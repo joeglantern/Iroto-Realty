@@ -119,29 +119,25 @@ function HeroCarousel() {
       id: 1,
       image: 'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
       title: 'IROTO',
-      highlight: 'REALTY',
-      subtitle: 'Discover luxury properties in Lamu and Watamu'
+      highlight: 'REALTY'
     },
     {
       id: 2,
       image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
       title: 'IROTO',
-      highlight: 'REALTY',
-      subtitle: 'Historic Lamu Island properties'
+      highlight: 'REALTY'
     },
     {
       id: 3,
       image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
       title: 'IROTO',
-      highlight: 'REALTY',
-      subtitle: 'Tropical Watamu paradise'
+      highlight: 'REALTY'
     },
     {
       id: 4,
       image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
       title: 'IROTO',
-      highlight: 'REALTY',
-      subtitle: 'Investment opportunities on Kenya\'s coast'
+      highlight: 'REALTY'
     }
   ];
 
@@ -233,9 +229,6 @@ function HeroCarousel() {
         <h1 className="text-4xl lg:text-7xl font-bold mb-6 transition-all duration-1000 text-[#713900]">
           {slides[currentSlide].title} {slides[currentSlide].highlight}
         </h1>
-        <p className="text-xl lg:text-2xl mb-12 text-white/90 transition-all duration-1000">
-          {slides[currentSlide].subtitle}
-        </p>
         
         {/* Property Search Widget */}
         <div className="bg-white/90 backdrop-blur-sm rounded-full p-2 mb-8 max-w-2xl mx-auto shadow-lg">
@@ -294,20 +287,6 @@ function HeroCarousel() {
           </form>
         </div>
 
-        <div className="space-y-4 sm:space-y-0 sm:space-x-4 sm:flex sm:justify-center">
-          <a
-            href="/rental-portfolio"
-            className="inline-block bg-brown hover:bg-brown/90 text-white px-8 py-3 rounded-md font-semibold transition-colors duration-200"
-          >
-            View All Properties
-          </a>
-          <a
-            href="/contact"
-            className="inline-block border-2 border-white hover:bg-white hover:text-black text-white px-8 py-3 rounded-md font-semibold transition-colors duration-200"
-          >
-            Contact Us
-          </a>
-        </div>
       </div>
     </section>
   );
