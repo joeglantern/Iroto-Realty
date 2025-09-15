@@ -1,4 +1,109 @@
+'use client';
+
+import { useState } from 'react';
 import PageLayout from '@/components/layout/PageLayout';
+
+interface PropertyCardProps {
+  id: number;
+  images: string[];
+  title: string;
+  location: string;
+  price: string;
+  slug: string;
+}
+
+function PropertyCard({ id, images, title, location, price, slug }: PropertyCardProps) {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  const nextImage = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % images.length);
+  };
+
+  const prevImage = () => {
+    setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
+  };
+
+  return (
+    <a href={`/property/${slug}`} className="group cursor-pointer bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-200 block">
+      <div className="aspect-[4/3] bg-gray-200 relative overflow-hidden">
+        <div 
+          className="w-full h-full bg-cover bg-center bg-no-repeat group-hover:scale-105 transition-transform duration-300"
+          style={{
+            backgroundImage: `url("${images[currentImageIndex]}")`
+          }}
+        />
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-200" />
+        
+        {/* Navigation Arrows */}
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            prevImage();
+          }}
+          className="absolute left-2 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            nextImage();
+          }}
+          className="absolute right-2 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+
+        {/* Image Counter */}
+        <div className="absolute bottom-3 left-3 bg-black/60 text-white text-xs px-2 py-1 rounded-full">
+          {currentImageIndex + 1}/{images.length}
+        </div>
+
+        {/* Dots Indicator */}
+        <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex space-x-1">
+          {images.map((_, index) => (
+            <button
+              key={index}
+              onClick={(e) => {
+                e.preventDefault();
+                setCurrentImageIndex(index);
+              }}
+              className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                index === currentImageIndex 
+                  ? 'bg-white' 
+                  : 'bg-white/50 hover:bg-white/70'
+              }`}
+            />
+          ))}
+        </div>
+        
+        {/* Eye Icon - Visual indicator only since whole card is clickable */}
+        <div className="absolute top-4 right-4 w-10 h-10 bg-white/90 rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-all duration-200 group-hover:scale-110">
+          <svg className="w-5 h-5 text-brown" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+          </svg>
+        </div>
+      </div>
+      <div className="p-4">
+        <h3 className="text-lg font-semibold text-black mb-2">
+          {title}
+        </h3>
+        <p className="text-gray-600 text-sm mb-2">
+          {location}
+        </p>
+        <p className="text-brown font-semibold">
+          {price}
+        </p>
+      </div>
+    </a>
+  );
+}
 
 export default function LamuProperties() {
   return (
@@ -42,43 +147,26 @@ export default function LamuProperties() {
             
             {/* 3x2 Grid as per Figma design */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-              {Array.from({ length: 6 }, (_, i) => (
-                <div 
-                  key={i} 
-                  className="group cursor-pointer bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-200"
-                >
-                  <div className="aspect-[4/3] bg-gray-200 relative overflow-hidden">
-                    <div 
-                      className="w-full h-full bg-cover bg-center bg-no-repeat group-hover:scale-105 transition-transform duration-300"
-                      style={{
-                        backgroundImage: `url("https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80")`
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-200" />
-                  </div>
-                  <div className="p-6">
-                    <h3 className="text-xl font-semibold text-black mb-2">
-                      Lamu Villa {i + 1}
-                    </h3>
-                    <p className="text-gray-600 mb-3">
-                      Lamu Old Town
-                    </p>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-brown font-semibold text-lg">
-                          From ${150 + (i * 50)}/night
-                        </p>
-                        <p className="text-gray-500 text-sm">
-                          {Math.floor(Math.random() * 3) + 2} bedrooms • {Math.floor(Math.random() * 3) + 2} bathrooms
-                        </p>
-                      </div>
-                      <button className="bg-brown hover:bg-brown/90 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200">
-                        View Details
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
+              {Array.from({ length: 6 }, (_, i) => {
+                const propertyImages = [
+                  "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+                  "https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+                  "https://images.unsplash.com/photo-1613977257363-707ba9348227?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+                  "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                ];
+                
+                return (
+                  <PropertyCard 
+                    key={i}
+                    id={i + 1}
+                    images={propertyImages}
+                    title={`Lamu Villa ${i + 1}`}
+                    location="Lamu Old Town"
+                    price={`From KES ${(25 + (i * 5)) * 1000}/night`}
+                    slug={`lamu-villa-${i + 1}`}
+                  />
+                );
+              })}
             </div>
 
             {/* Info Cards Section - Two rounded cards as per Figma */}

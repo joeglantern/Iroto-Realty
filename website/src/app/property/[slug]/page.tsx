@@ -19,6 +19,9 @@ export default function PropertyDetail({ params }: PropertyDetailProps) {
     description: "Lorem Ipsum, Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum",
     price: "From KES 25,000/night",
     videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+    // Dual INFO sections from database fields
+    propertyInfo1: "Experience authentic coastal living in this beautifully designed villa featuring traditional Swahili architecture. Located just steps from pristine beaches, this property offers the perfect blend of luxury and cultural heritage. Private garden sanctuary with indigenous plants creates a tranquil escape.",
+    propertyInfo2: "Premium amenities include fully equipped modern kitchen, spacious living areas, and private infinity pool overlooking the ocean. Each bedroom features handcrafted furniture and mosquito netting. Professional housekeeping and concierge services available. Perfect for families or romantic getaways seeking authentic Kenyan coastal experience.",
     images: [
       "https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
       "https://images.unsplash.com/photo-1613977257363-707ba9348227?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
@@ -141,14 +144,23 @@ export default function PropertyDetail({ params }: PropertyDetailProps) {
         <section className="py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-              <div className="bg-gray-100 rounded-3xl p-12 min-h-[300px] flex items-center justify-center">
-                <div className="text-center">
+              {/* First INFO Section */}
+              <div className="bg-gray-100 rounded-3xl p-12 min-h-[300px] flex flex-col justify-center">
+                <div className="text-center mb-6">
                   <h3 className="text-2xl font-bold text-gray-800 mb-4">INFO</h3>
                 </div>
+                <div className="text-gray-700 leading-relaxed">
+                  <p>{property.propertyInfo1}</p>
+                </div>
               </div>
-              <div className="bg-gray-100 rounded-3xl p-12 min-h-[300px] flex items-center justify-center">
-                <div className="text-center">
+              
+              {/* Second INFO Section */}
+              <div className="bg-gray-100 rounded-3xl p-12 min-h-[300px] flex flex-col justify-center">
+                <div className="text-center mb-6">
                   <h3 className="text-2xl font-bold text-gray-800 mb-4">INFO</h3>
+                </div>
+                <div className="text-gray-700 leading-relaxed">
+                  <p>{property.propertyInfo2}</p>
                 </div>
               </div>
             </div>

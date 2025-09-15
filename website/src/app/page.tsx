@@ -426,26 +426,149 @@ function TestimonialsCarousel() {
   );
 }
 
-export default function Home() {
+function PropertiesCarousel() {
+  const [currentSlide, setCurrentSlide] = useState(0);
+
   const propertyData = [
     {
       images: [
         "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
         "https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1613490493576-7fde63acd811?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+        "https://images.unsplash.com/photo-1613977257363-707ba9348227?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
       ]
     },
     {
       images: [
-        "https://images.unsplash.com/photo-1613977257363-707ba9348227?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
         "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+        "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
       ]
     }
   ];
+
+  // Generate 12 properties (2 sets of 6 for the carousel)
+  const allProperties = [];
+  for (let set = 0; set < 2; set++) {
+    for (let i = 1; i <= 6; i++) {
+      const globalIndex = set * 6 + i;
+      allProperties.push({
+        id: globalIndex,
+        images: propertyData[i % 2].images,
+        title: `Luxury Villa ${globalIndex}`,
+        location: globalIndex % 2 === 0 ? 'Lamu Island' : 'Watamu Beach',
+        price: "From KES 25,000/night",
+        slug: `${globalIndex % 2 === 0 ? 'lamu' : 'watamu'}-villa-${globalIndex}`
+      });
+    }
+  }
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % 2);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + 2) % 2);
+  };
+
+  // Auto-advance every 6 seconds
+  React.useEffect(() => {
+    const interval = setInterval(nextSlide, 6000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <section className="py-20 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl lg:text-4xl font-bold text-black mb-4">
+            Featured Properties
+          </h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Explore our handpicked selection of premium properties in Kenya's most sought-after coastal destinations.
+          </p>
+        </div>
+        
+        <div className="relative">
+          {/* Navigation Arrows */}
+          <button
+            onClick={prevSlide}
+            className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-4 z-10 w-12 h-12 bg-white shadow-lg rounded-full flex items-center justify-center hover:bg-gray-50 transition-colors duration-200"
+          >
+            <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+
+          <button
+            onClick={nextSlide}
+            className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-4 z-10 w-12 h-12 bg-white shadow-lg rounded-full flex items-center justify-center hover:bg-gray-50 transition-colors duration-200"
+          >
+            <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+
+          {/* Properties Grid - 3x2 layout matching design */}
+          <div className="overflow-hidden">
+            <div 
+              className="flex transition-transform duration-500 ease-in-out"
+              style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+            >
+              {/* Slide 1 */}
+              <div className="w-full flex-shrink-0">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {allProperties.slice(0, 6).map((property) => (
+                    <PropertyCard 
+                      key={property.id}
+                      id={property.id}
+                      images={property.images}
+                      title={property.title}
+                      location={property.location}
+                      price={property.price}
+                      slug={property.slug}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Slide 2 */}
+              <div className="w-full flex-shrink-0">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {allProperties.slice(6, 12).map((property) => (
+                    <PropertyCard 
+                      key={property.id}
+                      id={property.id}
+                      images={property.images}
+                      title={property.title}
+                      location={property.location}
+                      price={property.price}
+                      slug={property.slug}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Slide Indicators */}
+          <div className="flex justify-center mt-8 space-x-2">
+            {[0, 1].map((index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentSlide(index)}
+                className={`w-3 h-3 rounded-full transition-all duration-200 ${
+                  index === currentSlide ? 'bg-[#713900] scale-125' : 'bg-gray-300 hover:bg-gray-400'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export default function Home() {
 
   return (
     <PageLayout>
@@ -453,38 +576,8 @@ export default function Home() {
         {/* Hero Carousel Section */}
         <HeroCarousel />
 
-        {/* Featured Properties Section */}
-        <section className="py-20 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl lg:text-4xl font-bold text-black mb-4">
-                Featured Properties
-              </h2>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                Explore our handpicked selection of premium properties in Kenya's most sought-after coastal destinations.
-              </p>
-            </div>
-            
-            {/* Properties Grid - 3x2 layout as shown in Figma */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {[1, 2, 3, 4, 5, 6].map((i) => {
-                const imageSet = propertyData[i % 2].images;
-                
-                return (
-                  <PropertyCard 
-                    key={i}
-                    id={i}
-                    images={imageSet}
-                    title={`Luxury Villa ${i}`}
-                    location={i % 2 === 0 ? 'Lamu Island' : 'Watamu Beach'}
-                    price="From KES 25,000/night"
-                    slug={`${i % 2 === 0 ? 'lamu' : 'watamu'}-villa-${i}`}
-                  />
-                );
-              })}
-            </div>
-          </div>
-        </section>
+        {/* Featured Properties Carousel */}
+        <PropertiesCarousel />
 
         {/* Testimonials Carousel */}
         <TestimonialsCarousel />
