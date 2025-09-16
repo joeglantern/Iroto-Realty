@@ -226,7 +226,7 @@ function FilterPill({ label, isActive, onClick, children }: FilterPillProps) {
   );
 }
 
-export default function SearchPage() {
+function SearchPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -854,5 +854,22 @@ export default function SearchPage() {
         </section>
       </div>
     </PageLayout>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={
+      <PageLayout>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brown mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading search...</p>
+          </div>
+        </div>
+      </PageLayout>
+    }>
+      <SearchPageContent />
+    </Suspense>
   );
 }
