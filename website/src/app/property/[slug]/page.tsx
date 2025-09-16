@@ -14,6 +14,33 @@ interface PropertyDetailProps {
   };
 }
 
+// Convert YouTube URLs to embed format
+function convertToEmbedUrl(url: string): string {
+  if (!url) return '';
+
+  // Handle different YouTube URL formats
+  const patterns = [
+    // Standard YouTube URLs: https://www.youtube.com/watch?v=VIDEO_ID
+    /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)/,
+    // YouTube mobile URLs: https://m.youtube.com/watch?v=VIDEO_ID
+    /(?:https?:\/\/)?(?:m\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)/,
+    // YouTube short URLs: https://youtu.be/VIDEO_ID
+    /(?:https?:\/\/)?youtu\.be\/([a-zA-Z0-9_-]+)/,
+    // Already embed URLs: https://www.youtube.com/embed/VIDEO_ID
+    /(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([a-zA-Z0-9_-]+)/
+  ];
+
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match && match[1]) {
+      return `https://www.youtube.com/embed/${match[1]}`;
+    }
+  }
+
+  // If it's not a YouTube URL, return as-is (for other video platforms)
+  return url;
+}
+
 export default function PropertyDetail({ params }: PropertyDetailProps) {
   const { slug } = params;
   const [property, setProperty] = useState<Property | null>(null);
@@ -224,7 +251,7 @@ export default function PropertyDetail({ params }: PropertyDetailProps) {
               <div className="aspect-video bg-gray-200 rounded-lg overflow-hidden">
                 {property.video_url ? (
                   <iframe
-                    src={property.video_url}
+                    src={convertToEmbedUrl(property.video_url)}
                     title="Property Tour Video"
                     className="w-full h-full"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

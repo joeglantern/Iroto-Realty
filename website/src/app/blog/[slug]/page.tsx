@@ -77,7 +77,7 @@ export default function BlogPostDetail({ params }: BlogPostDetailProps) {
     });
   };
 
-  const getImageUrl = (imagePath: string | null): string => {
+  const getImageUrl = (imagePath: string | null | undefined): string => {
     if (imagePath) {
       return getStorageUrl('blog-images', imagePath);
     }
@@ -198,10 +198,10 @@ export default function BlogPostDetail({ params }: BlogPostDetailProps) {
               {/* Author Info */}
               <div className="flex items-center space-x-4 pb-8 border-b border-gray-200 mb-12">
                 <div className="w-12 h-12 bg-brown rounded-full flex items-center justify-center text-white text-lg font-semibold">
-                  {currentPost.author?.charAt(0) || 'A'}
+                  {currentPost.author_name?.charAt(0) || 'A'}
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-900">{currentPost.author || 'Author'}</p>
+                  <p className="font-semibold text-gray-900">{currentPost.author_name || 'Author'}</p>
                   <p className="text-sm text-gray-500">Published on {formatDate(currentPost.created_at)}</p>
                 </div>
               </div>

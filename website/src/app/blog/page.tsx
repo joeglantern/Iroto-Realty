@@ -66,7 +66,7 @@ export default function Blog() {
   };
 
   // Get image URL
-  const getImageUrl = (imagePath: string | null): string => {
+  const getImageUrl = (imagePath: string | null | undefined): string => {
     if (imagePath) {
       return getStorageUrl('blog-images', imagePath);
     }
@@ -167,10 +167,10 @@ export default function Blog() {
                     <div className="flex items-center justify-between mb-6">
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 bg-brown rounded-full flex items-center justify-center text-white font-semibold">
-                          {filteredPosts[0].author?.charAt(0) || 'A'}
+                          {filteredPosts[0].author_name?.charAt(0) || 'A'}
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900">{filteredPosts[0].author || 'Author'}</p>
+                          <p className="font-medium text-gray-900">{filteredPosts[0].author_name || 'Author'}</p>
                           <p className="text-sm text-gray-500">{formatDate(filteredPosts[0].created_at)}</p>
                         </div>
                       </div>
@@ -264,10 +264,10 @@ export default function Blog() {
                         </p>
                         <div className="flex items-center space-x-3">
                           <div className="w-8 h-8 bg-brown rounded-full flex items-center justify-center text-white text-xs font-semibold">
-                            {post.author?.charAt(0) || 'A'}
+                            {post.author_name?.charAt(0) || 'A'}
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-gray-900">{post.author || 'Author'}</p>
+                            <p className="text-sm font-medium text-gray-900">{post.author_name || 'Author'}</p>
                             <p className="text-xs text-gray-500">{formatDate(post.created_at)}</p>
                           </div>
                         </div>

@@ -317,7 +317,7 @@ export async function createDailyMetrics(date: string) {
     const searches = searchesResult.data || [];
 
     // Calculate metrics
-    const metrics = {
+    const metrics: any = {
       metric_date: date,
       total_page_views: pageViews.length,
       unique_visitors: new Set(pageViews.map(pv => pv.user_ip || pv.session_id)).size,

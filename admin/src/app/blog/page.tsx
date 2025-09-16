@@ -68,9 +68,10 @@ export default function Blog() {
     e.preventDefault();
     if (uploading) return;
 
+    const isEditing = !!editingPost;
+    
     try {
       setUploading(true);
-      const isEditing = !!editingPost;
       console.log(isEditing ? 'Starting blog post update...' : 'Starting blog post creation...');
 
       // Prepare post data

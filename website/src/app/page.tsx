@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { getFeaturedProperties, getFeaturedReviews } from '@/lib/data';
+import React, { useState, useEffect, useRef } from 'react';
+import { getFeaturedProperties, getFeaturedReviews, getSearchSuggestions } from '@/lib/data';
 import { getStorageUrl } from '@/lib/supabase';
 import type { Property, Review } from '@/lib/supabase';
 import PageLayout from '@/components/layout/PageLayout';
@@ -143,6 +143,12 @@ function HeroCarousel() {
     type: '',
     maxPrice: ''
   });
+  const [suggestions, setSuggestions] = useState<Property[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
+  const [isLoading, setIsLoading] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
 
   const slides = [
     {
@@ -188,15 +194,95 @@ function HeroCarousel() {
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Redirect to rental portfolio with search params
+    setShowSuggestions(false);
+    // Redirect to search page with search params
     const params = new URLSearchParams();
-    if (searchData.search) params.append('search', searchData.search);
+    if (searchData.search) params.append('q', searchData.search);
     if (searchData.location) params.append('location', searchData.location);
     if (searchData.type) params.append('type', searchData.type);
     if (searchData.maxPrice) params.append('maxPrice', searchData.maxPrice);
     
-    window.location.href = `/rental-portfolio?${params.toString()}`;
+    window.location.href = `/search?${params.toString()}`;
   };
+
+  // Debounced search for suggestions
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (searchData.search.trim().length > 2) {
+        setIsLoading(true);
+        try {
+          const results = await getSearchSuggestions(searchData.search, 5);
+          setSuggestions(results);
+          setShowSuggestions(true);
+          setSelectedSuggestionIndex(-1);
+        } catch (error) {
+          console.error('Error fetching suggestions:', error);
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchData.search]);
+
+  // Handle keyboard navigation
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!showSuggestions) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedSuggestionIndex(prev => 
+          prev < suggestions.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedSuggestionIndex(prev => prev > -1 ? prev - 1 : prev);
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (selectedSuggestionIndex >= 0) {
+          const selectedProperty = suggestions[selectedSuggestionIndex];
+          window.location.href = `/property/${selectedProperty.slug}`;
+        } else {
+          handleSearchSubmit(e);
+        }
+        break;
+      case 'Escape':
+        setShowSuggestions(false);
+        setSelectedSuggestionIndex(-1);
+        break;
+    }
+  };
+
+  // Handle suggestion click
+  const handleSuggestionClick = (property: Property) => {
+    setShowSuggestions(false);
+    window.location.href = `/property/${property.slug}`;
+  };
+
+  // Handle click outside to close suggestions
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        suggestionsRef.current && 
+        !suggestionsRef.current.contains(event.target as Node) &&
+        searchInputRef.current && 
+        !searchInputRef.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false);
+        setSelectedSuggestionIndex(-1);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Auto-advance slides every 5 seconds
   React.useEffect(() => {
@@ -205,7 +291,7 @@ function HeroCarousel() {
   }, []);
 
   return (
-    <section className="relative h-screen flex items-center justify-center overflow-hidden">
+    <section className="relative h-[70vh] flex items-center justify-center overflow-hidden">
       {/* Carousel Images */}
       {slides.map((slide, index) => (
         <div
@@ -256,64 +342,157 @@ function HeroCarousel() {
       
       {/* Hero Content */}
       <div className="relative z-10 text-center text-white max-w-6xl mx-auto px-4">
-        <h1 className="text-4xl lg:text-7xl font-bold mb-6 transition-all duration-1000 text-[#713900]">
-          {slides[currentSlide].title} {slides[currentSlide].highlight}
+        <h1 className="text-4xl lg:text-6xl font-bold mb-4 transition-all duration-1000 text-white drop-shadow-lg">
+          Find Your Perfect
         </h1>
+        <h2 className="text-2xl lg:text-4xl font-bold mb-8 text-[#713900] drop-shadow-lg">
+          Coastal Property
+        </h2>
         
-        {/* Property Search Widget */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-full p-2 mb-8 max-w-2xl mx-auto shadow-lg">
-          <form onSubmit={handleSearchSubmit} className="flex items-center">
-            {/* Search Input */}
-            <div className="flex-1 flex items-center">
-              <svg className="w-5 h-5 text-gray-400 ml-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <input
-                type="text"
-                name="search"
-                value={searchData.search}
-                onChange={handleSearchChange}
-                placeholder="Search properties by location, type, or keyword..."
-                className="flex-1 bg-transparent border-none outline-none text-gray-800 placeholder-gray-500 text-sm py-3"
-              />
-            </div>
-            
-            {/* Quick Filters */}
-            <div className="hidden md:flex items-center space-x-2 mx-4">
-              <select
-                name="location"
-                value={searchData.location}
-                onChange={handleSearchChange}
-                className="bg-transparent border border-gray-200 rounded-full px-3 py-1 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#713900] focus:ring-opacity-20"
-              >
-                <option value="">Location</option>
-                <option value="lamu">Lamu</option>
-                <option value="watamu">Watamu</option>
-              </select>
+        {/* Professional Search Bar with Autocomplete */}
+        <div className="max-w-2xl mx-auto">
+          <form onSubmit={handleSearchSubmit} className="relative">
+            <div className="bg-white rounded-lg shadow-xl p-2 flex items-center">
+              <div className="flex-1 flex items-center pl-4 relative">
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  name="search"
+                  value={searchData.search}
+                  onChange={handleSearchChange}
+                  onKeyDown={handleKeyDown}
+                  onFocus={() => {
+                    if (suggestions.length > 0) setShowSuggestions(true);
+                  }}
+                  placeholder="Search by location, property type, or keyword..."
+                  className="flex-1 bg-transparent border-none outline-none text-gray-800 placeholder-gray-500 text-base py-3"
+                  autoComplete="off"
+                />
+                {isLoading && (
+                  <div className="absolute right-4">
+                    <div className="w-4 h-4 border-2 border-gray-300 border-t-brown rounded-full animate-spin"></div>
+                  </div>
+                )}
+              </div>
               
-              <select
-                name="maxPrice"
-                value={searchData.maxPrice}
-                onChange={handleSearchChange}
-                className="bg-transparent border border-gray-200 rounded-full px-3 py-1 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#713900] focus:ring-opacity-20"
+              {/* Search Button */}
+              <button
+                type="submit"
+                className="bg-brown hover:bg-brown/90 text-white px-8 py-3 rounded-md font-semibold transition-colors duration-200 flex items-center shadow-md"
               >
-                <option value="">Price</option>
-                <option value="25000">25K</option>
-                <option value="40000">40K</option>
-                <option value="65000">65K+</option>
-              </select>
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                Search
+              </button>
             </div>
+
+            {/* Autocomplete Suggestions */}
+            {showSuggestions && suggestions.length > 0 && (
+              <div 
+                ref={suggestionsRef}
+                className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 z-50 overflow-hidden"
+              >
+                <div className="py-2">
+                  {suggestions.map((property, index) => {
+                    // Get property image
+                    let imageUrl = 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+                    if (property.hero_image_path) {
+                      imageUrl = getStorageUrl('property-images', property.hero_image_path);
+                    } else if ((property as any).property_images?.[0]?.image_path) {
+                      imageUrl = getStorageUrl('property-images', (property as any).property_images[0].image_path);
+                    }
+
+                    const price = property.listing_type === 'sale'
+                      ? `${property.currency || 'KES'} ${property.sale_price?.toLocaleString()}`
+                      : `From ${property.currency || 'KES'} ${property.rental_price?.toLocaleString()}/night`;
+
+                    return (
+                      <div
+                        key={property.id}
+                        onClick={() => handleSuggestionClick(property)}
+                        className={`flex items-center px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors ${
+                          index === selectedSuggestionIndex ? 'bg-gray-50' : ''
+                        }`}
+                      >
+                        <div className="w-16 h-12 bg-gray-200 rounded-md overflow-hidden flex-shrink-0 mr-4">
+                          <img
+                            src={imageUrl}
+                            alt={property.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-gray-900 truncate">
+                            {property.title}
+                          </h4>
+                          <p className="text-sm text-gray-500 truncate">
+                            {property.specific_location || 'Kenya Coast'}
+                          </p>
+                          <p className="text-sm font-semibold text-brown">
+                            {price}
+                          </p>
+                        </div>
+                        <div className="flex-shrink-0 ml-2">
+                          {property.listing_type === 'sale' && (
+                            <span className="bg-brown text-white px-2 py-1 rounded-full text-xs font-medium">
+                              FOR SALE
+                            </span>
+                          )}
+                          {property.listing_type === 'rental' && (
+                            <span className="bg-gray-700 text-white px-2 py-1 rounded-full text-xs font-medium">
+                              FOR RENT
+                            </span>
+                          )}
+                          {property.listing_type === 'both' && (
+                            <span className="bg-purple-600 text-white px-2 py-1 rounded-full text-xs font-medium">
+                              BOTH
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="border-t border-gray-200 px-4 py-2 bg-gray-50">
+                  <p className="text-xs text-gray-500 text-center">
+                    Press Enter to search for "{searchData.search}" • Use ↑↓ to navigate • Press Escape to close
+                  </p>
+                </div>
+              </div>
+            )}
             
-            {/* Search Button */}
-            <button
-              type="submit"
-              className="bg-[#713900] hover:bg-[#713900]/90 text-white px-6 py-3 rounded-full font-medium transition-colors duration-200 flex items-center"
-            >
-              Search
-              <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
+            {/* Quick Filter Pills */}
+            <div className="flex flex-wrap justify-center gap-3 mt-4">
+              <button
+                type="button"
+                onClick={() => setSearchData({ ...searchData, search: 'Lamu' })}
+                className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-full hover:bg-white/30 transition-colors duration-200 text-sm"
+              >
+                Lamu Properties
+              </button>
+              <button
+                type="button"
+                onClick={() => setSearchData({ ...searchData, search: 'Watamu' })}
+                className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-full hover:bg-white/30 transition-colors duration-200 text-sm"
+              >
+                Watamu Properties
+              </button>
+              <button
+                type="button"
+                onClick={() => setSearchData({ ...searchData, search: 'villa' })}
+                className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-full hover:bg-white/30 transition-colors duration-200 text-sm"
+              >
+                Luxury Villas
+              </button>
+              <button
+                type="button"
+                onClick={() => setSearchData({ ...searchData, search: 'beachfront' })}
+                className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-full hover:bg-white/30 transition-colors duration-200 text-sm"
+              >
+                Beachfront
+              </button>
+            </div>
           </form>
         </div>
 

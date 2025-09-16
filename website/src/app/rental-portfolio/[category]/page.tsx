@@ -276,8 +276,8 @@ export default function CategoryPage() {
                 </div>
               ) : (
                 properties.map((property) => {
-                  const propertyImages = property.property_images?.length 
-                    ? property.property_images.map(img => getStorageUrl('property-images', img.image_path))
+                  const propertyImages = (property as any).property_images?.length 
+                    ? (property as any).property_images.map((img: any) => getStorageUrl('property-images', img.image_path))
                     : ["https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"];
                   
                   return (
