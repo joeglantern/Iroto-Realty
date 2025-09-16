@@ -4,13 +4,14 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
+import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/contexts/AuthContext';
 import { getReviews, createReview, deleteReview, updateReview, getReview } from '@/lib/reviews';
 import { getProperties } from '@/lib/properties';
 import { uploadFile, supabase } from '@/lib/supabase';
 import type { Review, Property } from '@/lib/supabase';
 
-export default function Reviews() {
+function Reviews() {
   const { signOut } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState('all');
@@ -724,5 +725,13 @@ export default function Reviews() {
         isDeleting={deleting}
       />
     </div>
+  );
+}
+
+export default function ReviewsPage() {
+  return (
+    <ProtectedRoute requireAdmin={true}>
+      <Reviews />
+    </ProtectedRoute>
   );
 }

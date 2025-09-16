@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/contexts/AuthContext';
 import { getAnalytics } from '@/lib/analytics';
 
@@ -16,7 +17,7 @@ interface AnalyticsData {
   recentPageViews: any[];
 }
 
-export default function Analytics() {
+function Analytics() {
   const { signOut } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -497,5 +498,13 @@ export default function Analytics() {
         )}
       </main>
     </div>
+  );
+}
+
+export default function AnalyticsPage() {
+  return (
+    <ProtectedRoute requireAdmin={true}>
+      <Analytics />
+    </ProtectedRoute>
   );
 }

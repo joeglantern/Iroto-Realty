@@ -7,9 +7,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getProperties } from '@/lib/properties';
 import { getBlogPosts } from '@/lib/blog';
 import { getReviews } from '@/lib/reviews';
+import ProtectedRoute from '@/components/ProtectedRoute';
 import type { Property } from '@/lib/supabase';
 
-export default function Dashboard() {
+function Dashboard() {
   const { signOut } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -348,6 +349,14 @@ export default function Dashboard() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <ProtectedRoute requireAdmin={true}>
+      <Dashboard />
+    </ProtectedRoute>
   );
 }
 

@@ -4,12 +4,13 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
+import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/contexts/AuthContext';
 import { getBlogPosts, getBlogCategories, createBlogPost, generateSlug, deleteBlogPost, updateBlogPost, getBlogPost } from '@/lib/blog';
 import { uploadFile, supabase } from '@/lib/supabase';
 import type { BlogPost, BlogCategory } from '@/lib/supabase';
 
-export default function Blog() {
+function Blog() {
   const { signOut } = useAuth();
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [categories, setCategories] = useState<BlogCategory[]>([]);
@@ -735,5 +736,13 @@ export default function Blog() {
         isDeleting={deleting}
       />
     </div>
+  );
+}
+
+export default function BlogPage() {
+  return (
+    <ProtectedRoute requireAdmin={true}>
+      <Blog />
+    </ProtectedRoute>
   );
 }
