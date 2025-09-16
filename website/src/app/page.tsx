@@ -1,10 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getFeaturedProperties, getFeaturedReviews } from '@/lib/data';
+import { getStorageUrl } from '@/lib/supabase';
+import type { Property, Review } from '@/lib/supabase';
 import PageLayout from '@/components/layout/PageLayout';
 
 interface PropertyCardProps {
-  id: number;
+  id: string;
   images: string[];
   title: string;
   location: string;
@@ -12,7 +15,7 @@ interface PropertyCardProps {
   slug: string;
 }
 
-function PropertyCard({ id, images, title, location, price, slug }: PropertyCardProps) {
+function PropertyCard({ images, title, location, price, slug }: PropertyCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const nextImage = () => {
@@ -294,59 +297,56 @@ function HeroCarousel() {
 
 function TestimonialsCarousel() {
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
-  
-  const testimonials = [
-    {
-      id: 1,
-      name: 'Sarah Mitchell',
-      location: 'London, UK',
-      avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b5bb?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80',
-      text: 'Our stay at the Lamu villa was absolutely magical. The property exceeded our expectations in every way, and the team at Iroto Realty made everything seamless.',
-      rating: 5,
-      property: 'Lamu Beachfront Villa'
-    },
-    {
-      id: 2,
-      name: 'James Wilson',
-      location: 'New York, USA',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80',
-      text: 'Investing in coastal Kenya through Iroto Realty was the best decision we made. The ROI has been excellent and the property management is top-notch.',
-      rating: 5,
-      property: 'Watamu Investment Property'
-    },
-    {
-      id: 3,
-      name: 'Maria Rodriguez',
-      location: 'Barcelona, Spain',
-      avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80',
-      text: 'The cultural experience in Lamu combined with luxury accommodation was perfect. We felt connected to the local heritage while enjoying world-class amenities.',
-      rating: 5,
-      property: 'Heritage Lamu Villa'
-    },
-    {
-      id: 4,
-      name: 'David Chen',
-      location: 'Singapore',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80',
-      text: 'Exceptional service from start to finish. The property was exactly as described and the location in Watamu was breathtaking. Highly recommend!',
-      rating: 5,
-      property: 'Watamu Paradise Villa'
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadReviews() {
+      try {
+        const featuredReviews = await getFeaturedReviews(6);
+        setReviews(featuredReviews);
+      } catch (error) {
+        console.error('Error loading featured reviews:', error);
+      } finally {
+        setLoading(false);
+      }
     }
-  ];
+    
+    loadReviews();
+  }, []);
+
+  // Transform reviews for display
+  const testimonials = reviews.map(review => ({
+    id: review.id,
+    name: review.reviewer_name,
+    location: review.reviewer_location || 'Valued Guest',
+    avatar: review.reviewer_avatar_path 
+      ? getStorageUrl('review-images', review.reviewer_avatar_path)
+      : 'https://images.unsplash.com/photo-1494790108755-2616b612b5bb?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80',
+    text: review.comment,
+    rating: review.rating,
+    property: (review as any).properties?.title || 'Premium Property'
+  }));
 
   const nextTestimonial = () => {
-    setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
+    if (testimonials.length > 0) {
+      setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
+    }
   };
 
   const prevTestimonial = () => {
-    setCurrentTestimonial((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+    if (testimonials.length > 0) {
+      setCurrentTestimonial((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+    }
   };
 
   // Auto-advance testimonials every 4 seconds
-  React.useEffect(() => {
-    const interval = setInterval(nextTestimonial, 4000);
-    return () => clearInterval(interval);
-  }, []);
+  useEffect(() => {
+    if (testimonials.length > 0) {
+      const interval = setInterval(nextTestimonial, 4000);
+      return () => clearInterval(interval);
+    }
+  }, [testimonials.length]);
 
   return (
     <section className="py-20 bg-white">
@@ -360,67 +360,100 @@ function TestimonialsCarousel() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {testimonials.map((testimonial, index) => (
-            <div
-              key={testimonial.id}
-              className={`bg-gray-50 rounded-lg p-8 border border-gray-100 hover:shadow-lg transition-all duration-300 ${
-                index === currentTestimonial ? 'ring-2 ring-[#713900] ring-opacity-20 bg-white shadow-lg' : ''
-              }`}
-            >
-              {/* Property Badge */}
-              <div className="mb-6">
-                <span className="inline-flex items-center px-3 py-1 text-sm font-medium text-[#713900] bg-[#713900]/10 rounded-full">
-                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  {testimonial.property}
-                </span>
-              </div>
-
-              {/* Stars */}
-              <div className="flex mb-4">
-                {[...Array(testimonial.rating)].map((_, i) => (
-                  <svg key={i} className="w-5 h-5 text-[#713900] mr-1" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                ))}
-              </div>
-
-              {/* Quote */}
-              <p className="text-gray-700 mb-6 leading-relaxed">
-                "{testimonial.text}"
-              </p>
-
-              {/* Author */}
-              <div className="flex items-center">
-                <img
-                  src={testimonial.avatar}
-                  alt={testimonial.name}
-                  className="w-12 h-12 rounded-full mr-4 object-cover border-2 border-gray-200"
-                />
-                <div>
-                  <p className="font-semibold text-black">{testimonial.name}</p>
-                  <p className="text-sm text-gray-600">{testimonial.location}</p>
+        {loading ? (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="bg-gray-50 rounded-lg p-8 animate-pulse">
+                <div className="w-32 h-6 bg-gray-300 rounded-full mb-6"></div>
+                <div className="flex mb-4 space-x-1">
+                  {[...Array(5)].map((_, star) => (
+                    <div key={star} className="w-5 h-5 bg-gray-300 rounded"></div>
+                  ))}
+                </div>
+                <div className="space-y-2 mb-6">
+                  <div className="h-4 bg-gray-300 rounded w-full"></div>
+                  <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+                  <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-gray-300 rounded-full mr-4"></div>
+                  <div className="space-y-2">
+                    <div className="h-4 bg-gray-300 rounded w-24"></div>
+                    <div className="h-3 bg-gray-300 rounded w-16"></div>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : testimonials.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500">No reviews available</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {testimonials.map((testimonial, index) => (
+              <div
+                key={testimonial.id}
+                className={`bg-gray-50 rounded-lg p-8 border border-gray-100 hover:shadow-lg transition-all duration-300 ${
+                  index === currentTestimonial ? 'ring-2 ring-[#713900] ring-opacity-20 bg-white shadow-lg' : ''
+                }`}
+              >
+                {/* Property Badge */}
+                <div className="mb-6">
+                  <span className="inline-flex items-center px-3 py-1 text-sm font-medium text-[#713900] bg-[#713900]/10 rounded-full">
+                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    {testimonial.property}
+                  </span>
+                </div>
+
+                {/* Stars */}
+                <div className="flex mb-4">
+                  {[...Array(testimonial.rating)].map((_, i) => (
+                    <svg key={i} className="w-5 h-5 text-[#713900] mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  ))}
+                </div>
+
+                {/* Quote */}
+                <p className="text-gray-700 mb-6 leading-relaxed">
+                  "{testimonial.text}"
+                </p>
+
+                {/* Author */}
+                <div className="flex items-center">
+                  <img
+                    src={testimonial.avatar}
+                    alt={testimonial.name}
+                    className="w-12 h-12 rounded-full mr-4 object-cover border-2 border-gray-200"
+                  />
+                  <div>
+                    <p className="font-semibold text-black">{testimonial.name}</p>
+                    <p className="text-sm text-gray-600">{testimonial.location}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Navigation Dots */}
-        <div className="flex justify-center mt-12 space-x-2">
-          {testimonials.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentTestimonial(index)}
-              className={`w-3 h-3 rounded-full transition-all duration-200 ${
-                index === currentTestimonial ? 'bg-[#713900] scale-125' : 'bg-gray-300 hover:bg-gray-400'
-              }`}
-            />
-          ))}
-        </div>
+        {!loading && testimonials.length > 0 && (
+          <div className="flex justify-center mt-12 space-x-2">
+            {testimonials.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentTestimonial(index)}
+                className={`w-3 h-3 rounded-full transition-all duration-200 ${
+                  index === currentTestimonial ? 'bg-[#713900] scale-125' : 'bg-gray-300 hover:bg-gray-400'
+                }`}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
@@ -428,53 +461,84 @@ function TestimonialsCarousel() {
 
 function PropertiesCarousel() {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const propertyData = [
-    {
-      images: [
-        "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1613977257363-707ba9348227?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-      ]
-    },
-    {
-      images: [
-        "https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-      ]
+  useEffect(() => {
+    async function loadProperties() {
+      try {
+        const featuredProperties = await getFeaturedProperties(12);
+        setProperties(featuredProperties);
+      } catch (error) {
+        console.error('Error loading featured properties:', error);
+      } finally {
+        setLoading(false);
+      }
     }
-  ];
+    
+    loadProperties();
+  }, []);
 
-  // Generate 12 properties (2 sets of 6 for the carousel)
-  const allProperties = [];
-  for (let set = 0; set < 2; set++) {
-    for (let i = 1; i <= 6; i++) {
-      const globalIndex = set * 6 + i;
-      allProperties.push({
-        id: globalIndex,
-        images: propertyData[i % 2].images,
-        title: `Luxury Villa ${globalIndex}`,
-        location: globalIndex % 2 === 0 ? 'Lamu Island' : 'Watamu Beach',
-        price: "From KES 25,000/night",
-        slug: `${globalIndex % 2 === 0 ? 'lamu' : 'watamu'}-villa-${globalIndex}`
-      });
+  // Transform properties for display
+  const allProperties = properties.map(property => {
+    // Combine hero image and gallery images
+    const images = [];
+    
+    // Add hero image first if available
+    if (property.hero_image_path) {
+      images.push(getStorageUrl('property-images', property.hero_image_path));
     }
-  }
+    
+    // Add gallery images if available
+    if ((property as any).property_images && Array.isArray((property as any).property_images)) {
+      const galleryImages = (property as any).property_images
+        .filter((img: any) => img.is_active)
+        .sort((a: any, b: any) => a.sort_order - b.sort_order)
+        .map((img: any) => getStorageUrl('property-images', img.image_path));
+      
+      images.push(...galleryImages);
+    }
+    
+    // Fallback to placeholder if no images
+    if (images.length === 0) {
+      images.push('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');
+    }
+    
+    const price = property.listing_type === 'sale' 
+      ? property.sale_price 
+        ? `${property.currency} ${property.sale_price?.toLocaleString()}`
+        : 'Contact for price'
+      : property.rental_price 
+        ? `From ${property.currency} ${property.rental_price?.toLocaleString()}/night`
+        : 'Contact for price';
+
+    return {
+      id: property.id,
+      images,
+      title: property.title,
+      location: property.specific_location || 'Kenya Coast',
+      price,
+      slug: property.slug
+    };
+  });
+
+  const slidesCount = Math.ceil(allProperties.length / 6) || 1;
 
   const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % 2);
+    setCurrentSlide((prev) => (prev + 1) % slidesCount);
   };
 
   const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + 2) % 2);
+    setCurrentSlide((prev) => (prev - 1 + slidesCount) % slidesCount);
   };
 
   // Auto-advance every 6 seconds
-  React.useEffect(() => {
-    const interval = setInterval(nextSlide, 6000);
-    return () => clearInterval(interval);
-  }, []);
+  useEffect(() => {
+    if (allProperties.length > 6) {
+      const interval = setInterval(nextSlide, 6000);
+      return () => clearInterval(interval);
+    }
+  }, [allProperties.length, slidesCount]);
 
   return (
     <section className="py-20 bg-white">
@@ -510,58 +574,65 @@ function PropertiesCarousel() {
 
           {/* Properties Grid - 3x2 layout matching design */}
           <div className="overflow-hidden">
-            <div 
-              className="flex transition-transform duration-500 ease-in-out"
-              style={{ transform: `translateX(-${currentSlide * 100}%)` }}
-            >
-              {/* Slide 1 */}
-              <div className="w-full flex-shrink-0">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {allProperties.slice(0, 6).map((property) => (
-                    <PropertyCard 
-                      key={property.id}
-                      id={property.id}
-                      images={property.images}
-                      title={property.title}
-                      location={property.location}
-                      price={property.price}
-                      slug={property.slug}
-                    />
-                  ))}
-                </div>
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="bg-gray-200 rounded-lg animate-pulse">
+                    <div className="aspect-[4/3] bg-gray-300 rounded-t-lg"></div>
+                    <div className="p-4 space-y-2">
+                      <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+                      <div className="h-3 bg-gray-300 rounded w-1/2"></div>
+                      <div className="h-4 bg-gray-300 rounded w-1/3"></div>
+                    </div>
+                  </div>
+                ))}
               </div>
-
-              {/* Slide 2 */}
-              <div className="w-full flex-shrink-0">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {allProperties.slice(6, 12).map((property) => (
-                    <PropertyCard 
-                      key={property.id}
-                      id={property.id}
-                      images={property.images}
-                      title={property.title}
-                      location={property.location}
-                      price={property.price}
-                      slug={property.slug}
-                    />
-                  ))}
-                </div>
+            ) : allProperties.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-gray-500">No featured properties available</p>
               </div>
-            </div>
+            ) : (
+              <div 
+                className="flex transition-transform duration-500 ease-in-out"
+                style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+              >
+                {Array.from({ length: slidesCount }, (_, slideIndex) => (
+                  <div key={slideIndex} className="w-full flex-shrink-0">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                      {allProperties
+                        .slice(slideIndex * 6, (slideIndex + 1) * 6)
+                        .map((property) => (
+                          <PropertyCard 
+                            key={property.id}
+                            id={property.id}
+                            images={property.images}
+                            title={property.title}
+                            location={property.location}
+                            price={property.price}
+                            slug={property.slug}
+                          />
+                        ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Slide Indicators */}
-          <div className="flex justify-center mt-8 space-x-2">
-            {[0, 1].map((index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentSlide(index)}
-                className={`w-3 h-3 rounded-full transition-all duration-200 ${
-                  index === currentSlide ? 'bg-[#713900] scale-125' : 'bg-gray-300 hover:bg-gray-400'
-                }`}
-              />
-            ))}
-          </div>
+          {!loading && allProperties.length > 6 && (
+            <div className="flex justify-center mt-8 space-x-2">
+              {Array.from({ length: slidesCount }, (_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentSlide(index)}
+                  className={`w-3 h-3 rounded-full transition-all duration-200 ${
+                    index === currentSlide ? 'bg-[#713900] scale-125' : 'bg-gray-300 hover:bg-gray-400'
+                  }`}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </section>

@@ -1,5 +1,11 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { getPropertyBySlug, getPropertyReviews } from '@/lib/data';
+import { getStorageUrl } from '@/lib/supabase';
+import type { Property, Review } from '@/lib/supabase';
 import PageLayout from '@/components/layout/PageLayout';
 
 interface PropertyDetailProps {
@@ -10,44 +16,105 @@ interface PropertyDetailProps {
 
 export default function PropertyDetail({ params }: PropertyDetailProps) {
   const { slug } = params;
-  
-  // Mock property data - in a real app, this would come from an API or database
-  const property = {
-    id: slug,
-    title: "Baobab House",
-    location: slug.includes('lamu') ? 'Lamu' : 'Watamu',
-    description: "Lorem Ipsum, Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum",
-    price: "From KES 25,000/night",
-    videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-    // Dual INFO sections from database fields
-    propertyInfo1: "Experience authentic coastal living in this beautifully designed villa featuring traditional Swahili architecture. Located just steps from pristine beaches, this property offers the perfect blend of luxury and cultural heritage. Private garden sanctuary with indigenous plants creates a tranquil escape.",
-    propertyInfo2: "Premium amenities include fully equipped modern kitchen, spacious living areas, and private infinity pool overlooking the ocean. Each bedroom features handcrafted furniture and mosquito netting. Professional housekeeping and concierge services available. Perfect for families or romantic getaways seeking authentic Kenyan coastal experience.",
-    images: [
-      "https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1613977257363-707ba9348227?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-    ],
-    amenities: ["WiFi", "Pool", "Kitchen", "AC", "Parking", "Beach Access"],
-    reviews: [
-      {
-        id: 1,
-        text: "Lorem Ipsum, Lorem Ipsum Lorem Ipsum LoremIpsum Lorem IpsumLorem Ipsum",
-        author: "Sarah M."
-      },
-      {
-        id: 2,
-        text: "Lorem Ipsum, Lorem Ipsum Lorem Ipsum LoremIpsum Lorem IpsumLorem Ips",
-        author: "John D."
-      }
-    ]
-  };
+  const [property, setProperty] = useState<Property | null>(null);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const heroImage = property.location === 'Lamu' 
-    ? 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80'
-    : 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80';
+  useEffect(() => {
+    async function loadPropertyData() {
+      try {
+        setLoading(true);
+        const [propertyData, reviewsData] = await Promise.all([
+          getPropertyBySlug(slug),
+          getPropertyReviews(slug) // This will need to be updated to work with property ID
+        ]);
+
+        if (!propertyData) {
+          setError('Property not found');
+          return;
+        }
+
+        setProperty(propertyData);
+        
+        // Get reviews by property ID instead of slug
+        const propertyReviews = await getPropertyReviews(propertyData.id);
+        setReviews(propertyReviews);
+      } catch (err) {
+        console.error('Error loading property:', err);
+        setError('Failed to load property data');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadPropertyData();
+  }, [slug]);
+
+  if (loading) {
+    return (
+      <PageLayout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#713900] mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading property details...</p>
+          </div>
+        </div>
+      </PageLayout>
+    );
+  }
+
+  if (error || !property) {
+    return (
+      <PageLayout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">Property Not Found</h1>
+            <p className="text-gray-600 mb-8">{error || 'The property you are looking for does not exist.'}</p>
+            <Link href="/" className="bg-[#713900] text-white px-6 py-3 rounded-lg hover:bg-[#713900]/90 transition-colors">
+              Back to Home
+            </Link>
+          </div>
+        </div>
+      </PageLayout>
+    );
+  }
+
+  // Process property data for display
+  const images = [];
+  
+  // Add hero image first if available
+  if (property.hero_image_path) {
+    images.push(getStorageUrl('property-images', property.hero_image_path));
+  }
+  
+  // Add gallery images if available
+  if ((property as any).property_images && Array.isArray((property as any).property_images)) {
+    const galleryImages = (property as any).property_images
+      .filter((img: any) => img.is_active)
+      .sort((a: any, b: any) => a.sort_order - b.sort_order)
+      .map((img: any) => getStorageUrl('property-images', img.image_path));
+    
+    images.push(...galleryImages);
+  }
+  
+  // Fallback images if none available
+  if (images.length === 0) {
+    images.push(
+      'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1613977257363-707ba9348227?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
+    );
+  }
+
+  const heroImage = images[0];
+  
+  const price = property.listing_type === 'sale' 
+    ? property.sale_price 
+      ? `${property.currency} ${property.sale_price?.toLocaleString()}`
+      : 'Contact for price'
+    : property.rental_price 
+      ? `From ${property.currency} ${property.rental_price?.toLocaleString()}/night`
+      : 'Contact for price';
 
   return (
     <PageLayout>
@@ -76,7 +143,7 @@ export default function PropertyDetail({ params }: PropertyDetailProps) {
           {/* Hero Content */}
           <div className="relative z-10 text-center text-white">
             <h1 className="text-5xl lg:text-6xl font-bold text-brown">
-              {property.location.toUpperCase()}
+              {(property.specific_location || property.title).toUpperCase()}
             </h1>
           </div>
         </section>
@@ -87,35 +154,87 @@ export default function PropertyDetail({ params }: PropertyDetailProps) {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
               {/* Left Column - Property Details */}
               <div>
-                <h2 className="text-3xl font-bold text-brown mb-6">
+                <h2 className="text-3xl font-bold text-brown mb-4">
                   {property.title}
                 </h2>
+                
+                {/* Price and Property Details */}
+                <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                  <div className="text-2xl font-bold text-[#713900] mb-2">{price}</div>
+                  <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                    {property.bedrooms && (
+                      <span className="flex items-center">
+                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h18v16H3V4zm0 0v4h18V4M9 12v4m6-4v4" />
+                        </svg>
+                        {property.bedrooms} bedrooms
+                      </span>
+                    )}
+                    {property.bathrooms && (
+                      <span className="flex items-center">
+                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10v11M20 10v11" />
+                        </svg>
+                        {property.bathrooms} bathrooms
+                      </span>
+                    )}
+                    {property.max_guests && (
+                      <span className="flex items-center">
+                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        Up to {property.max_guests} guests
+                      </span>
+                    )}
+                    {property.specific_location && (
+                      <span className="flex items-center">
+                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        {property.specific_location}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                
                 <p className="text-gray-700 text-lg leading-relaxed mb-8">
                   {property.description}
                 </p>
                 
-                {/* Amenities Icons */}
-                <div className="grid grid-cols-3 gap-4 text-gray-600">
-                  {property.amenities.slice(0, 6).map((amenity, index) => (
-                    <div key={index} className="flex items-center space-x-2">
-                      <div className="w-6 h-6 bg-brown/20 rounded flex items-center justify-center flex-shrink-0">
-                        <div className="w-3 h-3 bg-brown rounded-sm"></div>
-                      </div>
-                      <span className="text-sm font-medium">{amenity}</span>
+                {/* Amenities */}
+                {property.amenities && property.amenities.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Amenities</h3>
+                    <div className="grid grid-cols-2 gap-3 text-gray-600">
+                      {property.amenities.slice(0, 8).map((amenity: string, index: number) => (
+                        <div key={index} className="flex items-center space-x-2">
+                          <div className="w-5 h-5 bg-[#713900]/20 rounded flex items-center justify-center flex-shrink-0">
+                            <div className="w-2 h-2 bg-[#713900] rounded-sm"></div>
+                          </div>
+                          <span className="text-sm font-medium">{amenity}</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </div>
+                )}
               </div>
               
               {/* Right Column - Video */}
               <div className="aspect-video bg-gray-200 rounded-lg overflow-hidden">
-                <iframe
-                  src={property.videoUrl}
-                  title="Property Tour Video"
-                  className="w-full h-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                ></iframe>
+                {property.video_url ? (
+                  <iframe
+                    src={property.video_url}
+                    title="Property Tour Video"
+                    className="w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  ></iframe>
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                    <p className="text-gray-500">No video available</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -124,12 +243,13 @@ export default function PropertyDetail({ params }: PropertyDetailProps) {
         {/* Image Gallery */}
         <section className="py-16 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl font-bold text-brown mb-8 text-center">Property Gallery</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {property.images.map((image, index) => (
+              {images.map((image: string, index: number) => (
                 <div key={index} className="aspect-[4/3] bg-gray-200 rounded-lg overflow-hidden">
                   <Image
                     src={image}
-                    alt={`Property image ${index + 1}`}
+                    alt={`${property.title} - Image ${index + 1}`}
                     width={400}
                     height={300}
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
@@ -150,7 +270,7 @@ export default function PropertyDetail({ params }: PropertyDetailProps) {
                   <h3 className="text-2xl font-bold text-gray-800 mb-4">INFO</h3>
                 </div>
                 <div className="text-gray-700 leading-relaxed">
-                  <p>{property.propertyInfo1}</p>
+                  <p>{property.property_info_1 || 'Additional property information will be available soon.'}</p>
                 </div>
               </div>
               
@@ -160,7 +280,7 @@ export default function PropertyDetail({ params }: PropertyDetailProps) {
                   <h3 className="text-2xl font-bold text-gray-800 mb-4">INFO</h3>
                 </div>
                 <div className="text-gray-700 leading-relaxed">
-                  <p>{property.propertyInfo2}</p>
+                  <p>{property.property_info_2 || 'More details about this property will be available soon.'}</p>
                 </div>
               </div>
             </div>
@@ -187,19 +307,50 @@ export default function PropertyDetail({ params }: PropertyDetailProps) {
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {property.reviews.map((review) => (
+              {reviews.length > 0 ? reviews.map((review: Review) => (
                 <div key={review.id} className="bg-white p-6 rounded-lg shadow-sm">
+                  {/* Rating Stars */}
+                  <div className="flex mb-3">
+                    {[...Array(review.rating)].map((_, i) => (
+                      <svg key={i} className="w-4 h-4 text-[#713900] mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    ))}
+                  </div>
+                  
+                  {review.title && (
+                    <h4 className="font-semibold text-gray-900 mb-2">{review.title}</h4>
+                  )}
+                  
                   <p className="text-gray-700 leading-relaxed mb-4">
-                    {review.text}
+                    "{review.comment}"
                   </p>
+                  
                   <div className="flex items-center">
-                    <div className="w-8 h-8 bg-brown rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                      {review.author.charAt(0)}
+                    {review.reviewer_avatar_path ? (
+                      <img 
+                        src={getStorageUrl('review-images', review.reviewer_avatar_path)}
+                        alt={review.reviewer_name}
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 bg-[#713900] rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                        {review.reviewer_name.charAt(0)}
+                      </div>
+                    )}
+                    <div className="ml-3">
+                      <span className="text-sm font-medium text-gray-900">{review.reviewer_name}</span>
+                      {review.reviewer_location && (
+                        <p className="text-xs text-gray-500">{review.reviewer_location}</p>
+                      )}
                     </div>
-                    <span className="ml-3 text-sm font-medium text-gray-900">{review.author}</span>
                   </div>
                 </div>
-              ))}
+              )) : (
+                <div className="col-span-full text-center py-8">
+                  <p className="text-gray-500">No reviews available for this property yet.</p>
+                </div>
+              )}
             </div>
           </div>
         </section>

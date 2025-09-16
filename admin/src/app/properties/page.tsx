@@ -45,6 +45,7 @@ export default function Properties() {
   });
 
   const [newCategory, setNewCategory] = useState({ name: '', description: '' });
+  const [categoryImage, setCategoryImage] = useState<File | null>(null);
   const [heroImage, setHeroImage] = useState<File | null>(null);
   const [galleryImages, setGalleryImages] = useState<File[]>([]);
 
@@ -128,6 +129,45 @@ export default function Properties() {
         }
       }
 
+      // Upload gallery images if provided
+      if (galleryImages.length > 0 && property) {
+        console.log(`Starting gallery images upload (${galleryImages.length} images)...`);
+        
+        for (let i = 0; i < galleryImages.length; i++) {
+          const image = galleryImages[i];
+          const imagePath = `properties/gallery/${property.id}/${Date.now()}-${i}-${image.name}`;
+          console.log(`Uploading gallery image ${i + 1}/${galleryImages.length}:`, imagePath);
+          
+          try {
+            const { data: uploadData, error: uploadError } = await uploadFile('property-images', imagePath, image);
+            
+            if (uploadError) {
+              console.error(`Gallery image ${i + 1} upload failed:`, uploadError);
+              continue; // Skip this image but continue with others
+            }
+
+            // Insert into property_images table
+            const { error: insertError } = await supabase
+              .from('property_images')
+              .insert({
+                property_id: property.id,
+                image_path: imagePath,
+                alt_text: `${property.title} - Image ${i + 1}`,
+                sort_order: i + 1,
+                is_active: true
+              });
+            
+            if (insertError) {
+              console.error(`Error inserting gallery image ${i + 1} record:`, insertError);
+            } else {
+              console.log(`Gallery image ${i + 1} uploaded and recorded successfully`);
+            }
+          } catch (error) {
+            console.error(`Error processing gallery image ${i + 1}:`, error);
+          }
+        }
+      }
+
       alert('Property created successfully!');
       setShowUploadModal(false);
       resetForm();
@@ -144,17 +184,53 @@ export default function Properties() {
   const handleCategorySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await createPropertyCategory({
+      console.log('Creating category...');
+      
+      // Create category first
+      const categoryData = {
         name: newCategory.name,
         slug: generateSlug(newCategory.name),
         description: newCategory.description,
         is_active: true,
         sort_order: categories.length
-      });
+      };
+
+      console.log('Category data:', categoryData);
+      const category = await createPropertyCategory(categoryData);
+      console.log('Category created:', category);
+
+      // Upload category image if provided
+      if (categoryImage && category) {
+        console.log('Starting category image upload...');
+        const imagePath = `categories/${category.id}/${Date.now()}-${categoryImage.name}`;
+        console.log('Upload path:', imagePath);
+        
+        const { data: uploadData, error: uploadError } = await uploadFile('property-images', imagePath, categoryImage);
+        
+        if (uploadError) {
+          console.error('Category image upload failed:', uploadError);
+          alert(`Category created but image upload failed: ${uploadError.message}`);
+        } else {
+          console.log('Category image uploaded successfully:', uploadData);
+          // Update category with hero image path using Supabase directly
+          const { error: updateError } = await supabase
+            .from('property_categories')
+            .update({ hero_image_path: imagePath })
+            .eq('id', category.id);
+            
+          if (updateError) {
+            console.error('Error updating category image path:', updateError);
+            alert(`Category created but failed to link image: ${updateError.message}`);
+          } else {
+            console.log('Category image path updated successfully');
+          }
+        }
+      }
       
       alert('Category created successfully!');
       setShowCategoryModal(false);
       setNewCategory({ name: '', description: '' });
+      setCategoryImage(null);
       loadData(); // Reload categories
     } catch (error) {
       console.error('Error creating category:', error);
@@ -791,6 +867,29 @@ export default function Properties() {
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                       placeholder="Brief description of the location..."
                     />
+                  </div>
+                  
+                  {/* Category Image Upload */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Category Image (Optional)</label>
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+                      <input
+                        type="file"
+                        onChange={(e) => setCategoryImage(e.target.files?.[0] || null)}
+                        accept="image/*"
+                        className="hidden"
+                        id="category-image-upload"
+                      />
+                      <label htmlFor="category-image-upload" className="cursor-pointer">
+                        <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                          <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        <p className="mt-2 text-sm text-gray-600">
+                          {categoryImage ? categoryImage.name : 'Click to upload category image'}
+                        </p>
+                        <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                      </label>
+                    </div>
                   </div>
                   <button
                     type="submit"

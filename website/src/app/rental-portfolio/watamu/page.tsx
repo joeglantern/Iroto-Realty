@@ -1,10 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { getProperties, getCategoryBySlug } from '@/lib/data';
+import { getStorageUrl } from '@/lib/supabase';
+import type { Property, PropertyCategory } from '@/lib/supabase';
 import PageLayout from '@/components/layout/PageLayout';
 
 interface PropertyCardProps {
-  id: number;
+  id: string;
   images: string[];
   title: string;
   location: string;
@@ -106,6 +109,75 @@ function PropertyCard({ id, images, title, location, price, slug }: PropertyCard
 }
 
 export default function WatamuProperties() {
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [category, setCategory] = useState<PropertyCategory | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        setLoading(true);
+        
+        // Load category data and properties in parallel
+        const [categoryData, watamuProperties] = await Promise.all([
+          getCategoryBySlug('watamu'),
+          getProperties({
+            listing_type: 'rental',
+            category_slug: 'watamu'
+          })
+        ]);
+        
+        setCategory(categoryData);
+        setProperties(watamuProperties);
+      } catch (error) {
+        console.error('Error loading Watamu data:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    loadData();
+  }, []);
+
+  // Transform properties for display
+  const transformedProperties = properties.map(property => {
+    // Combine hero image and gallery images
+    const images = [];
+    
+    // Add hero image first if available
+    if (property.hero_image_path) {
+      images.push(getStorageUrl('property-images', property.hero_image_path));
+    }
+    
+    // Add gallery images if available
+    if ((property as any).property_images && Array.isArray((property as any).property_images)) {
+      const galleryImages = (property as any).property_images
+        .filter((img: any) => img.is_active)
+        .sort((a: any, b: any) => a.sort_order - b.sort_order)
+        .map((img: any) => getStorageUrl('property-images', img.image_path));
+      
+      images.push(...galleryImages);
+    }
+    
+    // Fallback to placeholder if no images
+    if (images.length === 0) {
+      images.push('https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');
+    }
+    
+    const price = property.rental_price 
+      ? `From ${property.currency} ${property.rental_price?.toLocaleString()}/night`
+      : 'Contact for price';
+
+    return {
+      id: property.id,
+      images,
+      title: property.title,
+      location: property.specific_location || 'Watamu Beach',
+      price,
+      slug: property.slug
+    };
+  });
+
   return (
     <PageLayout>
       <div>
@@ -145,28 +217,37 @@ export default function WatamuProperties() {
               </p>
             </div>
             
-            {/* 3x2 Grid as per Figma design */}
+            {/* Properties Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-              {Array.from({ length: 6 }, (_, i) => {
-                const propertyImages = [
-                  "https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-                  "https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-                  "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-                  "https://images.unsplash.com/photo-1544551763-77ef2d0cfc6c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                ];
-                
-                return (
+              {loading ? (
+                // Loading skeleton
+                Array.from({ length: 6 }, (_, i) => (
+                  <div key={i} className="bg-white rounded-lg overflow-hidden shadow-md animate-pulse">
+                    <div className="aspect-[4/3] bg-gray-300"></div>
+                    <div className="p-4 space-y-2">
+                      <div className="h-5 bg-gray-300 rounded w-3/4"></div>
+                      <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+                      <div className="h-5 bg-gray-300 rounded w-1/3"></div>
+                    </div>
+                  </div>
+                ))
+              ) : transformedProperties.length === 0 ? (
+                <div className="col-span-full text-center py-12">
+                  <p className="text-gray-500 text-lg">No properties available in Watamu at the moment.</p>
+                </div>
+              ) : (
+                transformedProperties.map((property) => (
                   <PropertyCard 
-                    key={i}
-                    id={i + 1}
-                    images={propertyImages}
-                    title={`Watamu Villa ${i + 1}`}
-                    location="Watamu Beach"
-                    price={`From KES ${(30 + (i * 8)) * 1000}/night`}
-                    slug={`watamu-villa-${i + 1}`}
+                    key={property.id}
+                    id={property.id}
+                    images={property.images}
+                    title={property.title}
+                    location={property.location}
+                    price={property.price}
+                    slug={property.slug}
                   />
-                );
-              })}
+                ))
+              )}
             </div>
 
             {/* Info Cards Section - Two rounded cards as per Figma */}

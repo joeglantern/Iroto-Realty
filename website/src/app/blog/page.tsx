@@ -1,98 +1,80 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { getBlogPosts, getBlogCategories } from '@/lib/data';
+import { getStorageUrl } from '@/lib/supabase';
+import type { BlogPost, BlogCategory } from '@/lib/supabase';
 import PageLayout from '@/components/layout/PageLayout';
 
-interface BlogPost {
-  id: string;
-  title: string;
-  excerpt: string;
-  content: string;
-  image: string;
-  author: string;
-  publishedAt: string;
-  category: string;
-  readTime: string;
-  slug: string;
-}
-
 export default function Blog() {
-  // Mock blog data - in a real app, this would come from an API or CMS
-  const blogPosts: BlogPost[] = [
-    {
-      id: '1',
-      slug: 'discovering-lamu-island-paradise',
-      title: 'Discovering Lamu Island: A Hidden Paradise in Kenya',
-      excerpt: 'Explore the rich culture, stunning beaches, and historic architecture of Lamu Island, one of Kenya\'s most enchanting coastal destinations.',
-      content: '',
-      image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      author: 'Sarah Johnson',
-      publishedAt: 'March 15, 2024',
-      category: 'Travel Guide',
-      readTime: '5 min read'
-    },
-    {
-      id: '2',
-      slug: 'watamu-marine-national-park-guide',
-      title: 'Watamu Marine National Park: A Snorkeling Paradise',
-      excerpt: 'Dive into the crystal-clear waters of Watamu Marine National Park and discover vibrant coral reefs and exotic marine life.',
-      content: '',
-      image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      author: 'Michael Chen',
-      publishedAt: 'March 10, 2024',
-      category: 'Activities',
-      readTime: '4 min read'
-    },
-    {
-      id: '3',
-      slug: 'luxury-villa-investment-kenya',
-      title: 'Investing in Luxury Villas: Kenya\'s Coastal Real Estate Boom',
-      excerpt: 'Learn about the growing opportunities in Kenya\'s luxury real estate market and why coastal properties are attracting international investors.',
-      content: '',
-      image: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      author: 'David Mbugua',
-      publishedAt: 'March 5, 2024',
-      category: 'Investment',
-      readTime: '7 min read'
-    },
-    {
-      id: '4',
-      slug: 'kenyan-coastal-cuisine-guide',
-      title: 'A Culinary Journey: Traditional Coastal Cuisine of Kenya',
-      excerpt: 'Savor the flavors of the Kenyan coast with our guide to traditional Swahili dishes and the best local restaurants.',
-      content: '',
-      image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      author: 'Amina Hassan',
-      publishedAt: 'February 28, 2024',
-      category: 'Culture',
-      readTime: '6 min read'
-    },
-    {
-      id: '5',
-      slug: 'sustainable-tourism-kenya-coast',
-      title: 'Sustainable Tourism: Protecting Kenya\'s Coastal Ecosystem',
-      excerpt: 'Discover how responsible tourism practices are helping preserve the natural beauty and cultural heritage of Kenya\'s coast.',
-      content: '',
-      image: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      author: 'James Kimani',
-      publishedAt: 'February 20, 2024',
-      category: 'Sustainability',
-      readTime: '5 min read'
-    },
-    {
-      id: '6',
-      slug: 'best-time-visit-kenya-coast',
-      title: 'When to Visit: A Seasonal Guide to Kenya\'s Coast',
-      excerpt: 'Plan your perfect coastal getaway with our comprehensive guide to weather patterns, wildlife migrations, and seasonal activities.',
-      content: '',
-      image: 'https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      author: 'Grace Wanjiku',
-      publishedAt: 'February 15, 2024',
-      category: 'Travel Guide',
-      readTime: '4 min read'
-    }
-  ];
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [blogCategories, setBlogCategories] = useState<BlogCategory[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [filteredPosts, setFilteredPosts] = useState<BlogPost[]>([]);
 
-  const categories = ['All', 'Travel Guide', 'Activities', 'Investment', 'Culture', 'Sustainability'];
+  // Data loading
+  useEffect(() => {
+    async function loadBlogData() {
+      try {
+        setLoading(true);
+        const [postsData, categoriesData] = await Promise.all([
+          getBlogPosts({ featured: false }),
+          getBlogCategories()
+        ]);
+        setBlogPosts(postsData);
+        setBlogCategories(categoriesData);
+        setFilteredPosts(postsData);
+      } catch (error) {
+        console.error('Error loading blog data:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    loadBlogData();
+  }, []);
+
+  // Category filtering
+  useEffect(() => {
+    if (selectedCategory === 'All') {
+      setFilteredPosts(blogPosts);
+    } else {
+      const categoryId = blogCategories.find(cat => cat.name === selectedCategory)?.id;
+      setFilteredPosts(blogPosts.filter(post => post.category_id === categoryId));
+    }
+  }, [selectedCategory, blogPosts, blogCategories]);
+
+  // Helper function to calculate read time
+  const calculateReadTime = (content: string): string => {
+    const wordsPerMinute = 200;
+    const wordCount = content ? content.split(' ').length : 0;
+    const minutes = Math.ceil(wordCount / wordsPerMinute);
+    return `${minutes} min read`;
+  };
+
+  // Helper function to format date
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  };
+
+  // Get image URL
+  const getImageUrl = (imagePath: string | null): string => {
+    if (imagePath) {
+      return getStorageUrl('blog-images', imagePath);
+    }
+    return 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+  };
+
+  // Get categories for display
+  const displayCategories = ['All', ...blogCategories.map(cat => cat.name)];
 
   return (
     <PageLayout>
@@ -123,115 +105,187 @@ export default function Blog() {
             
             {/* Category Filter */}
             <div className="flex flex-wrap justify-center gap-4 mb-16">
-              {categories.map((category) => (
-                <button
-                  key={category}
-                  className="px-6 py-2 rounded-full border-2 border-brown text-brown hover:bg-brown hover:text-white transition-colors duration-200 font-medium"
-                >
-                  {category}
-                </button>
-              ))}
+              {loading ? (
+                // Loading skeleton for categories
+                Array.from({ length: 6 }, (_, i) => (
+                  <div key={i} className="h-10 w-24 bg-gray-300 rounded-full animate-pulse"></div>
+                ))
+              ) : (
+                displayCategories.map((category) => (
+                  <button
+                    key={category}
+                    onClick={() => setSelectedCategory(category)}
+                    className={`px-6 py-2 rounded-full border-2 border-brown font-medium transition-colors duration-200 ${
+                      selectedCategory === category
+                        ? 'bg-brown text-white'
+                        : 'text-brown hover:bg-brown hover:text-white'
+                    }`}
+                  >
+                    {category}
+                  </button>
+                ))
+              )}
             </div>
 
             {/* Featured Article */}
-            <div className="mb-20">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                <div className="order-2 lg:order-1">
-                  <div className="flex items-center space-x-4 mb-4">
-                    <span className="px-3 py-1 bg-brown/10 text-brown text-sm font-medium rounded-full">
-                      Featured
-                    </span>
-                    <span className="px-3 py-1 bg-gray-100 text-gray-600 text-sm font-medium rounded-full">
-                      {blogPosts[0].category}
-                    </span>
-                  </div>
-                  <h2 className="text-3xl lg:text-4xl font-bold text-black mb-4">
-                    {blogPosts[0].title}
-                  </h2>
-                  <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-                    {blogPosts[0].excerpt}
-                  </p>
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-brown rounded-full flex items-center justify-center text-white font-semibold">
-                        {blogPosts[0].author.charAt(0)}
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900">{blogPosts[0].author}</p>
-                        <p className="text-sm text-gray-500">{blogPosts[0].publishedAt}</p>
-                      </div>
+            {loading ? (
+              <div className="mb-20">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                  <div className="order-2 lg:order-1 space-y-4">
+                    <div className="flex space-x-2">
+                      <div className="h-6 w-20 bg-gray-300 rounded-full animate-pulse"></div>
+                      <div className="h-6 w-24 bg-gray-300 rounded-full animate-pulse"></div>
                     </div>
-                    <span className="text-sm text-gray-500">{blogPosts[0].readTime}</span>
+                    <div className="h-10 bg-gray-300 rounded animate-pulse"></div>
+                    <div className="h-6 bg-gray-300 rounded animate-pulse"></div>
+                    <div className="h-16 bg-gray-300 rounded animate-pulse"></div>
+                    <div className="h-12 w-32 bg-gray-300 rounded animate-pulse"></div>
                   </div>
-                  <Link
-                    href={`/blog/${blogPosts[0].slug}`}
-                    className="inline-block bg-brown hover:bg-brown/90 text-white px-8 py-3 rounded-md font-semibold transition-colors duration-200"
-                  >
-                    Read Article
-                  </Link>
-                </div>
-                <div className="order-1 lg:order-2">
-                  <div className="aspect-[4/3] rounded-lg overflow-hidden">
-                    <Image
-                      src={blogPosts[0].image}
-                      alt={blogPosts[0].title}
-                      width={600}
-                      height={450}
-                      className="w-full h-full object-cover"
-                    />
+                  <div className="order-1 lg:order-2">
+                    <div className="aspect-[4/3] bg-gray-300 rounded-lg animate-pulse"></div>
                   </div>
                 </div>
               </div>
-            </div>
+            ) : filteredPosts.length > 0 ? (
+              <div className="mb-20">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                  <div className="order-2 lg:order-1">
+                    <div className="flex items-center space-x-4 mb-4">
+                      <span className="px-3 py-1 bg-brown/10 text-brown text-sm font-medium rounded-full">
+                        Featured
+                      </span>
+                      <span className="px-3 py-1 bg-gray-100 text-gray-600 text-sm font-medium rounded-full">
+                        {blogCategories.find(cat => cat.id === filteredPosts[0].category_id)?.name || 'General'}
+                      </span>
+                    </div>
+                    <h2 className="text-3xl lg:text-4xl font-bold text-black mb-4">
+                      {filteredPosts[0].title}
+                    </h2>
+                    <p className="text-lg text-gray-600 mb-6 leading-relaxed">
+                      {filteredPosts[0].excerpt}
+                    </p>
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-brown rounded-full flex items-center justify-center text-white font-semibold">
+                          {filteredPosts[0].author?.charAt(0) || 'A'}
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900">{filteredPosts[0].author || 'Author'}</p>
+                          <p className="text-sm text-gray-500">{formatDate(filteredPosts[0].created_at)}</p>
+                        </div>
+                      </div>
+                      <span className="text-sm text-gray-500">{calculateReadTime(filteredPosts[0].content || '')}</span>
+                    </div>
+                    <Link
+                      href={`/blog/${filteredPosts[0].slug}`}
+                      className="inline-block bg-brown hover:bg-brown/90 text-white px-8 py-3 rounded-md font-semibold transition-colors duration-200"
+                    >
+                      Read Article
+                    </Link>
+                  </div>
+                  <div className="order-1 lg:order-2">
+                    <div className="aspect-[4/3] rounded-lg overflow-hidden">
+                      <Image
+                        src={getImageUrl(filteredPosts[0].featured_image_path)}
+                        alt={filteredPosts[0].title}
+                        width={600}
+                        height={450}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : null}
 
             {/* Blog Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {blogPosts.slice(1).map((post) => (
-                <Link key={post.id} href={`/blog/${post.slug}`} className="group">
-                  <article className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300">
-                    <div className="aspect-[4/3] overflow-hidden">
-                      <Image
-                        src={post.image}
-                        alt={post.title}
-                        width={400}
-                        height={300}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                    <div className="p-6">
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">
-                          {post.category}
-                        </span>
-                        <span className="text-xs text-gray-500">{post.readTime}</span>
+              {loading ? (
+                // Loading skeleton for blog grid
+                Array.from({ length: 6 }, (_, i) => (
+                  <div key={i} className="bg-white rounded-lg overflow-hidden shadow-sm animate-pulse">
+                    <div className="aspect-[4/3] bg-gray-300"></div>
+                    <div className="p-6 space-y-3">
+                      <div className="flex justify-between">
+                        <div className="h-4 w-20 bg-gray-300 rounded-full"></div>
+                        <div className="h-4 w-16 bg-gray-300 rounded"></div>
                       </div>
-                      <h3 className="text-xl font-bold text-black mb-3 group-hover:text-brown transition-colors duration-200">
-                        {post.title}
-                      </h3>
-                      <p className="text-gray-600 text-sm mb-4 leading-relaxed">
-                        {post.excerpt}
-                      </p>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-brown rounded-full flex items-center justify-center text-white text-xs font-semibold">
-                          {post.author.charAt(0)}
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">{post.author}</p>
-                          <p className="text-xs text-gray-500">{post.publishedAt}</p>
+                      <div className="h-6 bg-gray-300 rounded"></div>
+                      <div className="h-4 bg-gray-300 rounded"></div>
+                      <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+                      <div className="flex space-x-2">
+                        <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
+                        <div className="space-y-1">
+                          <div className="h-3 w-20 bg-gray-300 rounded"></div>
+                          <div className="h-3 w-16 bg-gray-300 rounded"></div>
                         </div>
                       </div>
                     </div>
-                  </article>
-                </Link>
-              ))}
+                  </div>
+                ))
+              ) : filteredPosts.length === 0 ? (
+                <div className="col-span-full text-center py-12">
+                  <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <h3 className="text-xl font-semibold text-gray-600 mb-2">No Blog Posts Found</h3>
+                  <p className="text-gray-500">
+                    {selectedCategory === 'All' 
+                      ? "We don't have any blog posts at the moment. Please check back later."
+                      : `No blog posts found in the "${selectedCategory}" category. Try selecting a different category.`
+                    }
+                  </p>
+                </div>
+              ) : (
+                filteredPosts.slice(1).map((post) => (
+                  <Link key={post.id} href={`/blog/${post.slug}`} className="group">
+                    <article className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300">
+                      <div className="aspect-[4/3] overflow-hidden">
+                        <Image
+                          src={getImageUrl(post.featured_image_path)}
+                          alt={post.title}
+                          width={400}
+                          height={300}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      </div>
+                      <div className="p-6">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">
+                            {blogCategories.find(cat => cat.id === post.category_id)?.name || 'General'}
+                          </span>
+                          <span className="text-xs text-gray-500">{calculateReadTime(post.content || '')}</span>
+                        </div>
+                        <h3 className="text-xl font-bold text-black mb-3 group-hover:text-brown transition-colors duration-200">
+                          {post.title}
+                        </h3>
+                        <p className="text-gray-600 text-sm mb-4 leading-relaxed">
+                          {post.excerpt}
+                        </p>
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-brown rounded-full flex items-center justify-center text-white text-xs font-semibold">
+                            {post.author?.charAt(0) || 'A'}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{post.author || 'Author'}</p>
+                            <p className="text-xs text-gray-500">{formatDate(post.created_at)}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </article>
+                  </Link>
+                ))
+              )}
             </div>
 
             {/* Load More Button */}
-            <div className="text-center mt-16">
-              <button className="border-2 border-brown text-brown hover:bg-brown hover:text-white px-8 py-3 rounded-md font-semibold transition-colors duration-200">
-                Load More Articles
-              </button>
-            </div>
+            {!loading && filteredPosts.length > 6 && (
+              <div className="text-center mt-16">
+                <button className="border-2 border-brown text-brown hover:bg-brown hover:text-white px-8 py-3 rounded-md font-semibold transition-colors duration-200">
+                  Load More Articles
+                </button>
+              </div>
+            )}
           </div>
         </section>
       </div>

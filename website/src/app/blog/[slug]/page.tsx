@@ -1,5 +1,11 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { getBlogPostBySlug, getBlogPosts, getBlogCategories } from '@/lib/data';
+import { getStorageUrl } from '@/lib/supabase';
+import type { BlogPost, BlogCategory } from '@/lib/supabase';
 import PageLayout from '@/components/layout/PageLayout';
 
 interface BlogPostDetailProps {
@@ -11,61 +17,137 @@ interface BlogPostDetailProps {
 export default function BlogPostDetail({ params }: BlogPostDetailProps) {
   const { slug } = params;
   
-  // Mock blog data - in a real app, this would come from an API or CMS
-  const blogPosts = [
-    {
-      id: '1',
-      slug: 'discovering-lamu-island-paradise',
-      title: 'Discovering Lamu Island: A Hidden Paradise in Kenya',
-      excerpt: 'Explore the rich culture, stunning beaches, and historic architecture of Lamu Island, one of Kenya\'s most enchanting coastal destinations.',
-      content: `
-        <p>Lamu Island, a UNESCO World Heritage Site, is one of Kenya's most captivating destinations. This ancient Swahili settlement has preserved its rich cultural heritage for over 700 years, making it a living museum of East African coastal civilization.</p>
+  const [currentPost, setCurrentPost] = useState<BlogPost | null>(null);
+  const [relatedPosts, setRelatedPosts] = useState<BlogPost[]>([]);
+  const [blogCategories, setBlogCategories] = useState<BlogCategory[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+
+  // Data loading
+  useEffect(() => {
+    async function loadBlogData() {
+      try {
+        setLoading(true);
+        setNotFound(false);
         
-        <h2>A Journey Through History</h2>
-        <p>Walking through Lamu's narrow stone streets feels like stepping back in time. The town's architecture tells the story of centuries of cultural exchange between African, Arab, Persian, and Indian influences. The coral stone buildings, intricately carved wooden doors, and traditional courtyards create an atmosphere unlike anywhere else in East Africa.</p>
+        const [postData, categoriesData] = await Promise.all([
+          getBlogPostBySlug(slug),
+          getBlogCategories()
+        ]);
         
-        <h2>Cultural Experiences</h2>
-        <p>Lamu offers visitors a chance to experience authentic Swahili culture. From traditional dhow sailing to learning about local crafts, the island provides immersive cultural experiences that connect visitors with the region's rich heritage.</p>
+        if (!postData) {
+          setNotFound(true);
+          setLoading(false);
+          return;
+        }
         
-        <h2>Natural Beauty</h2>
-        <p>Beyond its cultural significance, Lamu boasts pristine beaches, crystal-clear waters, and diverse marine life. The island's unspoiled natural environment provides the perfect backdrop for relaxation and adventure activities.</p>
-      `,
-      image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      author: 'Sarah Johnson',
-      publishedAt: 'March 15, 2024',
-      category: 'Travel Guide',
-      readTime: '5 min read'
-    },
-    {
-      id: '2',
-      slug: 'watamu-marine-national-park-guide',
-      title: 'Watamu Marine National Park: A Snorkeling Paradise',
-      excerpt: 'Dive into the crystal-clear waters of Watamu Marine National Park and discover vibrant coral reefs and exotic marine life.',
-      content: `
-        <p>Watamu Marine National Park is one of Kenya's premier marine conservation areas, protecting some of the most pristine coral reefs on the East African coast. This underwater paradise offers world-class snorkeling and diving experiences.</p>
+        setCurrentPost(postData);
+        setBlogCategories(categoriesData);
         
-        <h2>Marine Biodiversity</h2>
-        <p>The park is home to over 600 species of fish, sea turtles, dolphins, and whale sharks. The coral reefs here are among the most diverse in the Indian Ocean, providing habitat for countless marine species.</p>
+        // Get related posts (same category, excluding current post)
+        const allPosts = await getBlogPosts({ category: postData.category_id });
+        const related = allPosts.filter(post => post.slug !== slug).slice(0, 3);
+        setRelatedPosts(related);
         
-        <h2>Best Snorkeling Spots</h2>
-        <p>The park features several excellent snorkeling locations, each offering unique underwater experiences. From shallow coral gardens perfect for beginners to deeper reef walls for experienced snorkelers.</p>
-        
-        <h2>Conservation Efforts</h2>
-        <p>Local communities and conservation organizations work together to protect this marine ecosystem. Visitors can learn about ongoing conservation projects and how tourism supports marine protection efforts.</p>
-      `,
-      image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      author: 'Michael Chen',
-      publishedAt: 'March 10, 2024',
-      category: 'Activities',
-      readTime: '4 min read'
+      } catch (error) {
+        console.error('Error loading blog post:', error);
+        setNotFound(true);
+      } finally {
+        setLoading(false);
+      }
     }
-  ];
-  
-  // Find the current blog post
-  const currentPost = blogPosts.find(post => post.slug === slug) || blogPosts[0];
-  
-  // Get related posts (excluding current post)
-  const relatedPosts = blogPosts.filter(post => post.slug !== slug).slice(0, 3);
+    
+    loadBlogData();
+  }, [slug]);
+
+  // Helper functions
+  const calculateReadTime = (content: string): string => {
+    const wordsPerMinute = 200;
+    const wordCount = content ? content.split(' ').length : 0;
+    const minutes = Math.ceil(wordCount / wordsPerMinute);
+    return `${minutes} min read`;
+  };
+
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  };
+
+  const getImageUrl = (imagePath: string | null): string => {
+    if (imagePath) {
+      return getStorageUrl('blog-images', imagePath);
+    }
+    return 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80';
+  };
+
+  // Loading state
+  if (loading) {
+    return (
+      <PageLayout>
+        <div>
+          {/* Loading skeleton */}
+          <article className="bg-white">
+            <div className="relative h-96 lg:h-[500px] bg-gray-300 animate-pulse"></div>
+            
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="py-16 space-y-6">
+                <div className="flex justify-between">
+                  <div className="flex space-x-2">
+                    <div className="h-6 w-20 bg-gray-300 rounded-full animate-pulse"></div>
+                    <div className="h-6 w-16 bg-gray-300 rounded animate-pulse"></div>
+                  </div>
+                  <div className="flex space-x-2">
+                    <div className="h-6 w-6 bg-gray-300 rounded animate-pulse"></div>
+                    <div className="h-6 w-6 bg-gray-300 rounded animate-pulse"></div>
+                  </div>
+                </div>
+                <div className="h-12 bg-gray-300 rounded animate-pulse"></div>
+                <div className="flex space-x-3">
+                  <div className="w-12 h-12 bg-gray-300 rounded-full animate-pulse"></div>
+                  <div className="space-y-2">
+                    <div className="h-4 w-32 bg-gray-300 rounded animate-pulse"></div>
+                    <div className="h-3 w-24 bg-gray-300 rounded animate-pulse"></div>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="h-4 bg-gray-300 rounded animate-pulse"></div>
+                  <div className="h-4 bg-gray-300 rounded animate-pulse"></div>
+                  <div className="h-4 bg-gray-300 rounded w-3/4 animate-pulse"></div>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+      </PageLayout>
+    );
+  }
+
+  // Not found state
+  if (notFound || !currentPost) {
+    return (
+      <PageLayout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <h1 className="text-2xl font-bold text-black mb-4">Blog Post Not Found</h1>
+            <p className="text-gray-600 mb-6">The blog post you're looking for could not be found.</p>
+            <Link
+              href="/blog"
+              className="inline-block bg-brown hover:bg-brown/90 text-white px-6 py-3 rounded-md font-semibold transition-colors duration-200"
+            >
+              Back to Blog
+            </Link>
+          </div>
+        </div>
+      </PageLayout>
+    );
+  }
 
   return (
     <PageLayout>
@@ -75,7 +157,7 @@ export default function BlogPostDetail({ params }: BlogPostDetailProps) {
           {/* Hero Image */}
           <div className="relative h-96 lg:h-[500px]">
             <Image
-              src={currentPost.image}
+              src={getImageUrl(currentPost.featured_image_path)}
               alt={currentPost.title}
               fill
               className="object-cover"
@@ -90,9 +172,9 @@ export default function BlogPostDetail({ params }: BlogPostDetailProps) {
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center space-x-4">
                   <span className="px-4 py-2 bg-brown/10 text-brown text-sm font-medium rounded-full">
-                    {currentPost.category}
+                    {blogCategories.find(cat => cat.id === currentPost.category_id)?.name || 'General'}
                   </span>
-                  <span className="text-sm text-gray-500">{currentPost.readTime}</span>
+                  <span className="text-sm text-gray-500">{calculateReadTime(currentPost.content || '')}</span>
                 </div>
                 <div className="flex space-x-4">
                   <button className="text-gray-500 hover:text-brown">
@@ -116,18 +198,18 @@ export default function BlogPostDetail({ params }: BlogPostDetailProps) {
               {/* Author Info */}
               <div className="flex items-center space-x-4 pb-8 border-b border-gray-200 mb-12">
                 <div className="w-12 h-12 bg-brown rounded-full flex items-center justify-center text-white text-lg font-semibold">
-                  {currentPost.author.charAt(0)}
+                  {currentPost.author?.charAt(0) || 'A'}
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-900">{currentPost.author}</p>
-                  <p className="text-sm text-gray-500">Published on {currentPost.publishedAt}</p>
+                  <p className="font-semibold text-gray-900">{currentPost.author || 'Author'}</p>
+                  <p className="text-sm text-gray-500">Published on {formatDate(currentPost.created_at)}</p>
                 </div>
               </div>
               
               {/* Article Content */}
               <div 
                 className="prose prose-lg max-w-none prose-headings:text-black prose-headings:font-bold prose-p:text-gray-700 prose-p:leading-relaxed prose-a:text-brown hover:prose-a:text-brown/80"
-                dangerouslySetInnerHTML={{ __html: currentPost.content }}
+                dangerouslySetInnerHTML={{ __html: currentPost.content || '' }}
               />
             </div>
           </div>
@@ -144,7 +226,7 @@ export default function BlogPostDetail({ params }: BlogPostDetailProps) {
                   <article className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300">
                     <div className="aspect-[4/3] overflow-hidden">
                       <Image
-                        src={post.image}
+                        src={getImageUrl(post.featured_image_path)}
                         alt={post.title}
                         width={400}
                         height={300}
@@ -153,7 +235,7 @@ export default function BlogPostDetail({ params }: BlogPostDetailProps) {
                     </div>
                     <div className="p-6">
                       <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">
-                        {post.category}
+                        {blogCategories.find(cat => cat.id === post.category_id)?.name || 'General'}
                       </span>
                       <h3 className="text-xl font-bold text-black mt-3 mb-3 group-hover:text-brown transition-colors duration-200">
                         {post.title}

@@ -1,10 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { getProperties, getCategoryBySlug } from '@/lib/data';
+import { getStorageUrl } from '@/lib/supabase';
+import type { Property, PropertyCategory } from '@/lib/supabase';
 import PageLayout from '@/components/layout/PageLayout';
 
 interface PropertyCardProps {
-  id: number;
+  id: string;
   images: string[];
   title: string;
   location: string;
@@ -106,6 +109,75 @@ function PropertyCard({ id, images, title, location, price, slug }: PropertyCard
 }
 
 export default function LamuProperties() {
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [category, setCategory] = useState<PropertyCategory | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        setLoading(true);
+        
+        // Load category data and properties in parallel
+        const [categoryData, lamuProperties] = await Promise.all([
+          getCategoryBySlug('lamu'),
+          getProperties({
+            listing_type: 'rental',
+            category_slug: 'lamu'
+          })
+        ]);
+        
+        setCategory(categoryData);
+        setProperties(lamuProperties);
+      } catch (error) {
+        console.error('Error loading Lamu data:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    loadData();
+  }, []);
+
+  // Transform properties for display
+  const transformedProperties = properties.map(property => {
+    // Combine hero image and gallery images
+    const images = [];
+    
+    // Add hero image first if available
+    if (property.hero_image_path) {
+      images.push(getStorageUrl('property-images', property.hero_image_path));
+    }
+    
+    // Add gallery images if available
+    if ((property as any).property_images && Array.isArray((property as any).property_images)) {
+      const galleryImages = (property as any).property_images
+        .filter((img: any) => img.is_active)
+        .sort((a: any, b: any) => a.sort_order - b.sort_order)
+        .map((img: any) => getStorageUrl('property-images', img.image_path));
+      
+      images.push(...galleryImages);
+    }
+    
+    // Fallback to placeholder if no images
+    if (images.length === 0) {
+      images.push('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');
+    }
+    
+    const price = property.rental_price 
+      ? `From ${property.currency} ${property.rental_price?.toLocaleString()}/night`
+      : 'Contact for price';
+
+    return {
+      id: property.id,
+      images,
+      title: property.title,
+      location: property.specific_location || 'Lamu Island',
+      price,
+      slug: property.slug
+    };
+  });
+
   return (
     <PageLayout>
       <div>
@@ -114,21 +186,26 @@ export default function LamuProperties() {
           <div 
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
             style={{
-              backgroundImage: 'url("https://images.unsplash.com/photo-1544551763-46a013bb70d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80")'
+              backgroundImage: `url("${
+                category?.hero_image_path 
+                  ? getStorageUrl('property-images', category.hero_image_path)
+                  : 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80'
+              }")`
             }}
           />
           <div className="absolute inset-0 bg-black/40" />
           
           <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-4">
             <h1 className="text-4xl lg:text-6xl font-bold mb-6">
-              <span className="text-brown">Lamu</span> Island
+              <span className="text-brown">{category?.name || 'Lamu'}</span> {category?.name === 'Lamu' ? 'Island' : ''}
             </h1>
             <p className="text-xl lg:text-2xl mb-8 text-white/90">
               Where ancient Swahili culture meets modern luxury
             </p>
             <p className="text-lg text-white/80 max-w-3xl mx-auto">
-              Discover our exclusive collection of luxury properties on this UNESCO World Heritage site, 
-              where traditional dhows still sail and stone buildings tell stories of centuries past.
+              {category?.description || 
+                'Discover our exclusive collection of luxury properties on this UNESCO World Heritage site, where traditional dhows still sail and stone buildings tell stories of centuries past.'
+              }
             </p>
           </div>
         </section>
@@ -138,35 +215,46 @@ export default function LamuProperties() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="text-3xl lg:text-4xl font-bold text-black mb-4">
-                Lamu Properties
+                {category?.name || 'Lamu'} Properties
               </h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                Handpicked luxury rentals in Lamu's most desirable locations
+                Handpicked luxury rentals in {category?.name || 'Lamu'}'s most desirable locations
               </p>
             </div>
             
-            {/* 3x2 Grid as per Figma design */}
+            {/* Properties Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-              {Array.from({ length: 6 }, (_, i) => {
-                const propertyImages = [
-                  "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-                  "https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-                  "https://images.unsplash.com/photo-1613977257363-707ba9348227?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-                  "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                ];
-                
-                return (
+              {loading ? (
+                // Loading skeleton
+                Array.from({ length: 6 }, (_, i) => (
+                  <div key={i} className="bg-white rounded-lg overflow-hidden shadow-md animate-pulse">
+                    <div className="aspect-[4/3] bg-gray-300"></div>
+                    <div className="p-4 space-y-2">
+                      <div className="h-5 bg-gray-300 rounded w-3/4"></div>
+                      <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+                      <div className="h-5 bg-gray-300 rounded w-1/3"></div>
+                    </div>
+                  </div>
+                ))
+              ) : transformedProperties.length === 0 ? (
+                <div className="col-span-full text-center py-12">
+                  <p className="text-gray-500 text-lg">
+                    No properties available in {category?.name || 'Lamu'} at the moment.
+                  </p>
+                </div>
+              ) : (
+                transformedProperties.map((property) => (
                   <PropertyCard 
-                    key={i}
-                    id={i + 1}
-                    images={propertyImages}
-                    title={`Lamu Villa ${i + 1}`}
-                    location="Lamu Old Town"
-                    price={`From KES ${(25 + (i * 5)) * 1000}/night`}
-                    slug={`lamu-villa-${i + 1}`}
+                    key={property.id}
+                    id={property.id}
+                    images={property.images}
+                    title={property.title}
+                    location={property.location}
+                    price={property.price}
+                    slug={property.slug}
                   />
-                );
-              })}
+                ))
+              )}
             </div>
 
             {/* Info Cards Section - Two rounded cards as per Figma */}
