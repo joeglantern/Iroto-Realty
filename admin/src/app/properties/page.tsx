@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
 import { useAuth } from '@/contexts/AuthContext';
-import { getProperties, getPropertyCategories, getPropertyTypes, createProperty, createPropertyCategory, generateSlug } from '@/lib/properties';
+import { getProperties, getPropertyCategories, getPropertyTypes, createProperty, createPropertyCategory, generateSlug, deleteProperty, deletePropertyCategory, updateProperty, getProperty } from '@/lib/properties';
 import { uploadFile, getStorageUrl, supabase } from '@/lib/supabase';
 import type { Property, PropertyCategory, PropertyType } from '@/lib/supabase';
 
@@ -19,6 +20,11 @@ export default function Properties() {
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
+  
+  // Delete modal states
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<{id: string, name: string, type: 'property' | 'category'} | null>(null);
+  const [deleting, setDeleting] = useState(false);
   
   // Form states
   const [formData, setFormData] = useState({
@@ -82,10 +88,9 @@ export default function Properties() {
       setUploading(true);
       console.log('Starting property creation...');
 
-      // Create property first to get ID - let the database generate the slug automatically
+      // Prepare property data
       const propertyData = {
         ...formData,
-        // Remove manual slug generation - database trigger will handle this
         rental_price: formData.rental_price ? parseFloat(formData.rental_price) : undefined,
         sale_price: formData.sale_price ? parseFloat(formData.sale_price) : undefined,
         bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : undefined,
@@ -266,6 +271,49 @@ export default function Properties() {
     setGalleryImages([]);
   };
 
+  // Edit handlers
+  const handleEditClick = (propertyId: string) => {
+    // Navigate to dedicated edit page
+    window.location.href = `/properties/edit/${propertyId}`;
+  };
+
+  // Delete handlers
+  const handleDeleteClick = (id: string, name: string, type: 'property' | 'category') => {
+    setItemToDelete({ id, name, type });
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!itemToDelete) return;
+
+    try {
+      setDeleting(true);
+      if (itemToDelete.type === 'property') {
+        await deleteProperty(itemToDelete.id);
+        alert('Property deleted successfully!');
+      } else {
+        await deletePropertyCategory(itemToDelete.id);
+        alert('Category deleted successfully!');
+      }
+      
+      setShowDeleteModal(false);
+      setItemToDelete(null);
+      loadData(); // Reload data
+    } catch (error) {
+      console.error('Error deleting item:', error);
+      alert(`Error deleting ${itemToDelete.type}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleDeleteModalClose = () => {
+    if (!deleting) {
+      setShowDeleteModal(false);
+      setItemToDelete(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -436,8 +484,18 @@ export default function Properties() {
                         </span>
                       )}
                       <div className="flex space-x-2">
-                        <button className="text-primary hover:text-primary/80">Edit</button>
-                        <button className="text-red-600 hover:text-red-800">Delete</button>
+                        <button 
+                          onClick={() => handleEditClick(property.id)}
+                          className="text-primary hover:text-primary/80"
+                        >
+                          Edit
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteClick(property.id, property.title, 'property')}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          Delete
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -827,6 +885,7 @@ export default function Properties() {
         </div>
       )}
 
+
       {/* Category Management Modal */}
       {showCategoryModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -914,7 +973,12 @@ export default function Properties() {
                       </div>
                       <div className="flex space-x-2">
                         <button className="text-primary hover:text-primary/80 text-sm">Edit</button>
-                        <button className="text-red-600 hover:text-red-800 text-sm">Delete</button>
+                        <button 
+                          onClick={() => handleDeleteClick(category.id, category.name, 'category')}
+                          className="text-red-600 hover:text-red-800 text-sm"
+                        >
+                          Delete
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -924,6 +988,18 @@ export default function Properties() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={handleDeleteModalClose}
+        onConfirm={handleDeleteConfirm}
+        title={`Delete ${itemToDelete?.type === 'property' ? 'Property' : 'Category'}`}
+        message={`Are you sure you want to delete this ${itemToDelete?.type}?`}
+        itemName={itemToDelete?.name}
+        deleteButtonText={`Delete ${itemToDelete?.type === 'property' ? 'Property' : 'Category'}`}
+        isDeleting={deleting}
+      />
     </div>
     </ProtectedRoute>
   );

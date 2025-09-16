@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
 import { useAuth } from '@/contexts/AuthContext';
-import { getReviews, createReview } from '@/lib/reviews';
+import { getReviews, createReview, deleteReview, updateReview, getReview } from '@/lib/reviews';
 import { getProperties } from '@/lib/properties';
 import { uploadFile, supabase } from '@/lib/supabase';
 import type { Review, Property } from '@/lib/supabase';
@@ -14,10 +15,17 @@ export default function Reviews() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [editingReview, setEditingReview] = useState<any>(null);
+  
+  // Delete modal states
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [reviewToDelete, setReviewToDelete] = useState<{id: string, reviewer: string} | null>(null);
+  const [deleting, setDeleting] = useState(false);
   
   // Form states
   const [formData, setFormData] = useState({
@@ -60,7 +68,8 @@ export default function Reviews() {
 
     try {
       setUploading(true);
-      console.log('Starting review creation...');
+      const isEditing = !!editingReview;
+      console.log(isEditing ? 'Starting review update...' : 'Starting review creation...');
 
       const reviewData = {
         ...formData,
@@ -69,12 +78,18 @@ export default function Reviews() {
         verified_stay: true,
         status: 'approved' as const,
         is_active: true
-        // Don't include updated_at - let the database handle it
       };
 
-      console.log('Creating review with data:', reviewData);
-      const review = await createReview(reviewData);
-      console.log('Review created successfully:', review);
+      let review;
+      if (isEditing) {
+        console.log('Updating review with data:', reviewData);
+        review = await updateReview(editingReview.id, reviewData);
+        console.log('Review updated successfully:', review);
+      } else {
+        console.log('Creating review with data:', reviewData);
+        review = await createReview(reviewData);
+        console.log('Review created successfully:', review);
+      }
 
       // Upload reviewer photo if provided
       if (reviewerPhoto && review) {
@@ -104,14 +119,17 @@ export default function Reviews() {
         }
       }
 
-      alert('Review added successfully!');
+      alert(isEditing ? 'Review updated successfully!' : 'Review added successfully!');
       setShowUploadModal(false);
+      setShowEditModal(false);
+      setEditingReview(null);
       resetForm();
       loadData(); // Reload data
     } catch (error) {
-      console.error('Error creating review:', error);
+      const action = editingReview ? 'updating' : 'creating';
+      console.error(`Error ${action} review:`, error);
       console.error('Full error details:', JSON.stringify(error, null, 2));
-      alert(`Error creating review: ${error instanceof Error ? error.message : 'Unknown error'}. Check console for details.`);
+      alert(`Error ${action} review: ${error instanceof Error ? error.message : 'Unknown error'}. Check console for details.`);
     } finally {
       setUploading(false);
     }
@@ -127,6 +145,76 @@ export default function Reviews() {
       is_featured: false
     });
     setReviewerPhoto(null);
+  };
+
+  // Edit handlers
+  const handleEditClick = async (reviewId: string) => {
+    try {
+      setLoading(true);
+      const review = await getReview(reviewId);
+      setEditingReview(review);
+      
+      // Pre-populate form with existing data
+      setFormData({
+        reviewer_name: review.reviewer_name || '',
+        property_id: review.property_id || '',
+        rating: review.rating?.toString() || '',
+        comment: review.comment || '',
+        stay_date: review.stay_date || '',
+        is_featured: review.is_featured || false
+      });
+      
+      setShowEditModal(true);
+    } catch (error) {
+      console.error('Error loading review for edit:', error);
+      alert('Error loading review details. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Delete handlers
+  const handleDeleteClick = (id: string, reviewer: string) => {
+    setReviewToDelete({ id, reviewer });
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!reviewToDelete) return;
+
+    try {
+      setDeleting(true);
+      await deleteReview(reviewToDelete.id);
+      alert('Review deleted successfully!');
+      
+      setShowDeleteModal(false);
+      setReviewToDelete(null);
+      loadData(); // Reload data
+    } catch (error) {
+      console.error('Error deleting review:', error);
+      alert(`Error deleting review: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleDeleteModalClose = () => {
+    if (!deleting) {
+      setShowDeleteModal(false);
+      setReviewToDelete(null);
+    }
+  };
+
+  // Toggle featured status
+  const handleToggleFeatured = async (reviewId: string, currentStatus: boolean) => {
+    try {
+      await updateReview(reviewId, { is_featured: !currentStatus });
+      alert(`Review ${!currentStatus ? 'marked as featured' : 'removed from featured'}!`);
+      loadData(); // Reload data
+    } catch (error) {
+      console.error('Error updating review:', error);
+      alert(`Error updating review: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -314,17 +402,26 @@ export default function Reviews() {
                     </div>
                     <p className="text-gray-700 mb-4">{review.comment}</p>
                     <div className="flex flex-wrap gap-2">
-                      <button className="px-3 py-1 text-primary border border-primary text-sm rounded hover:bg-primary/10 transition-colors">
+                      <button 
+                        onClick={() => handleEditClick(review.id)}
+                        className="px-3 py-1 text-primary border border-primary text-sm rounded hover:bg-primary/10 transition-colors"
+                      >
                         Edit
                       </button>
-                      <button className="px-3 py-1 text-red-600 text-sm hover:text-red-800 transition-colors">
+                      <button 
+                        onClick={() => handleDeleteClick(review.id, review.reviewer_name)}
+                        className="px-3 py-1 text-red-600 text-sm hover:text-red-800 transition-colors"
+                      >
                         Delete
                       </button>
-                      <button className={`px-3 py-1 text-sm rounded transition-colors ${
-                        review.is_featured 
-                          ? 'text-yellow-700 border border-yellow-300 hover:bg-yellow-50' 
-                          : 'text-gray-700 border border-gray-300 hover:bg-gray-50'
-                      }`}>
+                      <button 
+                        onClick={() => handleToggleFeatured(review.id, review.is_featured)}
+                        className={`px-3 py-1 text-sm rounded transition-colors ${
+                          review.is_featured 
+                            ? 'text-yellow-700 border border-yellow-300 hover:bg-yellow-50' 
+                            : 'text-gray-700 border border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
                         {review.is_featured ? 'Remove from Featured' : 'Mark as Featured'}
                       </button>
                     </div>
@@ -466,7 +563,7 @@ export default function Reviews() {
                         onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
                         className="sr-only peer" 
                       />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/25 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                      <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/25 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                     </label>
                   </div>
                 </div>
@@ -492,6 +589,140 @@ export default function Reviews() {
           </div>
         </div>
       )}
+
+      {/* Edit Review Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">Edit Review</h3>
+              <button 
+                onClick={() => {
+                  setShowEditModal(false);
+                  setEditingReview(null);
+                  resetForm();
+                }}
+                className="text-gray-400 hover:text-gray-600"
+                disabled={uploading}
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-6">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Reviewer Name</label>
+                    <input
+                      type="text"
+                      value={formData.reviewer_name}
+                      onChange={(e) => setFormData({ ...formData, reviewer_name: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                      placeholder="John Smith"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Property</label>
+                    <select 
+                      value={formData.property_id}
+                      onChange={(e) => setFormData({ ...formData, property_id: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                      required
+                    >
+                      <option value="">Select a property</option>
+                      {properties.map((property) => (
+                        <option key={property.id} value={property.id}>
+                          {property.title}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Rating</label>
+                    <select 
+                      value={formData.rating}
+                      onChange={(e) => setFormData({ ...formData, rating: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                      required
+                    >
+                      <option value="">Select rating</option>
+                      <option value="5">5 Stars - Excellent</option>
+                      <option value="4">4 Stars - Very Good</option>
+                      <option value="3">3 Stars - Good</option>
+                      <option value="2">2 Stars - Fair</option>
+                      <option value="1">1 Star - Poor</option>
+                    </select>
+                  </div>
+                  <div className="flex items-center pt-8">
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={formData.is_featured}
+                        onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
+                        className="sr-only peer" 
+                      />
+                      <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/25 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                      <span className="ml-3 text-sm font-medium text-gray-900">Featured Review</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Review Comment</label>
+                  <textarea
+                    rows={4}
+                    value={formData.comment}
+                    onChange={(e) => setFormData({ ...formData, comment: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="Write the customer's review comment here..."
+                    required
+                  />
+                </div>
+
+                <div className="flex justify-end space-x-4 border-t pt-6">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowEditModal(false);
+                      setEditingReview(null);
+                      resetForm();
+                    }}
+                    className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+                    disabled={uploading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50"
+                    disabled={uploading}
+                  >
+                    {uploading ? 'Updating...' : 'Update Review'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={handleDeleteModalClose}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Review"
+        message="Are you sure you want to delete this review?"
+        itemName={reviewToDelete?.reviewer}
+        deleteButtonText="Delete Review"
+        isDeleting={deleting}
+      />
     </div>
   );
 }

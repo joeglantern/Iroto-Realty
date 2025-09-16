@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
 import { useAuth } from '@/contexts/AuthContext';
-import { getBlogPosts, getBlogCategories, createBlogPost, generateSlug } from '@/lib/blog';
+import { getBlogPosts, getBlogCategories, createBlogPost, generateSlug, deleteBlogPost, updateBlogPost, getBlogPost } from '@/lib/blog';
 import { uploadFile, supabase } from '@/lib/supabase';
 import type { BlogPost, BlogCategory } from '@/lib/supabase';
 
@@ -14,8 +15,15 @@ export default function Blog() {
   const [categories, setCategories] = useState<BlogCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [editingPost, setEditingPost] = useState<any>(null);
+  
+  // Delete modal states
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [postToDelete, setPostToDelete] = useState<{id: string, title: string} | null>(null);
+  const [deleting, setDeleting] = useState(false);
   
   // Form states
   const [formData, setFormData] = useState({
@@ -62,17 +70,25 @@ export default function Blog() {
 
     try {
       setUploading(true);
-      console.log('Starting blog post creation...');
+      const isEditing = !!editingPost;
+      console.log(isEditing ? 'Starting blog post update...' : 'Starting blog post creation...');
 
-      // Create blog post first to get ID
+      // Prepare post data
       const postData = {
         ...formData,
-        slug: generateSlug(formData.title),
+        slug: editingPost ? editingPost.slug : generateSlug(formData.title), // Keep existing slug when editing
       };
 
-      console.log('Creating blog post with data:', postData);
-      const post = await createBlogPost(postData);
-      console.log('Blog post created successfully:', post);
+      let post;
+      if (isEditing) {
+        console.log('Updating blog post with data:', postData);
+        post = await updateBlogPost(editingPost.id, postData);
+        console.log('Blog post updated successfully:', post);
+      } else {
+        console.log('Creating blog post with data:', postData);
+        post = await createBlogPost(postData);
+        console.log('Blog post created successfully:', post);
+      }
 
       // Upload featured image if provided
       if (featuredImage && post) {
@@ -102,14 +118,16 @@ export default function Blog() {
         }
       }
 
-      alert('Blog post created successfully!');
+      alert(isEditing ? 'Blog post updated successfully!' : 'Blog post created successfully!');
       setShowUploadModal(false);
+      setShowEditModal(false);
+      setEditingPost(null);
       resetForm();
       loadData(); // Reload data
     } catch (error) {
-      console.error('Error creating blog post:', error);
+      console.error(`Error ${isEditing ? 'updating' : 'creating'} blog post:`, error);
       console.error('Full error details:', JSON.stringify(error, null, 2));
-      alert(`Error creating blog post: ${error instanceof Error ? error.message : 'Unknown error'}. Check console for details.`);
+      alert(`Error ${isEditing ? 'updating' : 'creating'} blog post: ${error instanceof Error ? error.message : 'Unknown error'}. Check console for details.`);
     } finally {
       setUploading(false);
     }
@@ -129,6 +147,68 @@ export default function Blog() {
       is_featured: false
     });
     setFeaturedImage(null);
+  };
+
+  // Edit handlers
+  const handleEditClick = async (postId: string) => {
+    try {
+      setLoading(true);
+      const post = await getBlogPost(postId);
+      setEditingPost(post);
+      
+      // Pre-populate form with existing data
+      setFormData({
+        title: post.title || '',
+        excerpt: post.excerpt || '',
+        content: post.content || '',
+        category_id: post.category_id || '',
+        author_name: post.author_name || '',
+        read_time: post.read_time || '',
+        meta_description: post.meta_description || '',
+        focus_keyword: post.focus_keyword || '',
+        status: post.status || 'draft',
+        is_featured: post.is_featured || false
+      });
+      
+      setShowEditModal(true);
+    } catch (error) {
+      console.error('Error loading blog post for edit:', error);
+      alert('Error loading blog post details. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Delete handlers
+  const handleDeleteClick = (id: string, title: string) => {
+    setPostToDelete({ id, title });
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!postToDelete) return;
+
+    try {
+      setDeleting(true);
+      await deleteBlogPost(postToDelete.id);
+      alert('Blog post deleted successfully!');
+      
+      setShowDeleteModal(false);
+      setPostToDelete(null);
+      loadData(); // Reload data
+    } catch (error) {
+      console.error('Error deleting blog post:', error);
+      alert(`Error deleting blog post: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleDeleteModalClose = () => {
+    if (!deleting) {
+      setShowDeleteModal(false);
+      setPostToDelete(null);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -285,8 +365,18 @@ export default function Blog() {
                         </span>
                       )}
                       <div className="flex space-x-2">
-                        <button className="text-primary hover:text-primary/80">Edit</button>
-                        <button className="text-red-600 hover:text-red-800">Delete</button>
+                        <button 
+                          onClick={() => handleEditClick(post.id)}
+                          className="text-primary hover:text-primary/80"
+                        >
+                          Edit
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteClick(post.id, post.title)}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          Delete
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -504,6 +594,145 @@ export default function Blog() {
           </div>
         </div>
       )}
+
+      {/* Edit Blog Post Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">Edit Blog Post</h3>
+              <button 
+                onClick={() => {
+                  setShowEditModal(false);
+                  setEditingPost(null);
+                  resetForm();
+                }}
+                className="text-gray-400 hover:text-gray-600"
+                disabled={uploading}
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-6">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Post Title</label>
+                  <input
+                    type="text"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="Ultimate Guide to Coastal Living in Kenya"
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                    <select 
+                      value={formData.category_id}
+                      onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                      required
+                    >
+                      <option value="">Select Category</option>
+                      {categories.map((category) => (
+                        <option key={category.id} value={category.id}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Author Name</label>
+                    <input
+                      type="text"
+                      value={formData.author_name}
+                      onChange={(e) => setFormData({ ...formData, author_name: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                      placeholder="John Doe"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                    <select 
+                      value={formData.status}
+                      onChange={(e) => setFormData({ ...formData, status: e.target.value as 'draft' | 'published' })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    >
+                      <option value="draft">Draft</option>
+                      <option value="published">Published</option>
+                    </select>
+                  </div>
+                  <div className="flex items-center pt-8">
+                    <input
+                      type="checkbox"
+                      id="edit-featured"
+                      checked={formData.is_featured}
+                      onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
+                      className="mr-2 h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                    />
+                    <label htmlFor="edit-featured" className="text-sm font-medium text-gray-700">Feature this post</label>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Content</label>
+                  <textarea
+                    rows={8}
+                    value={formData.content}
+                    onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="Write your blog post content here..."
+                    required
+                  />
+                </div>
+
+                <div className="flex justify-end space-x-4 border-t pt-6">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowEditModal(false);
+                      setEditingPost(null);
+                      resetForm();
+                    }}
+                    className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+                    disabled={uploading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50"
+                    disabled={uploading}
+                  >
+                    {uploading ? 'Updating...' : 'Update Post'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={handleDeleteModalClose}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Blog Post"
+        message="Are you sure you want to delete this blog post?"
+        itemName={postToDelete?.title}
+        deleteButtonText="Delete Post"
+        isDeleting={deleting}
+      />
     </div>
   );
 }

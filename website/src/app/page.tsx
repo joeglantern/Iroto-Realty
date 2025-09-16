@@ -13,9 +13,10 @@ interface PropertyCardProps {
   location: string;
   price: string;
   slug: string;
+  listingType?: 'rental' | 'sale' | 'both';
 }
 
-function PropertyCard({ images, title, location, price, slug }: PropertyCardProps) {
+function PropertyCard({ images, title, location, price, slug, listingType }: PropertyCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const nextImage = () => {
@@ -36,6 +37,32 @@ function PropertyCard({ images, title, location, price, slug }: PropertyCardProp
           }}
         />
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-200" />
+        
+        {/* Listing Type Badge */}
+        {listingType && (
+          <div className="absolute top-4 left-4">
+            {listingType === 'sale' && (
+              <span className="bg-brown text-white px-3 py-1 rounded-full text-sm font-medium">
+                FOR SALE
+              </span>
+            )}
+            {listingType === 'rental' && (
+              <span className="bg-gray-700 text-white px-3 py-1 rounded-full text-sm font-medium">
+                FOR RENT
+              </span>
+            )}
+            {listingType === 'both' && (
+              <div className="flex flex-col gap-1">
+                <span className="bg-brown text-white px-2 py-1 rounded-full text-xs font-medium">
+                  FOR SALE
+                </span>
+                <span className="bg-gray-700 text-white px-2 py-1 rounded-full text-xs font-medium">
+                  FOR RENT
+                </span>
+              </div>
+            )}
+          </div>
+        )}
         
         {/* Navigation Arrows */}
         <button
@@ -518,7 +545,8 @@ function PropertiesCarousel() {
       title: property.title,
       location: property.specific_location || 'Kenya Coast',
       price,
-      slug: property.slug
+      slug: property.slug,
+      listingType: property.listing_type
     };
   });
 
@@ -610,6 +638,7 @@ function PropertiesCarousel() {
                             location={property.location}
                             price={property.price}
                             slug={property.slug}
+                            listingType={property.listingType}
                           />
                         ))}
                     </div>

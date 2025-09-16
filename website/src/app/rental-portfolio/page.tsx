@@ -17,9 +17,10 @@ interface PropertyCardProps {
   slug: string;
   bedrooms: number;
   bathrooms: number;
+  listingType?: 'rental' | 'sale' | 'both';
 }
 
-function PropertyCard({ id, images, title, location, price, slug, bedrooms, bathrooms }: PropertyCardProps) {
+function PropertyCard({ id, images, title, location, price, slug, bedrooms, bathrooms, listingType = 'rental' }: PropertyCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const nextImage = () => {
@@ -40,6 +41,32 @@ function PropertyCard({ id, images, title, location, price, slug, bedrooms, bath
           }}
         />
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-200" />
+        
+        {/* Listing Type Badge */}
+        {listingType && (
+          <div className="absolute top-4 left-4">
+            {listingType === 'sale' && (
+              <span className="bg-brown text-white px-3 py-1 rounded-full text-sm font-medium">
+                FOR SALE
+              </span>
+            )}
+            {listingType === 'rental' && (
+              <span className="bg-gray-700 text-white px-3 py-1 rounded-full text-sm font-medium">
+                FOR RENT
+              </span>
+            )}
+            {listingType === 'both' && (
+              <div className="flex flex-col gap-1">
+                <span className="bg-brown text-white px-2 py-1 rounded-full text-xs font-medium">
+                  FOR SALE
+                </span>
+                <span className="bg-gray-700 text-white px-2 py-1 rounded-full text-xs font-medium">
+                  FOR RENT
+                </span>
+              </div>
+            )}
+          </div>
+        )}
         
         {/* Navigation Arrows */}
         <button
@@ -641,6 +668,7 @@ export default function RentalPortfolio() {
                       slug={property.slug}
                       bedrooms={property.bedrooms || 0}
                       bathrooms={property.bathrooms || 0}
+                      listingType={property.listing_type}
                     />
                   );
                 })
