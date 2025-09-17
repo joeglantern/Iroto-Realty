@@ -136,25 +136,32 @@ export default function LamuProperties() {
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setShowSuggestions(false);
     
     // Create search parameters
     const params = new URLSearchParams();
-    if (searchData.search) params.append('search', searchData.search);
+    if (searchData.search) params.append('q', searchData.search);
     params.append('location', 'Lamu');
     params.append('type', 'rental');
     
     // Navigate to search page with results
-    router.push(`/search${params.toString() ? '?' + params.toString() : ''}`);
+    window.location.href = `/search?${params.toString()}`;
   };
 
   // Debounced search for suggestions (Lamu rental properties only)
   useEffect(() => {
     const timer = setTimeout(async () => {
-      if (searchData.search.length > 2) {
+      if (searchData.search.trim().length > 2) {
+        setIsLoading(true);
         try {
-          setIsLoading(true);
-          const results = await getSearchSuggestions(searchData.search, { type: 'rental', location: 'Lamu' });
-          setSuggestions(results);
+          const results = await getSearchSuggestions(searchData.search, 5);
+          // Filter for Lamu rental properties
+          const lamuResults = results.filter(property => 
+            (property.listing_type === 'rental' || property.listing_type === 'both') &&
+            (property.specific_location?.toLowerCase().includes('lamu') || 
+             property.title.toLowerCase().includes('lamu'))
+          );
+          setSuggestions(lamuResults);
           setShowSuggestions(true);
           setSelectedSuggestionIndex(-1);
         } catch (error) {

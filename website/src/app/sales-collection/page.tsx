@@ -420,25 +420,30 @@ export default function SalesCollection() {
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setShowSuggestions(false);
     
     // Create search parameters
     const params = new URLSearchParams();
-    if (searchData.search) params.append('search', searchData.search);
+    if (searchData.search) params.append('q', searchData.search);
     if (searchData.location) params.append('location', searchData.location);
     if (searchData.type) params.append('type', searchData.type);
     
     // Navigate to search page with results
-    router.push(`/search${params.toString() ? '?' + params.toString() : ''}`);
+    window.location.href = `/search?${params.toString()}`;
   };
 
   // Debounced search for suggestions (sale properties only)
   useEffect(() => {
     const timer = setTimeout(async () => {
-      if (searchData.search.length > 2) {
+      if (searchData.search.trim().length > 2) {
+        setIsLoading(true);
         try {
-          setIsLoading(true);
-          const results = await getSearchSuggestions(searchData.search, { type: 'sale' });
-          setSuggestions(results);
+          const results = await getSearchSuggestions(searchData.search, 5);
+          // Filter for sale properties
+          const saleResults = results.filter(property => 
+            property.listing_type === 'sale' || property.listing_type === 'both'
+          );
+          setSuggestions(saleResults);
           setShowSuggestions(true);
           setSelectedSuggestionIndex(-1);
         } catch (error) {
