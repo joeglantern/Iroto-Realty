@@ -20,8 +20,11 @@ interface AuthContextType {
   loading: boolean;
   isAdmin: boolean;
   isSuperAdmin: boolean;
+  authError: string | null;
+  isOnline: boolean;
   signOut: () => Promise<void>;
   retryAuth: () => Promise<void>;
+  clearAuthError: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -38,6 +41,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const retryTimeoutRef = useRef<NodeJS.Timeout>();
   const maxRetries = 3;
   const retryDelay = 2000;
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [isOnline, setIsOnline] = useState(true);
 
   const isAdmin = userRole?.is_active && userRole.role === 'admin';
   const isSuperAdmin = false; // We only have user/admin roles in our system
@@ -191,6 +196,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Error fetching user role after retries:', error);
       
+      // Set appropriate error message
+      if (!isOnline) {
+        setAuthError('No internet connection. Using cached profile.');
+      } else {
+        setAuthError('Failed to fetch user profile. Using fallback.');
+      }
+      
       // Try to use persisted role as fallback
       try {
         if (typeof window !== 'undefined') {
@@ -215,6 +227,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         is_active: true
       };
       setUserRole(tempAdminRole);
+      setAuthError('Using temporary admin profile. Some features may be limited.');
       return tempAdminRole;
     } finally {
       setLoading(false);
@@ -238,6 +251,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     }
   }, [fetchUserRole]);
+
+  // Network status tracking
+  useEffect(() => {
+    const handleOnline = () => {
+      console.log('Network connection restored');
+      setIsOnline(true);
+      setAuthError(null);
+      // Retry auth when coming back online
+      retryAuth();
+    };
+    
+    const handleOffline = () => {
+      console.log('Network connection lost');
+      setIsOnline(false);
+      setAuthError('Network connection lost. Please check your internet connection.');
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    // Check initial network status
+    setIsOnline(navigator.onLine);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // Clear auth error function
+  const clearAuthError = useCallback(() => {
+    setAuthError(null);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -266,9 +312,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Enhanced session initialization with retry
     const initAuth = async () => {
       try {
+        setAuthError(null); // Clear any previous errors
+        
         const sessionOperation = async () => {
           const { data: { session }, error } = await supabase.auth.getSession();
-          if (error) throw error;
+          if (error) {
+            console.error('Session fetch error:', error);
+            throw error;
+          }
           return session;
         };
 
@@ -291,12 +342,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (error) {
         console.error('Auth initialization error:', error);
         if (mounted) {
+          // Set appropriate error message
+          if (!isOnline) {
+            setAuthError('No internet connection. Using cached data.');
+          } else {
+            setAuthError('Authentication service unavailable. Retrying...');
+          }
+          
           // Fallback to persisted role if available
           if (persistedRole) {
             console.log('Auth init failed, using persisted role');
             setLoading(false);
           } else {
             setLoading(false);
+            // Schedule a retry after a delay
+            setTimeout(() => {
+              if (mounted && isOnline) {
+                console.log('Retrying auth initialization...');
+                initAuth();
+              }
+            }, 5000);
           }
         }
       } finally {
@@ -400,8 +465,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loading,
     isAdmin: !!isAdmin,
     isSuperAdmin: !!isSuperAdmin,
+    authError,
+    isOnline,
     signOut,
     retryAuth,
+    clearAuthError,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

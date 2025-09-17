@@ -15,7 +15,7 @@ export default function ProtectedRoute({
   requireAdmin = false, 
   requireSuperAdmin = false 
 }: ProtectedRouteProps) {
-  const { user, userRole, loading, isAdmin, isSuperAdmin, retryAuth } = useAuth();
+  const { user, userRole, loading, isAdmin, isSuperAdmin, authError, isOnline, retryAuth, clearAuthError } = useAuth();
   const router = useRouter();
   const [showRetry, setShowRetry] = useState(false);
   const [retrying, setRetrying] = useState(false);
@@ -85,6 +85,38 @@ export default function ProtectedRoute({
               : 'Verifying your authentication...'
             }
           </p>
+          
+          {/* Show auth error if present */}
+          {authError && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 mb-4">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  {!isOnline ? (
+                    <svg className="h-5 w-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.963-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                  ) : (
+                    <svg className="h-5 w-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  )}
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-yellow-700">{authError}</p>
+                </div>
+                <div className="ml-auto pl-3">
+                  <button
+                    onClick={clearAuthError}
+                    className="text-yellow-500 hover:text-yellow-600"
+                  >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
           
           {showRetry && !retrying && (
             <div className="space-y-4">
