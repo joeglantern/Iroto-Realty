@@ -47,6 +47,8 @@ export default function PropertyDetail({ params }: PropertyDetailProps) {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
 
   useEffect(() => {
     async function loadPropertyData() {
@@ -77,6 +79,48 @@ export default function PropertyDetail({ params }: PropertyDetailProps) {
 
     loadPropertyData();
   }, [slug]);
+
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') closeGallery();
+    if (e.key === 'ArrowRight') nextImage();
+    if (e.key === 'ArrowLeft') prevImage();
+  };
+
+  useEffect(() => {
+    if (isGalleryOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'auto';
+    };
+  }, [isGalleryOpen, selectedImageIndex]);
+
+  const openGallery = (index: number) => {
+    setSelectedImageIndex(index);
+    setIsGalleryOpen(true);
+  };
+
+  const closeGallery = () => {
+    setIsGalleryOpen(false);
+    setSelectedImageIndex(null);
+  };
+
+  const nextImage = () => {
+    if (selectedImageIndex !== null && selectedImageIndex < images.length - 1) {
+      setSelectedImageIndex(selectedImageIndex + 1);
+    }
+  };
+
+  const prevImage = () => {
+    if (selectedImageIndex !== null && selectedImageIndex > 0) {
+      setSelectedImageIndex(selectedImageIndex - 1);
+    }
+  };
 
   if (loading) {
     return (
@@ -142,6 +186,7 @@ export default function PropertyDetail({ params }: PropertyDetailProps) {
     : property.rental_price 
       ? `From ${property.currency} ${property.rental_price?.toLocaleString()}/night`
       : 'Contact for price';
+
 
   return (
     <PageLayout>
@@ -273,14 +318,25 @@ export default function PropertyDetail({ params }: PropertyDetailProps) {
             <h2 className="text-3xl font-bold text-brown mb-8 text-center">Property Gallery</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {images.map((image: string, index: number) => (
-                <div key={index} className="aspect-[4/3] bg-gray-200 rounded-lg overflow-hidden">
+                <div 
+                  key={index} 
+                  className="aspect-[4/3] bg-gray-200 rounded-lg overflow-hidden cursor-pointer group relative"
+                  onClick={() => openGallery(index)}
+                >
                   <Image
                     src={image}
                     alt={`${property.title} - Image ${index + 1}`}
                     width={400}
                     height={300}
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -381,6 +437,85 @@ export default function PropertyDetail({ params }: PropertyDetailProps) {
             </div>
           </div>
         </section>
+
+        {/* Photo Gallery Modal */}
+        {isGalleryOpen && selectedImageIndex !== null && (
+          <div className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4">
+            {/* Close Button */}
+            <button
+              onClick={closeGallery}
+              className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors z-10"
+            >
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Previous Button */}
+            {selectedImageIndex > 0 && (
+              <button
+                onClick={prevImage}
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 transition-colors z-10"
+              >
+                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+            )}
+
+            {/* Next Button */}
+            {selectedImageIndex < images.length - 1 && (
+              <button
+                onClick={nextImage}
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 transition-colors z-10"
+              >
+                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            )}
+
+            {/* Main Image */}
+            <div className="relative max-w-7xl max-h-full flex items-center justify-center">
+              <Image
+                src={images[selectedImageIndex]}
+                alt={`${property.title} - Image ${selectedImageIndex + 1}`}
+                width={1200}
+                height={800}
+                className="max-w-full max-h-full object-contain rounded-lg"
+                priority
+              />
+            </div>
+
+            {/* Image Counter */}
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white bg-black/50 px-3 py-1 rounded-full text-sm">
+              {selectedImageIndex + 1} of {images.length}
+            </div>
+
+            {/* Thumbnail Strip */}
+            <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 flex space-x-2 max-w-screen-lg overflow-x-auto px-4">
+              {images.map((image: string, index: number) => (
+                <button
+                  key={index}
+                  onClick={() => setSelectedImageIndex(index)}
+                  className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                    index === selectedImageIndex 
+                      ? 'border-white scale-110' 
+                      : 'border-gray-400 hover:border-white opacity-70 hover:opacity-100'
+                  }`}
+                >
+                  <Image
+                    src={image}
+                    alt={`Thumbnail ${index + 1}`}
+                    width={64}
+                    height={64}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </PageLayout>
   );

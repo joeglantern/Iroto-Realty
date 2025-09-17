@@ -158,18 +158,6 @@ function HeroCarousel() {
       highlight: 'REALTY'
     },
     {
-      id: 2,
-      image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
-      title: 'IROTO',
-      highlight: 'REALTY'
-    },
-    {
-      id: 3,
-      image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
-      title: 'IROTO',
-      highlight: 'REALTY'
-    },
-    {
       id: 4,
       image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
       title: 'IROTO',
