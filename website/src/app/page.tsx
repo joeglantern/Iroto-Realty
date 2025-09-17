@@ -416,7 +416,7 @@ function HeroCarousel() {
                   <p className="text-xs text-gray-500 mb-4">Try searching for a different location or property type</p>
                   <button
                     onClick={() => {
-                      setSearchData({ search: '' });
+                      setSearchData({ ...searchData, search: '' });
                       setShowSuggestions(false);
                     }}
                     className="text-xs text-brown hover:text-brown/80 font-medium"
