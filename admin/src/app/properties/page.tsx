@@ -607,30 +607,32 @@ export default function Properties() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         {/* Page Title */}
-        <div className="mb-6 md:mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Property Management</h1>
-            <p className="mt-2 text-sm md:text-base text-gray-600">Manage properties and categories</p>
-          </div>
-          <div className="flex gap-3">
-            <button 
-              onClick={() => setShowCategoryModal(true)}
-              className="px-4 py-2 border border-primary text-primary rounded-md hover:bg-primary/10 transition-colors"
-            >
-              Manage Categories
-            </button>
-            <button 
-              onClick={() => setShowUploadModal(true)}
-              className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
-            >
-              Add New Property
-            </button>
+        <div className="mb-6 md:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Property Management</h1>
+              <p className="mt-2 text-sm md:text-base text-gray-600">Manage properties and categories</p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+              <button 
+                onClick={() => setShowCategoryModal(true)}
+                className="px-3 sm:px-4 py-2 text-sm border border-primary text-primary rounded-md hover:bg-primary/10 transition-colors text-center"
+              >
+                Manage Categories
+              </button>
+              <button 
+                onClick={() => setShowUploadModal(true)}
+                className="px-3 sm:px-4 py-2 text-sm bg-primary text-white rounded-md hover:bg-primary/90 transition-colors text-center"
+              >
+                Add New Property
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Properties List */}
         <div className="bg-white rounded-lg shadow-sm border">
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             {properties.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-gray-500">No properties found. Create your first property!</p>
@@ -638,9 +640,9 @@ export default function Properties() {
             ) : (
               <div className="space-y-4">
                 {properties.map((property) => (
-                  <div key={property.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-16 h-16 bg-gray-200 rounded-lg overflow-hidden">
+                  <div key={property.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 border rounded-lg hover:bg-gray-50 space-y-3 sm:space-y-0">
+                    <div className="flex items-center space-x-3 sm:space-x-4 min-w-0 flex-1">
+                      <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
                         {property.hero_image_path ? (
                           <img
                             src={getStorageUrl('property-images', property.hero_image_path)}
@@ -655,38 +657,40 @@ export default function Properties() {
                           </div>
                         )}
                       </div>
-                      <div>
-                        <h4 className="font-medium text-gray-900">{property.title}</h4>
-                        <p className="text-sm text-gray-500">{property.property_categories?.name || 'No category'}</p>
-                        <p className="text-sm text-gray-500">
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-medium text-gray-900 text-sm sm:text-base truncate">{property.title}</h4>
+                        <p className="text-xs sm:text-sm text-gray-500">{property.property_categories?.name || 'No category'}</p>
+                        <p className="text-xs sm:text-sm text-gray-500">
                           {property.listing_type === 'rental' && property.rental_price && `KES ${property.rental_price}/night`}
                           {property.listing_type === 'sale' && property.sale_price && `KES ${property.sale_price}`}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-3">
-                      <span className={`px-2 py-1 rounded-full text-xs ${
-                        property.status === 'published'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {property.status}
-                      </span>
-                      {property.is_featured && (
-                        <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
-                          Featured
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                      <div className="flex items-center space-x-2 flex-wrap">
+                        <span className={`px-2 py-1 rounded-full text-xs ${
+                          property.status === 'published'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {property.status}
                         </span>
-                      )}
-                      <div className="flex space-x-2">
+                        {property.is_featured && (
+                          <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                            Featured
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex space-x-3 sm:space-x-2">
                         <button 
                           onClick={() => handleEditClick(property.id)}
-                          className="text-primary hover:text-primary/80"
+                          className="text-sm px-3 py-1 text-primary hover:text-primary/80 border border-primary rounded hover:bg-primary/10 transition-colors"
                         >
                           Edit
                         </button>
                         <button 
                           onClick={() => handleDeleteClick(property.id, property.title, 'property')}
-                          className="text-red-600 hover:text-red-800"
+                          className="text-sm px-3 py-1 text-red-600 hover:text-red-800 border border-red-200 rounded hover:bg-red-50 transition-colors"
                         >
                           Delete
                         </button>

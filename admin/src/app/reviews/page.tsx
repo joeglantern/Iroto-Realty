@@ -332,33 +332,35 @@ function Reviews() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         {/* Page Title */}
-        <div className="mb-6 md:mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Review Management</h1>
-            <p className="mt-2 text-sm md:text-base text-gray-600">Create and manage customer reviews</p>
-          </div>
-          <div className="flex gap-3">
-            <select 
-              value={selectedFilter}
-              onChange={(e) => setSelectedFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-            >
-              <option value="all">All Reviews</option>
-              <option value="featured">Featured Reviews</option>
-              <option value="regular">Regular Reviews</option>
-            </select>
-            <button 
-              onClick={() => setShowUploadModal(true)}
-              className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
-            >
-              Add New Review
-            </button>
+        <div className="mb-6 md:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Review Management</h1>
+              <p className="mt-2 text-sm md:text-base text-gray-600">Create and manage customer reviews</p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+              <select 
+                value={selectedFilter}
+                onChange={(e) => setSelectedFilter(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              >
+                <option value="all">All Reviews</option>
+                <option value="featured">Featured Reviews</option>
+                <option value="regular">Regular Reviews</option>
+              </select>
+              <button 
+                onClick={() => setShowUploadModal(true)}
+                className="px-3 sm:px-4 py-2 text-sm bg-primary text-white rounded-md hover:bg-primary/90 transition-colors text-center"
+              >
+                Add New Review
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Reviews List */}
         <div className="bg-white rounded-lg shadow-sm border">
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             {filteredReviews.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-gray-500">No reviews found. Add your first review!</p>
@@ -366,16 +368,16 @@ function Reviews() {
             ) : (
               <div className="space-y-4">
                 {filteredReviews.map((review) => (
-                  <div key={review.id} className="border rounded-lg p-4 hover:bg-gray-50">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <div className="flex items-center space-x-2 mb-1">
-                          <h4 className="font-medium text-gray-900">{review.reviewer_name}</h4>
+                  <div key={review.id} className="border rounded-lg p-3 sm:p-4 hover:bg-gray-50">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-3 space-y-2 sm:space-y-0">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2 mb-1 space-y-1 sm:space-y-0">
+                          <h4 className="font-medium text-gray-900 text-sm sm:text-base truncate">{review.reviewer_name}</h4>
                           <div className="flex items-center">
                             {[...Array(5)].map((_, i) => (
                               <svg
                                 key={i}
-                                className={`w-4 h-4 ${i < review.rating ? 'text-yellow-400' : 'text-gray-300'}`}
+                                className={`w-3 h-3 sm:w-4 sm:h-4 ${i < review.rating ? 'text-yellow-400' : 'text-gray-300'}`}
                                 fill="currentColor"
                                 viewBox="0 0 20 20"
                               >
@@ -384,10 +386,10 @@ function Reviews() {
                             ))}
                           </div>
                         </div>
-                        <p className="text-sm text-gray-600 mb-1">For: <span className="font-medium">{properties.find(p => p.id === review.property_id)?.title || 'Unknown Property'}</span></p>
+                        <p className="text-xs sm:text-sm text-gray-600 mb-1 truncate">For: <span className="font-medium">{properties.find(p => p.id === review.property_id)?.title || 'Unknown Property'}</span></p>
                         <p className="text-xs text-gray-500">{formatDate(review.created_at)}</p>
                       </div>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2 flex-wrap">
                         {review.is_featured && (
                           <div className="flex items-center text-yellow-600 bg-yellow-50 px-2 py-1 rounded-full">
                             <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -401,7 +403,7 @@ function Reviews() {
                         </span>
                       </div>
                     </div>
-                    <p className="text-gray-700 mb-4">{review.comment}</p>
+                    <p className="text-gray-700 mb-4 text-sm sm:text-base line-clamp-3">{review.comment}</p>
                     <div className="flex flex-wrap gap-2">
                       <button 
                         onClick={() => handleEditClick(review.id)}

@@ -439,22 +439,24 @@ function Blog() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         {/* Page Title */}
-        <div className="mb-6 md:mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Blog Management</h1>
-            <p className="mt-2 text-sm md:text-base text-gray-600">Create and manage blog posts</p>
+        <div className="mb-6 md:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Blog Management</h1>
+              <p className="mt-2 text-sm md:text-base text-gray-600">Create and manage blog posts</p>
+            </div>
+            <button 
+              onClick={() => setShowUploadModal(true)}
+              className="px-3 sm:px-4 py-2 text-sm bg-primary text-white rounded-md hover:bg-primary/90 transition-colors text-center"
+            >
+              Create New Post
+            </button>
           </div>
-          <button 
-            onClick={() => setShowUploadModal(true)}
-            className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
-          >
-            Create New Post
-          </button>
         </div>
 
         {/* Blog Posts List */}
         <div className="bg-white rounded-lg shadow-sm border">
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             {blogPosts.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-gray-500">No blog posts found. Create your first post!</p>
@@ -462,38 +464,42 @@ function Blog() {
             ) : (
               <div className="space-y-4">
                 {blogPosts.map((post) => (
-                  <div key={post.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                    <div className="flex-1">
-                      <h4 className="font-medium text-gray-900">{post.title}</h4>
-                      <div className="flex items-center space-x-4 text-sm text-gray-500 mt-1">
-                        <span>{categories.find(c => c.id === post.category_id)?.name || 'No category'}</span>
+                  <div key={post.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 border rounded-lg hover:bg-gray-50 space-y-3 sm:space-y-0">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium text-gray-900 text-sm sm:text-base truncate">{post.title}</h4>
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-xs sm:text-sm text-gray-500 mt-1 space-y-1 sm:space-y-0">
+                        <span className="truncate">{categories.find(c => c.id === post.category_id)?.name || 'No category'}</span>
+                        <span className="hidden sm:inline">•</span>
                         <span>{formatDate(post.created_at)}</span>
-                        <span>By {post.author_name}</span>
+                        <span className="hidden sm:inline">•</span>
+                        <span className="truncate">By {post.author_name}</span>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-3">
-                      <span className={`px-2 py-1 rounded-full text-xs ${
-                        post.status === 'published'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {post.status}
-                      </span>
-                      {post.is_featured && (
-                        <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
-                          Featured
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                      <div className="flex items-center space-x-2 flex-wrap">
+                        <span className={`px-2 py-1 rounded-full text-xs ${
+                          post.status === 'published'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {post.status}
                         </span>
-                      )}
-                      <div className="flex space-x-2">
+                        {post.is_featured && (
+                          <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                            Featured
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex space-x-3 sm:space-x-2">
                         <button 
                           onClick={() => handleEditClick(post.id)}
-                          className="text-primary hover:text-primary/80"
+                          className="text-sm px-3 py-1 text-primary hover:text-primary/80 border border-primary rounded hover:bg-primary/10 transition-colors"
                         >
                           Edit
                         </button>
                         <button 
                           onClick={() => handleDeleteClick(post.id, post.title)}
-                          className="text-red-600 hover:text-red-800"
+                          className="text-sm px-3 py-1 text-red-600 hover:text-red-800 border border-red-200 rounded hover:bg-red-50 transition-colors"
                         >
                           Delete
                         </button>

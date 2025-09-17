@@ -496,9 +496,9 @@ export default function EditProperty() {
         <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
           {/* Page Header */}
           <div className="mb-8">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Edit Property</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Edit Property</h1>
                 <p className="mt-2 text-sm text-gray-600">
                   Update property details, images, and settings
                 </p>
@@ -508,17 +508,17 @@ export default function EditProperty() {
                   </p>
                 )}
               </div>
-              <div className="flex space-x-3">
+              <div className="flex flex-col sm:flex-row gap-3 sm:space-x-3">
                 <Link
                   href="/properties"
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors text-center"
                 >
                   Cancel
                 </Link>
                 <button
                   onClick={handleSubmit}
                   disabled={saving}
-                  className="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center"
+                  className="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center"
                 >
                   {saving ? (
                     <>
@@ -535,7 +535,7 @@ export default function EditProperty() {
 
           {/* Main Form Container */}
           <div className="bg-white rounded-lg shadow-sm border">
-            <div className="p-8">
+            <div className="p-4 sm:p-6 lg:p-8">
               <form onSubmit={handleSubmit} className="space-y-8">
                 {/* Basic Property Information */}
                 <div className="space-y-6">
@@ -770,7 +770,7 @@ export default function EditProperty() {
                   {existingImages.length > 0 && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Current Images</label>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
                         {existingImages.map((image, index) => (
                           <div key={image.id} className="relative">
                             <div className="aspect-square rounded-lg overflow-hidden bg-gray-100">
@@ -972,18 +972,20 @@ export default function EditProperty() {
                         <option value="published">Published</option>
                       </select>
                     </div>
-                    <div className="flex items-center pt-8">
-                      <input
-                        type="checkbox"
-                        id="featured"
-                        checked={formData.is_featured}
-                        onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
-                        className="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary"
-                      />
-                      <label htmlFor="featured" className="ml-2 block text-sm text-gray-900">
-                        Featured Property
-                      </label>
-                      <p className="ml-2 text-xs text-gray-500">(appears prominently on homepage)</p>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:pt-8 space-y-2 sm:space-y-0">
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id="featured"
+                          checked={formData.is_featured}
+                          onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
+                          className="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary"
+                        />
+                        <label htmlFor="featured" className="ml-2 block text-sm text-gray-900">
+                          Featured Property
+                        </label>
+                      </div>
+                      <p className="text-xs text-gray-500 sm:ml-2">(appears prominently on homepage)</p>
                     </div>
                   </div>
                 </div>
