@@ -163,13 +163,13 @@ export default function LoginPage() {
             <Image
               src="/logo/iroto-logo.png"
               alt="Iroto Realty"
-              width={120}
-              height={40}
-              className="h-16 w-auto"
+              width={600}
+              height={200}
+              className="h-32 sm:h-48 md:h-64 w-auto"
             />
           </div>
         </div>
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+        <h2 className="mt-2 text-center text-2xl sm:text-3xl font-extrabold text-gray-900">
           Iroto Realty Admin
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
@@ -177,7 +177,7 @@ export default function LoginPage() {
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+      <div className="mt-2 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
           <form className="space-y-6" onSubmit={handleAuth}>
             <div>
