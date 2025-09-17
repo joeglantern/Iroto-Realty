@@ -1,20 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { NavigationItem } from '@/types';
+import { getPropertyCategories } from '@/lib/data';
 
-const navigation: NavigationItem[] = [
+const baseNavigation: NavigationItem[] = [
   { label: 'HOME', href: '/' },
   { label: 'About Us', href: '/about' },
   {
     label: 'Rental Portfolio',
     href: '/rental-portfolio',
-    children: [
-      { label: 'Lamu', href: '/rental-portfolio/lamu' },
-      { label: 'Watamu', href: '/rental-portfolio/watamu' },
-    ],
+    children: [], // Will be populated dynamically
   },
   { label: 'Sales Collection', href: '/sales-collection' },
   {
@@ -32,6 +30,36 @@ const navigation: NavigationItem[] = [
 export default function Header() {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [navigation, setNavigation] = useState<NavigationItem[]>(baseNavigation);
+
+  // Fetch categories and update navigation
+  useEffect(() => {
+    async function loadCategories() {
+      try {
+        const categories = await getPropertyCategories();
+
+        const updatedNavigation = baseNavigation.map(item => {
+          if (item.label === 'Rental Portfolio') {
+            return {
+              ...item,
+              children: categories.map(category => ({
+                label: category.name,
+                href: `/rental-portfolio/${category.slug}`
+              }))
+            };
+          }
+          return item;
+        });
+
+        setNavigation(updatedNavigation);
+      } catch (error) {
+        console.error('Error loading categories:', error);
+        // Keep base navigation as fallback
+      }
+    }
+
+    loadCategories();
+  }, []);
 
   return (
     <header className="bg-white border-b border-gray-100 sticky top-0 z-50">

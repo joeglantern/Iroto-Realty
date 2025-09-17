@@ -39,99 +39,135 @@ export default function GettingThere() {
                     <div>
                       <h4 className="font-semibold text-brown">Jomo Kenyatta International (NBO)</h4>
                       <p className="text-gray-600 text-sm">
-                        Nairobi - Main international gateway. Connect to coastal destinations 
-                        via domestic flights or road transport.
+                        Nairobi - Main international gateway, 15km from city center. Most international flights arrive here.
+                      </p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-brown">Wilson Airport (WIL)</h4>
+                      <p className="text-gray-600 text-sm">
+                        Nairobi - Primary hub for domestic flights, 6km south of city center. Most coastal flights depart here.
                       </p>
                     </div>
                     <div>
                       <h4 className="font-semibold text-brown">Moi International Airport (MBA)</h4>
                       <p className="text-gray-600 text-sm">
-                        Mombasa - Direct international flights available. Closest to coastal destinations.
+                        Mombasa - Coastal gateway with international and domestic flights. Closest to beach destinations.
                       </p>
                     </div>
                     <div>
-                      <h4 className="font-semibold text-brown">Lamu Airport (LAU)</h4>
+                      <h4 className="font-semibold text-brown">Malindi Airport (MYD)</h4>
                       <p className="text-gray-600 text-sm">
-                        Lamu Island - Domestic flights from Nairobi and Mombasa. Perfect for Lamu properties.
+                        Malindi - Domestic flights from Nairobi, convenient for Watamu and northern coast properties.
                       </p>
                     </div>
                   </div>
                 </div>
 
                 <div className="bg-gray-50 rounded-lg p-6">
-                  <h3 className="text-xl font-semibold text-black mb-4">Major Airlines</h3>
+                  <h3 className="text-xl font-semibold text-black mb-4">Domestic Airlines</h3>
                   <div className="space-y-2 text-gray-600">
                     <div className="flex justify-between">
                       <span>Kenya Airways</span>
-                      <span className="text-brown">National carrier</span>
+                      <span className="text-brown">Full service</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Emirates</span>
-                      <span className="text-brown">Via Dubai</span>
+                      <span>Jambojet</span>
+                      <span className="text-brown">Low cost</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Turkish Airlines</span>
-                      <span className="text-brown">Via Istanbul</span>
+                      <span>Safarilink</span>
+                      <span className="text-brown">Safari destinations</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Qatar Airways</span>
-                      <span className="text-brown">Via Doha</span>
+                      <span>AirKenya Express</span>
+                      <span className="text-brown">Game reserves</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>KLM</span>
-                      <span className="text-brown">Via Amsterdam</span>
+                      <span>Fly540</span>
+                      <span className="text-brown">Regional flights</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Fly ALS</span>
+                      <span className="text-brown">Charter & scheduled</span>
                     </div>
                   </div>
                 </div>
               </div>
 
               <div className="bg-brown/10 rounded-lg p-6 mb-12">
-                <h3 className="text-xl font-semibold text-black mb-3">✈️ Flight Tips</h3>
-                <ul className="space-y-2 text-gray-700">
-                  <li>• Book flights 2-3 months in advance for better prices</li>
-                  <li>• Consider flying into Mombasa to save travel time to coast</li>
-                  <li>• Domestic flights to Lamu run multiple times daily</li>
-                  <li>• Check baggage weight limits for domestic connections</li>
-                </ul>
+                <h3 className="text-xl font-semibold text-black mb-3">✈️ Flight Tips & Costs</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="font-semibold text-black mb-2">Domestic Flight Costs (2024)</h4>
+                    <ul className="space-y-1 text-gray-700 text-sm">
+                      <li>• Wilson to Mombasa: KES 8,000-15,000</li>
+                      <li>• Wilson to Malindi: KES 10,000-18,000</li>
+                      <li>• Wilson to Lamu: KES 12,000-20,000</li>
+                      <li>• Baggage limit: 15kg (domestic flights)</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-black mb-2">Booking Tips</h4>
+                    <ul className="space-y-1 text-gray-700 text-sm">
+                      <li>• Book 1-2 weeks ahead for better rates</li>
+                      <li>• Check-in opens 1 hour before departure</li>
+                      <li>• Wilson Airport has limited parking</li>
+                      <li>• Weather can affect small aircraft schedules</li>
+                    </ul>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Getting to Lamu */}
+        {/* Ground Transport */}
         <section className="py-20 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-4xl mx-auto">
               <h2 className="text-3xl lg:text-4xl font-bold text-black mb-8">
-                Getting to Lamu
+                Ground Transportation in Kenya
               </h2>
               
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-12">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-12">
                 <div>
-                  <h3 className="text-2xl font-semibold text-black mb-6">Transportation Options</h3>
+                  <h3 className="text-2xl font-semibold text-black mb-6">SGR Train (Madaraka Express)</h3>
                   
                   <div className="space-y-6">
                     <div className="border-l-4 border-brown pl-6">
-                      <h4 className="font-semibold text-black mb-2">✈️ By Air (Recommended)</h4>
+                      <h4 className="font-semibold text-black mb-2">🚆 Nairobi ↔ Mombasa</h4>
                       <p className="text-gray-600 mb-2">
-                        Fly directly to Lamu Airport (LAU) from Nairobi (1.5 hours) or Mombasa (45 minutes).
+                        Modern standard gauge railway with comfortable seating and scenic views.
                       </p>
                       <div className="text-sm text-gray-500">
-                        <p><strong>Airlines:</strong> Safarilink, Fly540</p>
-                        <p><strong>Duration:</strong> NBO-LAU: 1.5hrs | MBA-LAU: 45min</p>
-                        <p><strong>Cost:</strong> $150-250 USD</p>
+                        <p><strong>Duration:</strong> 4.5 hours (Express) | 6 hours (Regular)</p>
+                        <p><strong>Economy Class:</strong> KES 1,500 (2024 rates)</p>
+                        <p><strong>First Class:</strong> KES 4,500 (2024 rates)</p>
+                        <p><strong>Departure:</strong> Syokimau (Nairobi) to Miritini (Mombasa)</p>
                       </div>
                     </div>
 
                     <div className="border-l-4 border-gray-300 pl-6">
-                      <h4 className="font-semibold text-black mb-2">🚗 By Road + Boat</h4>
+                      <h4 className="font-semibold text-black mb-2">🚌 Bus Services</h4>
                       <p className="text-gray-600 mb-2">
-                        Drive to Mokowe jetty, then take a boat to Lamu. Scenic but time-consuming.
+                        Various operators with different comfort levels and pricing.
                       </p>
                       <div className="text-sm text-gray-500">
-                        <p><strong>Road:</strong> Nairobi to Mokowe (6-8 hours)</p>
-                        <p><strong>Boat:</strong> Mokowe to Lamu (20 minutes)</p>
-                        <p><strong>Total Cost:</strong> $50-100 USD including fuel</p>
+                        <p><strong>Nairobi to Mombasa:</strong> KES 1,000-2,500</p>
+                        <p><strong>Duration:</strong> 8-10 hours</p>
+                        <p><strong>Operators:</strong> Modern Coast, Mash, Buscar</p>
+                      </div>
+                    </div>
+                    
+                    <div className="border-l-4 border-gray-300 pl-6">
+                      <h4 className="font-semibold text-black mb-2">🚐 Matatu (Local Transport)</h4>
+                      <p className="text-gray-600 mb-2">
+                        Affordable public transport, though less comfortable for long distances.
+                      </p>
+                      <div className="text-sm text-gray-500">
+                        <p><strong>City transport:</strong> KES 50-200</p>
+                        <p><strong>Intercity routes:</strong> KES 500-1,500</p>
+                        <p><strong>Best for:</strong> Short distances and local experience</p>
                       </div>
                     </div>
                   </div>
@@ -141,134 +177,123 @@ export default function GettingThere() {
                   <div 
                     className="w-full h-full bg-cover bg-center bg-no-repeat"
                     style={{
-                      backgroundImage: 'url("https://images.unsplash.com/photo-1544551763-46a013bb70d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80")'
+                      backgroundImage: 'url("https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80")'
                     }}
                   />
-                </div>
-              </div>
-
-              <div className="bg-white rounded-lg p-8 shadow-sm">
-                <h3 className="text-xl font-semibold text-black mb-4">Transport on Lamu Island</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-brown rounded-full flex items-center justify-center mx-auto mb-3">
-                      <span className="text-white text-2xl">🚶</span>
-                    </div>
-                    <h4 className="font-semibold text-black mb-2">Walking</h4>
-                    <p className="text-gray-600 text-sm">
-                      The traditional way to explore Lamu's narrow streets and stone architecture.
-                    </p>
-                  </div>
-                  
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-brown rounded-full flex items-center justify-center mx-auto mb-3">
-                      <span className="text-white text-2xl">🫏</span>
-                    </div>
-                    <h4 className="font-semibold text-black mb-2">Donkey</h4>
-                    <p className="text-gray-600 text-sm">
-                      Historic transport method, mainly for goods. A unique cultural experience.
-                    </p>
-                  </div>
-                  
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-brown rounded-full flex items-center justify-center mx-auto mb-3">
-                      <span className="text-white text-2xl">⛵</span>
-                    </div>
-                    <h4 className="font-semibold text-black mb-2">Dhow</h4>
-                    <p className="text-gray-600 text-sm">
-                      Traditional sailing vessels for coastal trips and sunset cruises.
-                    </p>
-                  </div>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Getting to Watamu */}
+        {/* Getting to Coastal Destinations */}
         <section className="py-20 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-4xl mx-auto">
               <h2 className="text-3xl lg:text-4xl font-bold text-black mb-8">
-                Getting to Watamu
+                Reaching Coastal Destinations
               </h2>
               
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-12">
-                <div className="relative h-64 lg:h-96 rounded-lg overflow-hidden">
-                  <div 
-                    className="w-full h-full bg-cover bg-center bg-no-repeat"
-                    style={{
-                      backgroundImage: 'url("https://images.unsplash.com/photo-1544551763-77ef2d0cfc6c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80")'
-                    }}
-                  />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                <div className="bg-gray-50 rounded-lg p-6">
+                  <h3 className="text-xl font-semibold text-black mb-4">🏝️ Lamu Island</h3>
+                  <div className="space-y-4">
+                    <div className="border-l-4 border-brown pl-4">
+                      <h4 className="font-semibold text-brown mb-1">By Air (Recommended)</h4>
+                      <p className="text-gray-600 text-sm mb-1">Direct flights to Lamu Airport from Wilson or Mombasa</p>
+                      <div className="text-xs text-gray-500">
+                        <p><strong>Cost:</strong> KES 12,000-20,000 | <strong>Duration:</strong> 1.5 hours</p>
+                      </div>
+                    </div>
+                    
+                    <div className="border-l-4 border-gray-300 pl-4">
+                      <h4 className="font-semibold text-black mb-1">By Road + Boat</h4>
+                      <p className="text-gray-600 text-sm mb-1">Drive to Mokowe jetty, then dhow to Lamu</p>
+                      <div className="text-xs text-gray-500">
+                        <p><strong>Road:</strong> 6-8 hours | <strong>Boat:</strong> 20 minutes</p>
+                      </div>
+                    </div>
+                    
+                    <div className="text-xs text-brown">
+                      <p><strong>Note:</strong> No cars on Lamu Island - transport by foot, donkey, or dhow</p>
+                    </div>
+                  </div>
                 </div>
-                
-                <div>
-                  <h3 className="text-2xl font-semibold text-black mb-6">Transportation Options</h3>
-                  
-                  <div className="space-y-6">
-                    <div className="border-l-4 border-brown pl-6">
-                      <h4 className="font-semibold text-black mb-2">🚗 By Road from Mombasa</h4>
-                      <p className="text-gray-600 mb-2">
-                        Most convenient option. Scenic coastal drive along well-maintained roads.
-                      </p>
-                      <div className="text-sm text-gray-500">
-                        <p><strong>Distance:</strong> 120km (75 miles)</p>
-                        <p><strong>Duration:</strong> 1.5-2 hours</p>
-                        <p><strong>Cost:</strong> Taxi $50-80 | Rental car $30-50/day</p>
+
+                <div className="bg-gray-50 rounded-lg p-6">
+                  <h3 className="text-xl font-semibold text-black mb-4">🏖️ Watamu & Malindi</h3>
+                  <div className="space-y-4">
+                    <div className="border-l-4 border-brown pl-4">
+                      <h4 className="font-semibold text-brown mb-1">By Air</h4>
+                      <p className="text-gray-600 text-sm mb-1">Fly to Malindi Airport, then 20 minutes to Watamu</p>
+                      <div className="text-xs text-gray-500">
+                        <p><strong>Cost:</strong> KES 10,000-18,000 | <strong>Duration:</strong> 1 hour</p>
                       </div>
                     </div>
-
-                    <div className="border-l-4 border-gray-300 pl-6">
-                      <h4 className="font-semibold text-black mb-2">🚌 By Bus/Matatu</h4>
-                      <p className="text-gray-600 mb-2">
-                        Budget-friendly public transport option. Adventure but less comfort.
-                      </p>
-                      <div className="text-sm text-gray-500">
-                        <p><strong>Route:</strong> Mombasa to Malindi, then Watamu</p>
-                        <p><strong>Duration:</strong> 2-3 hours</p>
-                        <p><strong>Cost:</strong> $3-5 USD</p>
+                    
+                    <div className="border-l-4 border-gray-300 pl-4">
+                      <h4 className="font-semibold text-black mb-1">By Road from Mombasa</h4>
+                      <p className="text-gray-600 text-sm mb-1">Scenic coastal drive on well-maintained road</p>
+                      <div className="text-xs text-gray-500">
+                        <p><strong>Distance:</strong> 120km | <strong>Duration:</strong> 1.5-2 hours</p>
                       </div>
                     </div>
-
-                    <div className="border-l-4 border-brown pl-6">
-                      <h4 className="font-semibold text-black mb-2">🚁 By Helicopter</h4>
-                      <p className="text-gray-600 mb-2">
-                        Luxury option with spectacular aerial views of the coast.
-                      </p>
-                      <div className="text-sm text-gray-500">
-                        <p><strong>Duration:</strong> 45 minutes</p>
-                        <p><strong>Cost:</strong> $300-500 USD</p>
-                        <p><strong>Booking:</strong> Through luxury hotels or tour operators</p>
+                    
+                    <div className="border-l-4 border-gray-300 pl-4">
+                      <h4 className="font-semibold text-black mb-1">By Matatu/Bus</h4>
+                      <p className="text-gray-600 text-sm mb-1">Budget option via public transport</p>
+                      <div className="text-xs text-gray-500">
+                        <p><strong>Cost:</strong> KES 300-500 | <strong>Duration:</strong> 2-3 hours</p>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-gray-50 rounded-lg p-8">
-                <h3 className="text-xl font-semibold text-black mb-4">Local Transportation in Watamu</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <h4 className="font-semibold text-brown mb-2">Getting Around</h4>
-                    <ul className="space-y-2 text-gray-600 text-sm">
-                      <li>• Tuk-tuks for short distances ($1-3)</li>
-                      <li>• Bicycle rentals ($5-10/day)</li>
-                      <li>• Beach walks along the coastline</li>
-                      <li>• Hotel shuttle services</li>
-                    </ul>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                <div className="bg-gray-50 rounded-lg p-6">
+                  <h3 className="text-xl font-semibold text-black mb-4">🌊 Diani Beach</h3>
+                  <div className="space-y-4">
+                    <div className="border-l-4 border-brown pl-4">
+                      <h4 className="font-semibold text-brown mb-1">From Mombasa Airport</h4>
+                      <p className="text-gray-600 text-sm mb-1">Direct transfer to South Coast beaches</p>
+                      <div className="text-xs text-gray-500">
+                        <p><strong>Taxi:</strong> KES 3,000-5,000 | <strong>Duration:</strong> 1 hour</p>
+                      </div>
+                    </div>
+                    
+                    <div className="border-l-4 border-gray-300 pl-4">
+                      <h4 className="font-semibold text-black mb-1">Via Likoni Ferry</h4>
+                      <p className="text-gray-600 text-sm mb-1">Cross Kilifi Creek by ferry, then road to Diani</p>
+                      <div className="text-xs text-gray-500">
+                        <p><strong>Ferry:</strong> Free for passengers | <strong>Total:</strong> 1-1.5 hours</p>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-brown mb-2">Nearby Attractions</h4>
-                    <ul className="space-y-2 text-gray-600 text-sm">
-                      <li>• Malindi town (20 minutes drive)</li>
-                      <li>• Arabuko Sokoke Forest (30 minutes)</li>
-                      <li>• Gedi Ruins (15 minutes)</li>
-                      <li>• Various beach clubs and resorts</li>
-                    </ul>
+                </div>
+
+                <div className="bg-gray-50 rounded-lg p-6">
+                  <h3 className="text-xl font-semibold text-black mb-4">🏙️ Nairobi Area</h3>
+                  <div className="space-y-4">
+                    <div className="border-l-4 border-brown pl-4">
+                      <h4 className="font-semibold text-brown mb-1">Airport Transfers</h4>
+                      <p className="text-gray-600 text-sm mb-1">From JKIA to city center or suburbs</p>
+                      <div className="text-xs text-gray-500">
+                        <p><strong>Taxi:</strong> KES 1,500-3,000 | <strong>Uber:</strong> KES 800-2,000</p>
+                      </div>
+                    </div>
+                    
+                    <div className="border-l-4 border-gray-300 pl-4">
+                      <h4 className="font-semibold text-black mb-1">City Transport</h4>
+                      <p className="text-gray-600 text-sm mb-1">Matatus, buses, boda bodas, ride-hailing apps</p>
+                      <div className="text-xs text-gray-500">
+                        <p><strong>Matatu:</strong> KES 50-200 | <strong>Uber/Bolt:</strong> KES 200-1,000</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
+
             </div>
           </div>
         </section>
