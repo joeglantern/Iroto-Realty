@@ -627,7 +627,7 @@ export default function RentalPortfolio() {
                 Featured Properties
               </h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                Handpicked luxury rentals for unforgettable experiences
+                Handpicked luxury rentals that reflect style, quality, and the essence of coastal charm
               </p>
             </div>
             
@@ -707,7 +707,7 @@ export default function RentalPortfolio() {
                 </div>
                 <h3 className="text-xl font-semibold text-black mb-4">Local Expertise</h3>
                 <p className="text-gray-600">
-                  Deep knowledge of local areas, culture, and the best experiences each destination offers.
+                  Over seven years of coastal living gives us insider understanding of the region's charm, culture, and lifestyle.
                 </p>
               </div>
               

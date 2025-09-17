@@ -631,7 +631,7 @@ export default function SalesCollection() {
                 Featured Properties for Sale
               </h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                Handpicked luxury properties for purchase in Kenya's most beautiful destinations
+                Handpicked properties that reflect style, quality, and the essence of coastal charm — perfect for investment in Kenya's coast
               </p>
             </div>
             
@@ -748,7 +748,7 @@ export default function SalesCollection() {
                 </div>
                 <h3 className="text-xl font-semibold text-black mb-4">Premium Properties</h3>
                 <p className="text-gray-600">
-                  Carefully selected luxury homes with exceptional finishes and prime coastal locations.
+                  Every property is carefully vetted to ensure quality and authenticity, with exceptional finishes and prime coastal locations.
                 </p>
               </div>
               

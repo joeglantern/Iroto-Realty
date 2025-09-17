@@ -755,7 +755,7 @@ function PropertiesCarousel() {
             Featured Properties
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Explore our handpicked selection of premium properties in Kenya's most sought-after coastal destinations.
+            Discover our handpicked properties that reflect style, quality, and the essence of coastal charm — curated through over seven years of coastal living experience.
           </p>
         </div>
         

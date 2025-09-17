@@ -130,13 +130,26 @@ export function getStorageUrl(bucket: string, path: string): string {
   return `${supabaseUrl}/storage/v1/object/public/${bucket}/${path}`
 }
 
-// Helper function to upload file to storage
+// Helper function to upload file to storage with timeout handling
 export async function uploadFile(
   bucket: string,
   path: string,
   file: File
 ): Promise<{ data: any; error: any }> {
-  return await supabase.storage.from(bucket).upload(path, file)
+  const uploadPromise = supabase.storage.from(bucket).upload(path, file);
+
+  // Add timeout to file upload
+  try {
+    const result = await Promise.race([
+      uploadPromise,
+      new Promise<any>((_, reject) => 
+        setTimeout(() => reject(new Error(`File upload timed out after 60 seconds for ${file.name}`)), 60000)
+      )
+    ]);
+    return result;
+  } catch (error) {
+    return { data: null, error };
+  }
 }
 
 // Helper function to delete file from storage

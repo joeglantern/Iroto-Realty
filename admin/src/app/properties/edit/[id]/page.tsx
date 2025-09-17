@@ -57,11 +57,120 @@ export default function EditProperty() {
   const [heroImage, setHeroImage] = useState<File | null>(null);
   const [galleryImages, setGalleryImages] = useState<File[]>([]);
   const [existingImages, setExistingImages] = useState<any[]>([]);
+  
+  // Image format constants
+  const SUPPORTED_FORMATS = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/avif'];
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
   // Load data on component mount
   useEffect(() => {
     loadData();
   }, [propertyId]);
+
+  // Image processing functions
+  const validateImageFile = (file: File): string | null => {
+    if (!SUPPORTED_FORMATS.includes(file.type) && !file.name.toLowerCase().match(/\.(jpg|jpeg|png|webp|avif)$/)) {
+      return `Unsupported format. Please use: ${SUPPORTED_FORMATS.join(', ')}`;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      return `File too large. Maximum size is ${MAX_FILE_SIZE / (1024 * 1024)}MB`;
+    }
+    return null;
+  };
+
+  const processImage = async (file: File): Promise<File> => {
+    const isAVIF = file.type === 'image/avif' || file.name.toLowerCase().endsWith('.avif');
+    
+    if (isAVIF) {
+      console.log('Converting AVIF to JPEG for Supabase compatibility');
+      return convertToJPEG(file);
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      console.log('Compressing large image');
+      return compressImage(file);
+    }
+
+    return file;
+  };
+
+  const convertToJPEG = async (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      img.onload = () => {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        
+        if (ctx) {
+          ctx.fillStyle = 'white';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0);
+          
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const newFile = new File([blob], file.name.replace(/\.(avif)$/i, '.jpg'), {
+                type: 'image/jpeg'
+              });
+              resolve(newFile);
+            } else {
+              reject(new Error('Failed to convert image'));
+            }
+          }, 'image/jpeg', 0.85);
+        } else {
+          reject(new Error('Canvas context not available'));
+        }
+      };
+      
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
+  const compressImage = async (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      img.onload = () => {
+        const maxWidth = 1920;
+        const maxHeight = 1080;
+        let { width, height } = img;
+        
+        if (width > maxWidth || height > maxHeight) {
+          const ratio = Math.min(maxWidth / width, maxHeight / height);
+          width *= ratio;
+          height *= ratio;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const newFile = new File([blob], file.name, {
+                type: file.type
+              });
+              resolve(newFile);
+            } else {
+              reject(new Error('Failed to compress image'));
+            }
+          }, file.type, 0.85);
+        } else {
+          reject(new Error('Canvas context not available'));
+        }
+      };
+      
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = URL.createObjectURL(file);
+    });
+  };
 
   const loadData = async () => {
     try {
@@ -146,10 +255,19 @@ export default function EditProperty() {
       // Upload hero image if provided
       if (heroImage && updatedProperty) {
         console.log('Starting hero image upload...');
-        const heroPath = `properties/hero/${updatedProperty.id}/${Date.now()}-${heroImage.name}`;
+        
+        // Validate and process hero image
+        const validationError = validateImageFile(heroImage);
+        if (validationError) {
+          alert(`Hero image error: ${validationError}`);
+          return;
+        }
+        
+        const processedHeroImage = await processImage(heroImage);
+        const heroPath = `properties/hero/${updatedProperty.id}/${Date.now()}-${processedHeroImage.name}`;
         console.log('Upload path:', heroPath);
         
-        const { data: uploadData, error: uploadError } = await uploadFile('property-images', heroPath, heroImage);
+        const { data: uploadData, error: uploadError } = await uploadFile('property-images', heroPath, processedHeroImage);
         
         if (uploadError) {
           console.error('Hero image upload failed:', uploadError);
@@ -174,11 +292,25 @@ export default function EditProperty() {
       // Upload gallery images if provided
       if (galleryImages.length > 0 && updatedProperty) {
         console.log('Starting gallery images upload...');
+        
+        // Validate all gallery images first
+        for (const image of galleryImages) {
+          const validationError = validateImageFile(image);
+          if (validationError) {
+            alert(`Gallery image error (${image.name}): ${validationError}`);
+            return;
+          }
+        }
+        
+        // Process and upload gallery images
         for (const [index, image] of galleryImages.entries()) {
-          const galleryPath = `properties/gallery/${updatedProperty.id}/${Date.now()}-${index}-${image.name}`;
+          console.log(`Processing gallery image ${index + 1}/${galleryImages.length}: ${image.name}`);
+          
+          const processedImage = await processImage(image);
+          const galleryPath = `properties/gallery/${updatedProperty.id}/${Date.now()}-${index}-${processedImage.name}`;
           console.log('Uploading gallery image:', galleryPath);
           
-          const { data: uploadData, error: uploadError } = await uploadFile('property-images', galleryPath, image);
+          const { data: uploadData, error: uploadError } = await uploadFile('property-images', galleryPath, processedImage);
           
           if (uploadError) {
             console.error('Gallery image upload failed:', uploadError);
@@ -676,10 +808,23 @@ export default function EditProperty() {
                       <p className="text-gray-600 mb-2">{heroImage ? heroImage.name : 'Drop hero image here or click to browse'}</p>
                       <input 
                         type="file" 
-                        accept="image/*" 
+                        accept="image/jpeg,image/jpg,image/png,image/webp,image/avif" 
                         className="hidden" 
                         id="property-hero-image"
-                        onChange={(e) => setHeroImage(e.target.files?.[0] || null)}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const validationError = validateImageFile(file);
+                            if (validationError) {
+                              alert(`Invalid hero image: ${validationError}`);
+                              e.target.value = '';
+                              return;
+                            }
+                            setHeroImage(file);
+                          } else {
+                            setHeroImage(null);
+                          }
+                        }}
                       />
                       <label 
                         htmlFor="property-hero-image" 
@@ -687,7 +832,7 @@ export default function EditProperty() {
                       >
                         Choose Image
                       </label>
-                      <p className="text-xs text-gray-500 mt-2">PNG, JPG up to 10MB. Recommended: 1920x1080px</p>
+                      <p className="text-xs text-gray-500 mt-2">JPG, PNG, WebP, AVIF up to 10MB. Recommended: 1920x1080px</p>
                     </div>
                   </div>
 
@@ -703,13 +848,33 @@ export default function EditProperty() {
                       </p>
                       <input 
                         type="file" 
-                        accept="image/*" 
+                        accept="image/jpeg,image/jpg,image/png,image/webp,image/avif" 
                         multiple
                         className="hidden" 
                         id="property-gallery-images"
                         onChange={(e) => {
                           const files = Array.from(e.target.files || []);
-                          setGalleryImages(files);
+                          
+                          // Validate all files
+                          const invalidFiles: string[] = [];
+                          const validFiles: File[] = [];
+                          
+                          files.forEach(file => {
+                            const validationError = validateImageFile(file);
+                            if (validationError) {
+                              invalidFiles.push(`${file.name}: ${validationError}`);
+                            } else {
+                              validFiles.push(file);
+                            }
+                          });
+                          
+                          if (invalidFiles.length > 0) {
+                            alert(`Invalid gallery images:\n${invalidFiles.join('\n')}`);
+                            e.target.value = '';
+                            return;
+                          }
+                          
+                          setGalleryImages(validFiles);
                         }}
                       />
                       <label 
@@ -718,7 +883,7 @@ export default function EditProperty() {
                       >
                         Choose Images
                       </label>
-                      <p className="text-xs text-gray-500 mt-2">PNG, JPG up to 10MB each. Multiple images allowed.</p>
+                      <p className="text-xs text-gray-500 mt-2">JPG, PNG, WebP, AVIF up to 10MB each. Multiple images allowed.</p>
                       {galleryImages.length > 0 && (
                         <div className="mt-4">
                           <div className="flex flex-wrap gap-2 justify-center">

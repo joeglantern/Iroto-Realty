@@ -56,9 +56,14 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
 
+    const timeoutId = setTimeout(() => {
+      setLoading(false);
+      setError('Login timed out. Please check your internet connection and try again.');
+    }, 30000); // 30 second timeout
+
     try {
       if (isSignUp) {
-        const { data, error } = await supabase.auth.signUp({
+        const signUpPromise = supabase.auth.signUp({
           email,
           password,
           options: {
@@ -67,6 +72,13 @@ export default function LoginPage() {
             }
           }
         });
+
+        const { data, error } = await Promise.race([
+          signUpPromise,
+          new Promise<any>((_, reject) => 
+            setTimeout(() => reject(new Error('Sign up timed out after 20 seconds')), 20000)
+          )
+        ]);
         
         if (error) throw error;
         
@@ -75,22 +87,45 @@ export default function LoginPage() {
           setIsSignUp(false);
         }
       } else {
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const signInPromise = supabase.auth.signInWithPassword({
           email,
           password,
         });
 
+        const { data, error } = await Promise.race([
+          signInPromise,
+          new Promise<any>((_, reject) => 
+            setTimeout(() => reject(new Error('Sign in timed out after 20 seconds')), 20000)
+          )
+        ]);
+
         if (error) throw error;
 
         if (data.user) {
-          // Check if user is admin
-          const { data: roleData } = await supabase
+          // Check if user is admin with timeout
+          const rolePromise = supabase
             .from('profiles')
             .select('role, is_active')
             .eq('id', data.user.id)
             .single();
+
+          const { data: roleData, error: roleError } = await Promise.race([
+            rolePromise,
+            new Promise<any>((_, reject) => 
+              setTimeout(() => reject(new Error('Profile check timed out after 10 seconds')), 10000)
+            )
+          ]);
+
+          if (roleError) {
+            console.error('Error checking user role:', roleError);
+            setError('Failed to verify admin access. Please try again.');
+            await supabase.auth.signOut();
+            return;
+          }
           
           if (roleData && roleData.is_active && roleData.role === 'admin') {
+            // Clear timeout before navigation
+            clearTimeout(timeoutId);
             router.push('/properties');
           } else {
             setError('Access denied. Admin privileges required.');
@@ -99,8 +134,19 @@ export default function LoginPage() {
         }
       }
     } catch (error: any) {
-      setError(error.message || 'Authentication failed');
+      console.error('Authentication error:', error);
+      
+      if (error.message && error.message.includes('timed out')) {
+        setError(`Login timed out: ${error.message}. Please check your internet connection and try again.`);
+      } else if (error.message && error.message.includes('Invalid login credentials')) {
+        setError('Invalid email or password. Please check your credentials and try again.');
+      } else if (error.message && error.message.includes('Email not confirmed')) {
+        setError('Please confirm your email address before signing in.');
+      } else {
+        setError(error.message || 'Authentication failed. Please try again.');
+      }
     } finally {
+      clearTimeout(timeoutId);
       setLoading(false);
     }
   };

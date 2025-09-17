@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -15,8 +15,10 @@ export default function ProtectedRoute({
   requireAdmin = false, 
   requireSuperAdmin = false 
 }: ProtectedRouteProps) {
-  const { user, userRole, loading, isAdmin, isSuperAdmin } = useAuth();
+  const { user, userRole, loading, isAdmin, isSuperAdmin, retryAuth } = useAuth();
   const router = useRouter();
+  const [showRetry, setShowRetry] = useState(false);
+  const [retrying, setRetrying] = useState(false);
 
   useEffect(() => {
     if (!loading) {
@@ -40,13 +42,76 @@ export default function ProtectedRoute({
     }
   }, [user, userRole, loading, isAdmin, isSuperAdmin, requireAdmin, requireSuperAdmin, router]);
 
-  // Show loading while checking auth
+  // Show retry option after some time
+  useEffect(() => {
+    if (loading) {
+      const timer = setTimeout(() => {
+        setShowRetry(true);
+      }, 8000);
+      return () => clearTimeout(timer);
+    } else {
+      setShowRetry(false);
+    }
+  }, [loading]);
+
+  const handleRetry = async () => {
+    setRetrying(true);
+    try {
+      await retryAuth();
+      // If still loading after retry, show it worked
+      setTimeout(() => {
+        if (loading) {
+          setRetrying(false);
+        }
+      }, 3000);
+    } catch (error) {
+      console.error('Retry failed:', error);
+      setRetrying(false);
+    }
+  };
+
+  // Show loading while checking auth with enhanced UX
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+        <div className="text-center max-w-md mx-auto px-4">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-6"></div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            {retrying ? 'Reconnecting...' : 'Loading your dashboard'}
+          </h2>
+          <p className="text-gray-600 mb-6">
+            {retrying 
+              ? 'Attempting to restore your session...' 
+              : 'Verifying your authentication...'
+            }
+          </p>
+          
+          {showRetry && !retrying && (
+            <div className="space-y-4">
+              <p className="text-sm text-gray-500">Taking longer than expected?</p>
+              <button
+                onClick={handleRetry}
+                className="bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-md font-medium transition-colors"
+              >
+                Retry Connection
+              </button>
+              <p className="text-xs text-gray-400">
+                Or <button 
+                  onClick={() => window.location.reload()} 
+                  className="underline hover:no-underline"
+                >
+                  refresh the page
+                </button>
+              </p>
+            </div>
+          )}
+          
+          {retrying && (
+            <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+              <span>Retrying...</span>
+            </div>
+          )}
         </div>
       </div>
     );

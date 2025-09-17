@@ -55,6 +55,98 @@ export default function Properties() {
   const [heroImage, setHeroImage] = useState<File | null>(null);
   const [galleryImages, setGalleryImages] = useState<File[]>([]);
 
+  // Supported image formats and max sizes
+  const SUPPORTED_FORMATS = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/avif'];
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+  const MAX_GALLERY_IMAGES = 15; // Reasonable limit for performance
+
+  // Image compression and validation utility
+  const processImage = async (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      console.log(`Processing image: ${file.name}, type: ${file.type}, size: ${(file.size / 1024 / 1024).toFixed(1)}MB`);
+      
+      // Check file type (including file extension fallback for AVIF)
+      const isAVIF = file.type === 'image/avif' || file.name.toLowerCase().endsWith('.avif');
+      const isSupportedType = SUPPORTED_FORMATS.includes(file.type) || isAVIF;
+      
+      if (!isSupportedType) {
+        reject(new Error(`Unsupported format: ${file.type}. Please use JPEG, PNG, WebP, or AVIF.`));
+        return;
+      }
+
+      // Check file size
+      if (file.size > MAX_FILE_SIZE) {
+        reject(new Error(`File too large: ${(file.size / 1024 / 1024).toFixed(1)}MB. Maximum size is 10MB.`));
+        return;
+      }
+
+      // Always convert AVIF to JPEG for Supabase compatibility
+      if (isAVIF) {
+        console.log('AVIF detected - will convert to JPEG for Supabase compatibility');
+        // Continue to conversion process below
+      }
+      // If file is already reasonable size and JPEG/WebP, return as-is  
+      else if (file.size <= 2 * 1024 * 1024 && (file.type === 'image/jpeg' || file.type === 'image/webp')) {
+        console.log('Small JPEG/WebP - using as-is');
+        resolve(file);
+        return;
+      } else {
+        console.log('Large file or PNG - will compress to JPEG');
+      }
+      
+      // AVIF and large files need conversion to JPEG for Supabase compatibility
+
+      // Compress if needed
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+
+      img.onload = () => {
+        // Calculate new dimensions (max 1920px width, maintain aspect ratio)
+        const maxWidth = 1920;
+        const maxHeight = 1920;
+        let { width, height } = img;
+
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+        if (height > maxHeight) {
+          width = (width * maxHeight) / height;
+          height = maxHeight;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        // Draw and compress
+        ctx?.drawImage(img, 0, 0, width, height);
+        
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              // Create a new filename with .jpg extension
+              const newFileName = file.name.replace(/\.(avif|png|webp|jpe?g)$/i, '.jpg');
+              const compressedFile = new File([blob], newFileName, {
+                type: 'image/jpeg',
+                lastModified: Date.now(),
+              });
+              console.log(`Converted ${file.type} (${(file.size / 1024 / 1024).toFixed(1)}MB) to JPEG (${(blob.size / 1024 / 1024).toFixed(1)}MB)`);
+              resolve(compressedFile);
+            } else {
+              reject(new Error('Failed to convert image to JPEG'));
+            }
+          },
+          'image/jpeg',
+          0.85 // 85% quality - good balance of quality and file size
+        );
+      };
+
+      img.onerror = () => reject(new Error('Failed to load image for processing'));
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   // Load data on component mount
   useEffect(() => {
     loadData();
@@ -84,6 +176,9 @@ export default function Properties() {
     e.preventDefault();
     if (uploading) return;
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minute timeout
+
     try {
       setUploading(true);
       console.log('Starting property creation...');
@@ -102,35 +197,60 @@ export default function Properties() {
       };
 
       console.log('Creating property with data:', propertyData);
+      
+      // Create property with more reasonable timeout
+      console.log('Creating property...');
       const property = await createProperty(propertyData);
+      
       console.log('Property created successfully:', property);
 
       // Upload hero image if provided
       if (heroImage && property) {
         console.log('Starting hero image upload...');
-        const heroPath = `properties/hero/${property.id}/${Date.now()}-${heroImage.name}`;
-        console.log('Upload path:', heroPath);
         
-        const { data: uploadData, error: uploadError } = await uploadFile('property-images', heroPath, heroImage);
-        
-        if (uploadError) {
-          console.error('Hero image upload failed:', uploadError);
-          // Don't fail the entire operation for image upload issues
-          alert(`Property created but hero image upload failed: ${uploadError.message}`);
-        } else {
-          console.log('Hero image uploaded successfully:', uploadData);
-          // Update property with hero image path using Supabase directly
-          const { error: updateError } = await supabase
-            .from('properties')
-            .update({ hero_image_path: heroPath })
-            .eq('id', property.id);
-            
-          if (updateError) {
-            console.error('Error updating hero image path:', updateError);
-            alert(`Property created but failed to link hero image: ${updateError.message}`);
+        try {
+          // Process and validate hero image
+          const processedHeroImage = await processImage(heroImage);
+          const heroPath = `properties/hero/${property.id}/${Date.now()}-${processedHeroImage.name}`;
+          console.log('Upload path:', heroPath);
+          
+          const uploadPromise = uploadFile('property-images', heroPath, processedHeroImage);
+          const { data: uploadData, error: uploadError } = await Promise.race([
+            uploadPromise,
+            new Promise<any>((_, reject) => 
+              setTimeout(() => reject(new Error('Hero image upload timed out after 60 seconds')), 60000)
+            )
+          ]);
+          
+          if (uploadError) {
+            console.error('Hero image upload failed:', uploadError);
+            alert(`Property created but hero image upload failed: ${uploadError.message}`);
           } else {
-            console.log('Hero image path updated successfully');
+            console.log('Hero image uploaded successfully:', uploadData);
+            
+            // Update property with hero image path
+            const updatePromise = supabase
+              .from('properties')
+              .update({ hero_image_path: heroPath })
+              .eq('id', property.id);
+              
+            const { error: updateError } = await Promise.race([
+              updatePromise,
+              new Promise<any>((_, reject) => 
+                setTimeout(() => reject(new Error('Hero image link update timed out')), 15000)
+              )
+            ]);
+              
+            if (updateError) {
+              console.error('Error updating hero image path:', updateError);
+              alert(`Property created but failed to link hero image: ${updateError.message}`);
+            } else {
+              console.log('Hero image path updated successfully');
+            }
           }
+        } catch (heroError) {
+          console.error('Hero image process error:', heroError);
+          alert(`Property created but hero image failed: ${heroError instanceof Error ? heroError.message : 'Unknown error'}`);
         }
       }
 
@@ -138,50 +258,124 @@ export default function Properties() {
       if (galleryImages.length > 0 && property) {
         console.log(`Starting gallery images upload (${galleryImages.length} images)...`);
         
-        for (let i = 0; i < galleryImages.length; i++) {
-          const image = galleryImages[i];
-          const imagePath = `properties/gallery/${property.id}/${Date.now()}-${i}-${image.name}`;
-          console.log(`Uploading gallery image ${i + 1}/${galleryImages.length}:`, imagePath);
-          
-          try {
-            const { data: uploadData, error: uploadError } = await uploadFile('property-images', imagePath, image);
+        // Validate gallery image count
+        if (galleryImages.length > MAX_GALLERY_IMAGES) {
+          alert(`Too many gallery images (${galleryImages.length}). Maximum allowed is ${MAX_GALLERY_IMAGES}. Processing first ${MAX_GALLERY_IMAGES} images.`);
+        }
+        
+        const imagesToProcess = galleryImages.slice(0, MAX_GALLERY_IMAGES);
+        const maxConcurrent = 2; // Reduced for better performance with compression
+        let completed = 0;
+        let failed = 0;
+        const failedImages: string[] = [];
+        
+        // Process images in batches
+        for (let i = 0; i < imagesToProcess.length; i += maxConcurrent) {
+          const batch = imagesToProcess.slice(i, i + maxConcurrent);
+          const batchPromises = batch.map(async (image, batchIndex) => {
+            const actualIndex = i + batchIndex;
+            console.log(`Processing gallery image ${actualIndex + 1}/${imagesToProcess.length}...`);
             
-            if (uploadError) {
-              console.error(`Gallery image ${i + 1} upload failed:`, uploadError);
-              continue; // Skip this image but continue with others
-            }
+            try {
+              // Process and validate image first
+              const processedImage = await processImage(image);
+              const imagePath = `properties/gallery/${property.id}/${Date.now()}-${actualIndex}-${processedImage.name}`;
+              console.log(`Uploading gallery image ${actualIndex + 1}/${imagesToProcess.length}:`, imagePath);
+              
+              const uploadPromise = uploadFile('property-images', imagePath, processedImage);
+              const { data: uploadData, error: uploadError } = await Promise.race([
+                uploadPromise,
+                new Promise<any>((_, reject) => 
+                  setTimeout(() => reject(new Error(`Gallery image ${actualIndex + 1} upload timed out after 45 seconds`)), 45000)
+                )
+              ]);
+              
+              if (uploadError) {
+                console.error(`Gallery image ${actualIndex + 1} upload failed:`, uploadError);
+                failed++;
+                failedImages.push(`Image ${actualIndex + 1}: ${uploadError.message}`);
+                return;
+              }
 
-            // Insert into property_images table
-            const { error: insertError } = await supabase
-              .from('property_images')
-              .insert({
-                property_id: property.id,
-                image_path: imagePath,
-                alt_text: `${property.title} - Image ${i + 1}`,
-                sort_order: i + 1,
-                is_active: true
-              });
-            
-            if (insertError) {
-              console.error(`Error inserting gallery image ${i + 1} record:`, insertError);
-            } else {
-              console.log(`Gallery image ${i + 1} uploaded and recorded successfully`);
+              // Insert into property_images table
+              const insertPromise = supabase
+                .from('property_images')
+                .insert({
+                  property_id: property.id,
+                  image_path: imagePath,
+                  alt_text: `${property.title} - Image ${actualIndex + 1}`,
+                  sort_order: actualIndex + 1,
+                  is_active: true
+                });
+                
+              const { error: insertError } = await Promise.race([
+                insertPromise,
+                new Promise<any>((_, reject) => 
+                  setTimeout(() => reject(new Error(`Gallery image ${actualIndex + 1} database insert timed out`)), 15000)
+                )
+              ]);
+              
+              if (insertError) {
+                console.error(`Error inserting gallery image ${actualIndex + 1} record:`, insertError);
+                failed++;
+                failedImages.push(`Image ${actualIndex + 1}: Database error`);
+              } else {
+                console.log(`Gallery image ${actualIndex + 1} uploaded and recorded successfully`);
+                completed++;
+              }
+            } catch (error) {
+              console.error(`Error processing gallery image ${actualIndex + 1}:`, error);
+              failed++;
+              const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+              failedImages.push(`Image ${actualIndex + 1}: ${errorMsg}`);
             }
-          } catch (error) {
-            console.error(`Error processing gallery image ${i + 1}:`, error);
+          });
+          
+          await Promise.allSettled(batchPromises);
+          
+          // Small delay between batches to prevent overwhelming
+          if (i + maxConcurrent < imagesToProcess.length) {
+            await new Promise(resolve => setTimeout(resolve, 500));
           }
+        }
+        
+        console.log(`Gallery upload completed: ${completed} successful, ${failed} failed`);
+        if (failed > 0) {
+          console.log('Failed images:', failedImages);
+          alert(`Property created! ${completed} gallery images uploaded successfully, ${failed} failed.\n\nFailed images:\n${failedImages.slice(0, 3).join('\n')}${failedImages.length > 3 ? '\n...' : ''}`);
         }
       }
 
       alert('Property created successfully!');
       setShowUploadModal(false);
       resetForm();
-      loadData(); // Reload data
+      
+      // Reload data with timeout
+      try {
+        await Promise.race([
+          loadData(),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Data reload timed out')), 15000)
+          )
+        ]);
+      } catch (reloadError) {
+        console.error('Failed to reload data:', reloadError);
+        // Don't show error to user, just log it
+      }
+      
     } catch (error) {
       console.error('Error creating property:', error);
-      console.error('Full error details:', JSON.stringify(error, null, 2));
-      alert(`Error creating property: ${error instanceof Error ? error.message : 'Unknown error'}. Check console for details.`);
+      
+      if (error instanceof Error && error.message.includes('timed out')) {
+        alert(`Operation timed out: ${error.message}. Please check your internet connection and try again.`);
+      } else if (error instanceof Error && error.name === 'AbortError') {
+        alert('Operation was cancelled due to timeout. Please try again with a better internet connection.');
+      } else {
+        console.error('Full error details:', JSON.stringify(error, null, 2));
+        alert(`Error creating property: ${error instanceof Error ? error.message : 'Unknown error'}. Check console for details.`);
+      }
     } finally {
+      clearTimeout(timeoutId);
       setUploading(false);
     }
   };
@@ -708,10 +902,30 @@ export default function Properties() {
                     <p className="text-gray-600 mb-2">{heroImage ? heroImage.name : 'Drop hero image here or click to browse'}</p>
                     <input 
                       type="file" 
-                      accept="image/*" 
+                      accept="image/jpeg,image/jpg,image/png,image/webp,image/avif" 
                       className="hidden" 
                       id="property-hero-image"
-                      onChange={(e) => setHeroImage(e.target.files?.[0] || null)}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const isAVIF = file.type === 'image/avif' || file.name.toLowerCase().endsWith('.avif');
+                          const isSupportedType = SUPPORTED_FORMATS.includes(file.type) || isAVIF;
+                          
+                          if (!isSupportedType) {
+                            alert(`Unsupported format: ${file.type}. Please use JPEG, PNG, WebP, or AVIF.`);
+                            e.target.value = '';
+                            return;
+                          }
+                          if (file.size > MAX_FILE_SIZE) {
+                            alert(`File too large: ${(file.size / 1024 / 1024).toFixed(1)}MB. Maximum size is 10MB.`);
+                            e.target.value = '';
+                            return;
+                          }
+                          setHeroImage(file);
+                        } else {
+                          setHeroImage(null);
+                        }
+                      }}
                     />
                     <label 
                       htmlFor="property-hero-image" 
@@ -719,7 +933,7 @@ export default function Properties() {
                     >
                       Choose Image
                     </label>
-                    <p className="text-xs text-gray-500 mt-2">PNG, JPG up to 10MB. Recommended: 1920x1080px</p>
+                    <p className="text-xs text-gray-500 mt-2">JPEG, PNG, WebP up to 10MB. Recommended: 1920x1080px. AVIF supported (auto-converted).</p>
                   </div>
                 </div>
 
@@ -735,13 +949,41 @@ export default function Properties() {
                     </p>
                     <input 
                       type="file" 
-                      accept="image/*" 
+                      accept="image/jpeg,image/jpg,image/png,image/webp,image/avif" 
                       multiple
                       className="hidden" 
                       id="property-gallery-images"
                       onChange={(e) => {
                         const files = Array.from(e.target.files || []);
-                        setGalleryImages(files);
+                        const validFiles: File[] = [];
+                        const errors: string[] = [];
+                        
+                        files.forEach((file, index) => {
+                          const isAVIF = file.type === 'image/avif' || file.name.toLowerCase().endsWith('.avif');
+                          const isSupportedType = SUPPORTED_FORMATS.includes(file.type) || isAVIF;
+                          
+                          if (!isSupportedType) {
+                            errors.push(`File ${index + 1} (${file.name}): Unsupported format ${file.type}`);
+                          } else if (file.size > MAX_FILE_SIZE) {
+                            errors.push(`File ${index + 1} (${file.name}): Too large (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
+                          } else {
+                            validFiles.push(file);
+                          }
+                        });
+                        
+                        if (errors.length > 0) {
+                          alert(`Some files were rejected:\n\n${errors.slice(0, 5).join('\n')}${errors.length > 5 ? '\n...' : ''}\n\nPlease use JPEG, PNG, WebP, or AVIF files under 10MB.`);
+                        }
+                        
+                        if (validFiles.length > MAX_GALLERY_IMAGES) {
+                          alert(`Too many images selected (${validFiles.length}). Maximum allowed is ${MAX_GALLERY_IMAGES}. Using first ${MAX_GALLERY_IMAGES} images.`);
+                          setGalleryImages(validFiles.slice(0, MAX_GALLERY_IMAGES));
+                        } else {
+                          setGalleryImages(validFiles);
+                        }
+                        
+                        // Clear the input so the same files can be selected again if needed
+                        e.target.value = '';
                       }}
                     />
                     <label 
@@ -750,7 +992,7 @@ export default function Properties() {
                     >
                       Choose Images
                     </label>
-                    <p className="text-xs text-gray-500 mt-2">PNG, JPG up to 10MB each. Multiple images allowed.</p>
+                    <p className="text-xs text-gray-500 mt-2">JPEG, PNG, WebP up to 10MB each. Max 15 images. AVIF supported (auto-converted).</p>
                     {galleryImages.length > 0 && (
                       <div className="mt-4">
                         <div className="flex flex-wrap gap-2 justify-center">

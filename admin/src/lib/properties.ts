@@ -34,19 +34,29 @@ export async function getProperty(id: string) {
 export async function createProperty(property: Omit<Property, 'id' | 'created_at' | 'updated_at' | 'slug'>) {
   console.log('createProperty called with:', property);
   
-  const { data, error } = await supabase
-    .from('properties')
-    .insert(property)
-    .select()
-    .single()
+  try {
+    const { data, error } = await Promise.race([
+      supabase
+        .from('properties')
+        .insert(property)
+        .select()
+        .single(),
+      new Promise<any>((_, reject) => 
+        setTimeout(() => reject(new Error('Database operation timed out after 60 seconds')), 60000)
+      )
+    ]);
 
-  console.log('createProperty response - data:', data, 'error:', error);
-  
-  if (error) {
-    console.error('Property creation failed:', error);
+    console.log('createProperty response - data:', data, 'error:', error);
+    
+    if (error) {
+      console.error('Property creation failed:', error);
+      throw error;
+    }
+    return data;
+  } catch (error) {
+    console.error('Property creation error:', error);
     throw error;
   }
-  return data
 }
 
 export async function updateProperty(id: string, updates: Partial<Property>) {

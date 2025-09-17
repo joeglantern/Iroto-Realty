@@ -84,7 +84,7 @@ export default function Contact() {
               Contact <span className="text-brown">Us</span>
             </h1>
             <p className="text-xl lg:text-2xl text-white/90">
-              Let's discuss your coastal property dreams
+              Connect with our coastal living experts
             </p>
           </div>
         </section>
