@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import Image from 'next/image';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -158,8 +159,14 @@ export default function LoginPage() {
           className="flex justify-center cursor-pointer"
           onClick={handleLogoClick}
         >
-          <div className="w-16 h-16 bg-primary rounded-lg flex items-center justify-center">
-            <span className="text-white text-xl font-bold">IR</span>
+          <div className="flex items-center justify-center">
+            <Image
+              src="/logo/iroto-logo.png"
+              alt="Iroto Realty"
+              width={120}
+              height={40}
+              className="h-16 w-auto"
+            />
           </div>
         </div>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
