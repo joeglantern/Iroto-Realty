@@ -39,10 +39,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [loading, setLoading] = useState(true);
   const retryTimeoutRef = useRef<NodeJS.Timeout>();
+  const loadingTimeoutRef = useRef<NodeJS.Timeout>();
   const maxRetries = 3;
   const retryDelay = 2000;
   const [authError, setAuthError] = useState<string | null>(null);
   const [isOnline, setIsOnline] = useState(true);
+
+  // Centralized loading state management
+  const setLoadingWithTimeout = useCallback((isLoading: boolean, timeoutMs = 15000) => {
+    setLoading(isLoading);
+    
+    if (isLoading) {
+      // Clear any existing timeout
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+      
+      // Set maximum loading time
+      loadingTimeoutRef.current = setTimeout(() => {
+        console.warn('Loading timeout reached, forcing loading to false');
+        setLoading(false);
+        setAuthError('Authentication took too long. Please try refreshing the page.');
+      }, timeoutMs);
+    } else {
+      // Clear timeout when loading is done
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+        loadingTimeoutRef.current = undefined;
+      }
+    }
+  }, []);
 
   const isAdmin = userRole?.is_active && userRole.role === 'admin';
   const isSuperAdmin = false; // We only have user/admin roles in our system
@@ -230,7 +256,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setAuthError('Using temporary admin profile. Some features may be limited.');
       return tempAdminRole;
     } finally {
-      setLoading(false);
+      setLoadingWithTimeout(false);
     }
   }, [withRetry]);
 
@@ -244,13 +270,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await fetchUserRole(session.user.id, true);
       } else {
         console.log('No session found during retry');
-        setLoading(false);
+        setLoadingWithTimeout(false);
       }
     } catch (error) {
       console.error('Auth retry failed:', error);
-      setLoading(false);
+      setLoadingWithTimeout(false);
     }
-  }, [fetchUserRole]);
+  }, [fetchUserRole, setLoadingWithTimeout]);
 
   // Network status tracking
   useEffect(() => {
@@ -258,8 +284,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('Network connection restored');
       setIsOnline(true);
       setAuthError(null);
-      // Retry auth when coming back online
-      retryAuth();
+      // Only retry if we have a session but no userRole
+      setTimeout(() => {
+        // Use timeout to avoid immediate retry loops
+        if (user && !userRole && !loading) {
+          console.log('Network restored, retrying auth...');
+          retryAuth();
+        }
+      }, 1000);
     };
     
     const handleOffline = () => {
@@ -278,7 +310,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, []);
+  }, [user, userRole, loading, retryAuth]); // Added proper dependencies
 
   // Clear auth error function
   const clearAuthError = useCallback(() => {
@@ -295,19 +327,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('Loaded persisted auth state');
     }
 
-    // Set maximum loading time before giving up
-    const maxLoadingTime = setTimeout(() => {
-      if (mounted) {
-        console.warn('Auth initialization timed out after 15 seconds');
-        // If we have persisted role, use it
-        if (persistedRole) {
-          console.log('Using persisted role due to timeout');
-          setLoading(false);
-        } else {
-          setLoading(false);
-        }
-      }
-    }, 15000);
+    // Loading timeout is now handled by setLoadingWithTimeout
+    // Start loading with timeout
+    setLoadingWithTimeout(true, 15000);
 
     // Enhanced session initialization with retry
     const initAuth = async () => {
@@ -337,7 +359,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Clear persisted auth if no session
           persistAuthState(null, null);
           setUserRole(null);
-          setLoading(false);
+          setLoadingWithTimeout(false);
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
@@ -352,9 +374,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Fallback to persisted role if available
           if (persistedRole) {
             console.log('Auth init failed, using persisted role');
-            setLoading(false);
+            setLoadingWithTimeout(false);
           } else {
-            setLoading(false);
+            setLoadingWithTimeout(false);
             // Schedule a retry after a delay
             setTimeout(() => {
               if (mounted && isOnline) {
@@ -365,7 +387,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         }
       } finally {
-        clearTimeout(maxLoadingTime);
+        // Loading timeout is handled by setLoadingWithTimeout
       }
     };
 
@@ -383,14 +405,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (event === 'SIGNED_OUT') {
         persistAuthState(null, null);
         setUserRole(null);
-        setLoading(false);
+        setLoadingWithTimeout(false);
         return;
       }
 
       if (event === 'TOKEN_REFRESHED') {
         console.log('Token refreshed successfully');
-        // Re-verify role after token refresh
-        if (session?.user) {
+        // Don't fetch role on token refresh if we already have it
+        // This prevents unnecessary loading states
+        if (session?.user && !userRole) {
+          console.log('Token refreshed but no userRole, fetching...');
           await fetchUserRole(session.user.id, false); // Don't retry on token refresh
         }
         return;
@@ -401,47 +425,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await fetchUserRole(session.user.id, true);
       } else {
         setUserRole(null);
-        setLoading(false);
+        setLoadingWithTimeout(false);
       }
     });
 
-    // Auto-retry failed auth operations
-    const autoRetryInterval = setInterval(async () => {
-      if (mounted && !loading) {
-        try {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (session?.user && !userRole) {
-            console.log('Auto-retrying failed auth operation');
-            await fetchUserRole(session.user.id, true);
-          }
-        } catch (error) {
-          console.error('Auto-retry error:', error);
-        }
-      }
-    }, 30000); // Retry every 30 seconds if needed
+    // Disabled auto-retry to prevent infinite loops
+    // Only retry on explicit user action or network reconnection
+    // const autoRetryInterval = setInterval(async () => {
+    //   // This was causing infinite loading loops
+    // }, 30000);
 
     return () => {
       mounted = false;
-      clearTimeout(maxLoadingTime);
       clearTimeout(sessionTimeoutId);
-      clearInterval(autoRetryInterval);
       if (retryTimeoutRef.current) {
         clearTimeout(retryTimeoutRef.current);
       }
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
       subscription.unsubscribe();
     };
-  }, []); // Empty dependency array - all functions are memoized with useCallback
+  }, [setLoadingWithTimeout]); // Added setLoadingWithTimeout dependency
 
   // Enhanced signOut with cleanup
   const signOut = useCallback(async () => {
     try {
-      setLoading(true);
+      setLoadingWithTimeout(true, 5000); // Shorter timeout for signout
       await supabase.auth.signOut();
       
       // Clear all state
       setUser(null);
       setSession(null);
       setUserRole(null);
+      setAuthError(null);
       
       // Clear persisted data
       persistAuthState(null, null);
@@ -454,9 +471,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Error signing out:', error);
     } finally {
-      setLoading(false);
+      setLoadingWithTimeout(false);
     }
-  }, [persistAuthState]);
+  }, [persistAuthState, setLoadingWithTimeout]);
 
   const value = {
     user,

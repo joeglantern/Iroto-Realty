@@ -291,69 +291,77 @@ function HeroCarousel() {
   }, []);
 
   return (
-    <section className="relative h-[70vh] flex items-center justify-center overflow-hidden">
-      {/* Carousel Images */}
-      {slides.map((slide, index) => (
-        <div
-          key={slide.id}
-          className={`absolute inset-0 transition-opacity duration-1000 ${
-            index === currentSlide ? 'opacity-100' : 'opacity-0'
-          }`}
-        >
-          <div 
-            className="w-full h-full bg-cover bg-center bg-no-repeat"
-            style={{ backgroundImage: `url("${slide.image}")` }}
-          />
-          <div className="absolute inset-0 bg-black/40" />
-        </div>
-      ))}
-
-      {/* Navigation Arrows */}
-      <button
-        onClick={prevSlide}
-        className="absolute left-6 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center text-white transition-all duration-200 z-20"
-      >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-        </svg>
-      </button>
-      
-      <button
-        onClick={nextSlide}
-        className="absolute right-6 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center text-white transition-all duration-200 z-20"
-      >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-        </svg>
-      </button>
-
-      {/* Slide Indicators */}
-      <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2 z-20">
-        {slides.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => setCurrentSlide(index)}
-            className={`w-3 h-3 rounded-full transition-all duration-200 ${
-              index === currentSlide ? 'bg-white' : 'bg-white/50 hover:bg-white/70'
+    <section className="relative h-[60vh] sm:h-[70vh] lg:h-[80vh] flex items-center justify-center">
+      {/* Background Images Container - Clipped */}
+      <div className="absolute inset-0 overflow-hidden">
+        {/* Carousel Images */}
+        {slides.map((slide, index) => (
+          <div
+            key={slide.id}
+            className={`absolute inset-0 transition-opacity duration-1000 ${
+              index === currentSlide ? 'opacity-100' : 'opacity-0'
             }`}
-          />
+          >
+            <div 
+              className="w-full h-full bg-cover bg-center bg-no-repeat"
+              style={{ 
+                backgroundImage: `url("${slide.image}")`,
+                backgroundPosition: 'center 30%' // Better positioning for mobile
+              }}
+            />
+            {/* Mobile-optimized image overlay for better cropping */}
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/20 md:hidden" />
+            <div className="absolute inset-0 bg-black/40" />
+          </div>
         ))}
+        
+        {/* Navigation Arrows - Inside clipped container */}
+        <button
+          onClick={prevSlide}
+          className="absolute left-2 sm:left-4 lg:left-6 top-1/3 sm:top-1/2 transform -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center text-white transition-all duration-200 z-10"
+        >
+          <svg className="w-4 h-4 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        
+        <button
+          onClick={nextSlide}
+          className="absolute right-2 sm:right-4 lg:right-6 top-1/3 sm:top-1/2 transform -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center text-white transition-all duration-200 z-10"
+        >
+          <svg className="w-4 h-4 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+
+        {/* Slide Indicators - Inside clipped container */}
+        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2 z-20">
+          {slides.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentSlide(index)}
+              className={`w-3 h-3 rounded-full transition-all duration-200 ${
+                index === currentSlide ? 'bg-white' : 'bg-white/50 hover:bg-white/70'
+              }`}
+            />
+          ))}
+        </div>
       </div>
       
       {/* Hero Content */}
-      <div className="relative z-10 text-center text-white max-w-6xl mx-auto px-4">
-        <h1 className="text-4xl lg:text-6xl font-bold mb-4 transition-all duration-1000 text-white drop-shadow-lg">
+      <div className="relative z-10 text-center text-white max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold mb-3 sm:mb-4 transition-all duration-1000 text-white drop-shadow-lg">
           Find Your Perfect
         </h1>
-        <h2 className="text-2xl lg:text-4xl font-bold mb-8 text-[#713900] drop-shadow-lg">
+        <h2 className="text-xl sm:text-2xl lg:text-4xl font-bold mb-6 sm:mb-8 text-[#713900] drop-shadow-lg">
           Coastal Property
         </h2>
         
         {/* Professional Search Bar with Autocomplete */}
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-2xl mx-auto px-2 sm:px-0 relative">
           <form onSubmit={handleSearchSubmit} className="relative">
-            <div className="bg-white rounded-lg shadow-xl p-2 flex items-center">
-              <div className="flex-1 flex items-center pl-4 relative">
+            <div className="bg-white rounded-lg shadow-xl p-1 sm:p-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-0">
+              <div className="flex-1 flex items-center pl-3 sm:pl-4 relative min-h-[48px]">
                 <input
                   ref={searchInputRef}
                   type="text"
@@ -364,12 +372,12 @@ function HeroCarousel() {
                   onFocus={() => {
                     if (suggestions.length > 0) setShowSuggestions(true);
                   }}
-                  placeholder="Search by location, property type, or keyword..."
-                  className="flex-1 bg-transparent border-none outline-none text-gray-800 placeholder-gray-500 text-base py-3"
+                  placeholder="Search by location, property type..."
+                  className="flex-1 bg-transparent border-none outline-none text-gray-800 placeholder-gray-500 text-sm sm:text-base py-2 sm:py-3"
                   autoComplete="off"
                 />
                 {isLoading && (
-                  <div className="absolute right-4">
+                  <div className="absolute right-3 sm:right-4">
                     <div className="w-4 h-4 border-2 border-gray-300 border-t-brown rounded-full animate-spin"></div>
                   </div>
                 )}
@@ -378,29 +386,77 @@ function HeroCarousel() {
               {/* Search Button */}
               <button
                 type="submit"
-                className="bg-brown hover:bg-brown/90 text-white px-8 py-3 rounded-md font-semibold transition-colors duration-200 flex items-center shadow-md"
+                className="bg-brown hover:bg-brown/90 text-white px-4 sm:px-8 py-2 sm:py-3 rounded-md font-semibold transition-colors duration-200 flex items-center justify-center shadow-md min-h-[44px]"
               >
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
-                Search
+                <span className="text-sm sm:text-base">Search</span>
               </button>
             </div>
 
+            {/* Loading State for Suggestions */}
+            {isLoading && searchData.search.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 z-[9999] overflow-hidden">
+                <div className="py-8 px-4 text-center">
+                  <div className="w-8 h-8 border-2 border-gray-300 border-t-brown rounded-full animate-spin mx-auto mb-3"></div>
+                  <p className="text-sm text-gray-500">Searching properties...</p>
+                </div>
+              </div>
+            )}
+
+            {/* Empty State for Suggestions */}
+            {showSuggestions && !isLoading && suggestions.length === 0 && searchData.search.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 z-[9999] overflow-hidden">
+                <div className="py-8 px-4 text-center">
+                  <svg className="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  <p className="text-sm font-medium text-gray-900 mb-1">No properties found</p>
+                  <p className="text-xs text-gray-500 mb-4">Try searching for a different location or property type</p>
+                  <button
+                    onClick={() => {
+                      setSearchData({ search: '' });
+                      setShowSuggestions(false);
+                    }}
+                    className="text-xs text-brown hover:text-brown/80 font-medium"
+                  >
+                    Clear search
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Autocomplete Suggestions */}
-            {showSuggestions && suggestions.length > 0 && (
+            {showSuggestions && !isLoading && suggestions.length > 0 && (
               <div 
                 ref={suggestionsRef}
-                className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 z-50 overflow-hidden"
+                className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 z-[9999] overflow-hidden max-h-96 sm:max-h-80"
+                style={{ 
+                  boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05)' 
+                }}
               >
-                <div className="py-2">
+                <div className="max-h-72 sm:max-h-64 overflow-y-auto py-2">
                   {suggestions.map((property, index) => {
-                    // Get property image
-                    let imageUrl = 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+                    // Get property image with multiple fallbacks
+                    let imageUrl = '';
+                    let hasImage = false;
+                    
                     if (property.hero_image_path) {
                       imageUrl = getStorageUrl('property-images', property.hero_image_path);
+                      hasImage = true;
                     } else if ((property as any).property_images?.[0]?.image_path) {
                       imageUrl = getStorageUrl('property-images', (property as any).property_images[0].image_path);
+                      hasImage = true;
+                    } else {
+                      // Fallback based on property type or location
+                      if (property.title.toLowerCase().includes('lamu')) {
+                        imageUrl = 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80';
+                      } else if (property.title.toLowerCase().includes('watamu')) {
+                        imageUrl = 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80';
+                      } else {
+                        imageUrl = 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80';
+                      }
                     }
 
                     const price = property.listing_type === 'sale'
@@ -411,84 +467,121 @@ function HeroCarousel() {
                       <div
                         key={property.id}
                         onClick={() => handleSuggestionClick(property)}
-                        className={`flex items-center px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors ${
-                          index === selectedSuggestionIndex ? 'bg-gray-50' : ''
+                        className={`flex items-start sm:items-center px-3 sm:px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors border-l-4 ${
+                          index === selectedSuggestionIndex 
+                            ? 'bg-blue-50 border-l-blue-500' 
+                            : 'border-l-transparent hover:border-l-gray-300'
                         }`}
                       >
-                        <div className="w-16 h-12 bg-gray-200 rounded-md overflow-hidden flex-shrink-0 mr-4">
+                        <div className="w-14 h-10 sm:w-16 sm:h-12 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0 mr-3 sm:mr-4 relative">
                           <img
                             src={imageUrl}
                             alt={property.title}
                             className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80';
+                            }}
                           />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-gray-900 truncate">
-                            {property.title}
-                          </h4>
-                          <p className="text-sm text-gray-500 truncate">
-                            {property.specific_location || 'Kenya Coast'}
-                          </p>
-                          <p className="text-sm font-semibold text-brown">
-                            {price}
-                          </p>
-                        </div>
-                        <div className="flex-shrink-0 ml-2">
-                          {property.listing_type === 'sale' && (
-                            <span className="bg-brown text-white px-2 py-1 rounded-full text-xs font-medium">
-                              FOR SALE
-                            </span>
+                          {property.is_featured && (
+                            <div className="absolute top-0 right-0 w-2 h-2 bg-yellow-400 rounded-full"></div>
                           )}
-                          {property.listing_type === 'rental' && (
-                            <span className="bg-gray-700 text-white px-2 py-1 rounded-full text-xs font-medium">
-                              FOR RENT
-                            </span>
-                          )}
-                          {property.listing_type === 'both' && (
-                            <span className="bg-purple-600 text-white px-2 py-1 rounded-full text-xs font-medium">
-                              BOTH
-                            </span>
+                        </div>
+                        <div className="flex-1 min-w-0 space-y-1">
+                          <div className="flex items-start justify-between">
+                            <h4 className="font-medium text-gray-900 text-sm sm:text-base truncate pr-2">
+                              {property.title}
+                            </h4>
+                            <div className="flex-shrink-0">
+                              {property.listing_type === 'sale' && (
+                                <span className="bg-brown text-white px-2 py-0.5 rounded-full text-xs font-medium">
+                                  FOR SALE
+                                </span>
+                              )}
+                              {property.listing_type === 'rental' && (
+                                <span className="bg-gray-700 text-white px-2 py-0.5 rounded-full text-xs font-medium">
+                                  FOR RENT
+                                </span>
+                              )}
+                              {property.listing_type === 'both' && (
+                                <span className="bg-gradient-to-r from-brown to-gray-700 text-white px-2 py-0.5 rounded-full text-xs font-medium">
+                                  BOTH
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between text-xs sm:text-sm">
+                            <p className="text-gray-500 truncate flex items-center">
+                              <svg className="w-3 h-3 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                              </svg>
+                              {property.specific_location || 'Kenya Coast'}
+                            </p>
+                            <p className="font-semibold text-brown ml-2">
+                              {price}
+                            </p>
+                          </div>
+                          {property.property_type_text && (
+                            <p className="text-xs text-gray-400 truncate">
+                              {property.property_type_text}
+                            </p>
                           )}
                         </div>
                       </div>
                     );
                   })}
                 </div>
-                <div className="border-t border-gray-200 px-4 py-2 bg-gray-50">
-                  <p className="text-xs text-gray-500 text-center">
-                    Press Enter to search for "{searchData.search}" • Use ↑↓ to navigate • Press Escape to close
-                  </p>
+                
+                {/* Enhanced Footer with Better Instructions */}
+                <div className="border-t border-gray-200 px-3 sm:px-4 py-2 bg-gray-50">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
+                    <div className="flex items-center text-xs text-gray-500">
+                      <svg className="w-3 h-3 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {suggestions.length} propert{suggestions.length === 1 ? 'y' : 'ies'} found
+                    </div>
+                    <div className="text-xs text-gray-500 hidden sm:block">
+                      <kbd className="px-1 py-0.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded">↑↓</kbd> navigate • 
+                      <kbd className="px-1 py-0.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded ml-1">Enter</kbd> search • 
+                      <kbd className="px-1 py-0.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded ml-1">Esc</kbd> close
+                    </div>
+                    <div className="text-xs text-gray-500 sm:hidden">
+                      Tap any property to view details
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
             
             {/* Quick Filter Pills */}
-            <div className="flex flex-wrap justify-center gap-3 mt-4">
+            <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mt-3 sm:mt-4 px-2">
               <button
                 type="button"
                 onClick={() => setSearchData({ ...searchData, search: 'Lamu' })}
-                className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-full hover:bg-white/30 transition-colors duration-200 text-sm"
+                className="px-3 sm:px-4 py-1.5 sm:py-2 bg-white/20 backdrop-blur-sm text-white rounded-full hover:bg-white/30 transition-colors duration-200 text-xs sm:text-sm"
               >
                 Lamu Properties
               </button>
               <button
                 type="button"
                 onClick={() => setSearchData({ ...searchData, search: 'Watamu' })}
-                className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-full hover:bg-white/30 transition-colors duration-200 text-sm"
+                className="px-3 sm:px-4 py-1.5 sm:py-2 bg-white/20 backdrop-blur-sm text-white rounded-full hover:bg-white/30 transition-colors duration-200 text-xs sm:text-sm"
               >
                 Watamu Properties
               </button>
               <button
                 type="button"
                 onClick={() => setSearchData({ ...searchData, search: 'villa' })}
-                className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-full hover:bg-white/30 transition-colors duration-200 text-sm"
+                className="px-3 sm:px-4 py-1.5 sm:py-2 bg-white/20 backdrop-blur-sm text-white rounded-full hover:bg-white/30 transition-colors duration-200 text-xs sm:text-sm"
               >
                 Luxury Villas
               </button>
               <button
                 type="button"
                 onClick={() => setSearchData({ ...searchData, search: 'beachfront' })}
-                className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-full hover:bg-white/30 transition-colors duration-200 text-sm"
+                className="px-3 sm:px-4 py-1.5 sm:py-2 bg-white/20 backdrop-blur-sm text-white rounded-full hover:bg-white/30 transition-colors duration-200 text-xs sm:text-sm"
               >
                 Beachfront
               </button>
