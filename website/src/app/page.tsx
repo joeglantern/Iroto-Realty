@@ -350,12 +350,9 @@ function HeroCarousel() {
       
       {/* Hero Content */}
       <div className="relative z-10 text-center text-white max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold mb-3 sm:mb-4 transition-all duration-1000 text-white drop-shadow-lg">
-          Find Your Perfect
+        <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold mb-6 sm:mb-8 transition-all duration-1000 text-[#713900] drop-shadow-lg">
+          IROTO REALTY
         </h1>
-        <h2 className="text-xl sm:text-2xl lg:text-4xl font-bold mb-6 sm:mb-8 text-[#713900] drop-shadow-lg">
-          Coastal Property
-        </h2>
         
         {/* Professional Search Bar with Autocomplete */}
         <div className="max-w-2xl mx-auto px-2 sm:px-0 relative">

@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { getPropertyCategories, getFeaturedProperties } from '@/lib/data';
+import { getPropertyCategories, getFeaturedProperties, getSearchSuggestions } from '@/lib/data';
 import { getStorageUrl } from '@/lib/supabase';
 import type { PropertyCategory, Property } from '@/lib/supabase';
 import PageLayout from '@/components/layout/PageLayout';
@@ -438,8 +438,15 @@ export default function RentalPortfolio() {
   const [searchData, setSearchData] = useState({
     search: '',
     location: '',
-    type: 'rental'
+    type: 'rental',
+    maxPrice: ''
   });
+  const [suggestions, setSuggestions] = useState<Property[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
+  const [isLoading, setIsLoading] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
     setSearchData({
@@ -457,10 +464,80 @@ export default function RentalPortfolio() {
     if (searchData.location) params.append('location', searchData.location);
     if (searchData.type) params.append('type', searchData.type);
     
-    // Navigate to search results - we can create a search results page later
-    // For now, let's redirect to the main rental portfolio with search params
-    router.push(`/rental-portfolio${params.toString() ? '?' + params.toString() : ''}`);
+    // Navigate to search page with results
+    router.push(`/search${params.toString() ? '?' + params.toString() : ''}`);
   };
+
+  // Debounced search for suggestions (rental properties only)
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (searchData.search.length > 2) {
+        try {
+          setIsLoading(true);
+          const results = await getSearchSuggestions(searchData.search, { type: 'rental' });
+          setSuggestions(results);
+          setShowSuggestions(true);
+          setSelectedSuggestionIndex(-1);
+        } catch (error) {
+          console.error('Error fetching suggestions:', error);
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchData.search]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!showSuggestions) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedSuggestionIndex(prev => 
+          prev < suggestions.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedSuggestionIndex(prev => prev > 0 ? prev - 1 : -1);
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (selectedSuggestionIndex >= 0) {
+          const selectedProperty = suggestions[selectedSuggestionIndex];
+          window.location.href = `/property/${selectedProperty.slug}`;
+        } else {
+          handleSearchSubmit(e);
+        }
+        break;
+      case 'Escape':
+        setShowSuggestions(false);
+        setSelectedSuggestionIndex(-1);
+        break;
+    }
+  };
+
+  // Handle click outside to close suggestions
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        suggestionsRef.current && 
+        !suggestionsRef.current.contains(event.target as Node) &&
+        searchInputRef.current && 
+        !searchInputRef.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     async function loadData() {
@@ -503,89 +580,188 @@ export default function RentalPortfolio() {
               Discover luxury vacation rentals in Kenya's premier coastal destinations
             </p>
             
-            {/* Embedded Search Form */}
-            <div className="max-w-4xl mx-auto">
-              <form onSubmit={handleSearchSubmit} className="bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl p-4 md:p-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
-                  {/* Search Input */}
-                  <div className="md:col-span-1">
+            {/* Advanced Search Bar with Autocomplete */}
+            <div className="max-w-2xl mx-auto px-2 sm:px-0 relative">
+              <form onSubmit={handleSearchSubmit} className="relative">
+                <div className="bg-white rounded-lg shadow-xl p-1 sm:p-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-0">
+                  <div className="flex-1 flex items-center pl-3 sm:pl-4 relative min-h-[48px]">
                     <input
+                      ref={searchInputRef}
                       type="text"
-                      id="search"
                       name="search"
                       value={searchData.search}
                       onChange={handleSearchChange}
-                      placeholder="Search destinations..."
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brown focus:border-brown transition-colors duration-200 text-gray-900"
+                      onKeyDown={handleKeyDown}
+                      onFocus={() => {
+                        if (suggestions.length > 0) setShowSuggestions(true);
+                      }}
+                      placeholder="Search rental properties, locations..."
+                      className="flex-1 bg-transparent border-none outline-none text-gray-800 placeholder-gray-500 text-sm sm:text-base py-2 sm:py-3"
+                      autoComplete="off"
                     />
+                    {isLoading && (
+                      <div className="absolute right-3 sm:right-4">
+                        <div className="w-4 h-4 border-2 border-gray-300 border-t-brown rounded-full animate-spin"></div>
+                      </div>
+                    )}
                   </div>
-
-                  {/* Location Filter */}
-                  <div>
-                    <select
-                      id="location"
-                      name="location"
-                      value={searchData.location}
-                      onChange={handleSearchChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brown focus:border-brown transition-colors duration-200 text-gray-900"
-                    >
-                      <option value="">All Locations</option>
-                      <option value="Lamu">Lamu</option>
-                      <option value="Watamu">Watamu</option>
-                      <option value="Malindi">Malindi</option>
-                      <option value="Diani">Diani</option>
-                      <option value="Nairobi">Nairobi</option>
-                    </select>
-                  </div>
-
+                  
                   {/* Search Button */}
-                  <div>
-                    <button
-                      type="submit"
-                      className="w-full bg-brown text-white px-6 py-3 rounded-lg hover:bg-brown/90 transition-colors duration-200 font-semibold flex items-center justify-center"
-                    >
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <button
+                    type="submit"
+                    className="bg-brown hover:bg-brown/90 text-white px-4 sm:px-8 py-2 sm:py-3 rounded-md font-semibold transition-colors duration-200 flex items-center justify-center shadow-md min-h-[44px]"
+                  >
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <span className="text-sm sm:text-base">Search</span>
+                  </button>
+                </div>
+
+                {/* Loading State for Suggestions */}
+                {isLoading && searchData.search.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 z-[9999] overflow-hidden">
+                    <div className="py-8 px-4 text-center">
+                      <div className="w-8 h-8 border-2 border-gray-300 border-t-brown rounded-full animate-spin mx-auto mb-3"></div>
+                      <p className="text-sm text-gray-500">Searching rental properties...</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Empty State for Suggestions */}
+                {showSuggestions && !isLoading && suggestions.length === 0 && searchData.search.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 z-[9999] overflow-hidden">
+                    <div className="py-8 px-4 text-center">
+                      <svg className="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                       </svg>
-                      Search
-                    </button>
+                      <p className="text-sm font-medium text-gray-900 mb-1">No rental properties found</p>
+                      <p className="text-xs text-gray-500 mb-4">Try searching for a different location or property type</p>
+                      <button
+                        onClick={() => {
+                          setSearchData({ ...searchData, search: '' });
+                          setShowSuggestions(false);
+                        }}
+                        className="text-xs text-brown hover:text-brown/80 font-medium"
+                      >
+                        Clear search
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
 
-                {/* Quick Filters */}
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <div className="flex flex-wrap gap-2 justify-center">
-                    <button
-                      type="button"
-                      onClick={() => setSearchData({ ...searchData, search: 'beachfront' })}
-                      className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-full hover:bg-brown hover:text-white transition-colors duration-200"
-                    >
-                      Beachfront
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSearchData({ ...searchData, search: 'villa' })}
-                      className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-full hover:bg-brown hover:text-white transition-colors duration-200"
-                    >
-                      Villa
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSearchData({ ...searchData, search: 'luxury' })}
-                      className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-full hover:bg-brown hover:text-white transition-colors duration-200"
-                    >
-                      Luxury
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSearchData({ ...searchData, search: 'pool' })}
-                      className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-full hover:bg-brown hover:text-white transition-colors duration-200"
-                    >
-                      Pool
-                    </button>
+                {/* Autocomplete Suggestions */}
+                {showSuggestions && !isLoading && suggestions.length > 0 && (
+                  <div 
+                    ref={suggestionsRef}
+                    className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 z-[9999] overflow-hidden max-h-96 sm:max-h-80"
+                    style={{ 
+                      boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05)' 
+                    }}
+                  >
+                    <div className="max-h-72 sm:max-h-64 overflow-y-auto py-2">
+                      {suggestions.map((property, index) => {
+                        // Get property image with fallbacks
+                        let imageUrl = '';
+                        
+                        if (property.hero_image_path) {
+                          imageUrl = getStorageUrl('property-images', property.hero_image_path);
+                        } else if ((property as any).property_images?.[0]?.image_path) {
+                          imageUrl = getStorageUrl('property-images', (property as any).property_images[0].image_path);
+                        } else {
+                          // Fallback based on property type or location
+                          if (property.title.toLowerCase().includes('lamu')) {
+                            imageUrl = 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80';
+                          } else if (property.title.toLowerCase().includes('watamu')) {
+                            imageUrl = 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80';
+                          } else {
+                            imageUrl = 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80';
+                          }
+                        }
+                        
+                        return (
+                          <button
+                            key={property.id}
+                            onClick={() => window.location.href = `/property/${property.slug}`}
+                            className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors duration-150 border-b border-gray-100 last:border-b-0 flex items-center space-x-3 ${
+                              index === selectedSuggestionIndex ? 'bg-gray-50' : ''
+                            }`}
+                          >
+                            <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-gray-200">
+                              <img 
+                                src={imageUrl} 
+                                alt={property.title}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.src = 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80';
+                                }}
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-gray-900 text-sm truncate">{property.title}</p>
+                              <p className="text-xs text-gray-500 truncate">{property.specific_location}</p>
+                              {property.rental_price && (
+                                <p className="text-xs text-brown font-medium">KES {property.rental_price.toLocaleString()}/night</p>
+                              )}
+                            </div>
+                            <div className="flex-shrink-0">
+                              <span className="bg-gray-700 text-white px-2 py-1 rounded-full text-xs font-medium">
+                                RENTAL
+                              </span>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    
+                    {/* Results count footer */}
+                    <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 text-center">
+                      <div className="flex items-center justify-center text-xs text-gray-500">
+                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        {suggestions.length} rental propert{suggestions.length === 1 ? 'y' : 'ies'} found
+                      </div>
+                    </div>
                   </div>
-                </div>
+                )}
               </form>
+              
+              {/* Quick Filters */}
+              <div className="mt-6">
+                <p className="text-white/80 text-sm text-center mb-3">Popular searches:</p>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setSearchData({ ...searchData, search: 'beachfront' })}
+                    className="px-3 py-1 text-sm bg-white/20 text-white rounded-full hover:bg-brown hover:text-white transition-colors duration-200 backdrop-blur-sm"
+                  >
+                    Beachfront
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSearchData({ ...searchData, search: 'villa' })}
+                    className="px-3 py-1 text-sm bg-white/20 text-white rounded-full hover:bg-brown hover:text-white transition-colors duration-200 backdrop-blur-sm"
+                  >
+                    Villa
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSearchData({ ...searchData, search: 'luxury' })}
+                    className="px-3 py-1 text-sm bg-white/20 text-white rounded-full hover:bg-brown hover:text-white transition-colors duration-200 backdrop-blur-sm"
+                  >
+                    Luxury
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSearchData({ ...searchData, search: 'pool' })}
+                    className="px-3 py-1 text-sm bg-white/20 text-white rounded-full hover:bg-brown hover:text-white transition-colors duration-200 backdrop-blur-sm"
+                  >
+                    Pool
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </section>
