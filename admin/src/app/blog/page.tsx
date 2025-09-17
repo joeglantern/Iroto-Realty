@@ -42,6 +42,115 @@ function Blog() {
   
   const [featuredImage, setFeaturedImage] = useState<File | null>(null);
 
+  // Image format constants
+  const SUPPORTED_FORMATS = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/avif'];
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+  // Image processing functions
+  const validateImageFile = (file: File): string | null => {
+    if (!SUPPORTED_FORMATS.includes(file.type) && !file.name.toLowerCase().match(/\.(jpg|jpeg|png|webp|avif)$/)) {
+      return `Unsupported format. Please use: ${SUPPORTED_FORMATS.join(', ')}`;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      return `File too large. Maximum size is ${MAX_FILE_SIZE / (1024 * 1024)}MB`;
+    }
+    return null;
+  };
+
+  const processImage = async (file: File): Promise<File> => {
+    const isAVIF = file.type === 'image/avif' || file.name.toLowerCase().endsWith('.avif');
+    
+    if (isAVIF) {
+      console.log('Converting AVIF to JPEG for Supabase compatibility');
+      return convertToJPEG(file);
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      console.log('Compressing large image');
+      return compressImage(file);
+    }
+
+    return file;
+  };
+
+  const convertToJPEG = async (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new window.Image();
+      
+      img.onload = () => {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        
+        if (ctx) {
+          ctx.fillStyle = 'white';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0);
+          
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const newFile = new File([blob], file.name.replace(/\.(avif)$/i, '.jpg'), {
+                type: 'image/jpeg'
+              });
+              resolve(newFile);
+            } else {
+              reject(new Error('Failed to convert image'));
+            }
+          }, 'image/jpeg', 0.85);
+        } else {
+          reject(new Error('Canvas context not available'));
+        }
+      };
+      
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
+  const compressImage = async (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new window.Image();
+      
+      img.onload = () => {
+        const maxWidth = 1920;
+        const maxHeight = 1080;
+        let { width, height } = img;
+        
+        if (width > maxWidth || height > maxHeight) {
+          const ratio = Math.min(maxWidth / width, maxHeight / height);
+          width *= ratio;
+          height *= ratio;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const newFile = new File([blob], file.name, {
+                type: file.type
+              });
+              resolve(newFile);
+            } else {
+              reject(new Error('Failed to compress image'));
+            }
+          }, file.type, 0.85);
+        } else {
+          reject(new Error('Canvas context not available'));
+        }
+      };
+      
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   // Load data on component mount
   useEffect(() => {
     loadData();
@@ -95,10 +204,19 @@ function Blog() {
       // Upload featured image if provided
       if (featuredImage && post) {
         console.log('Starting featured image upload...');
-        const imagePath = `blog/featured/${post.id}/${Date.now()}-${featuredImage.name}`;
+        
+        // Validate and process featured image
+        const validationError = validateImageFile(featuredImage);
+        if (validationError) {
+          alert(`Featured image error: ${validationError}`);
+          return;
+        }
+        
+        const processedImage = await processImage(featuredImage);
+        const imagePath = `blog/featured/${post.id}/${Date.now()}-${processedImage.name}`;
         console.log('Upload path:', imagePath);
         
-        const { data: uploadData, error: uploadError } = await uploadFile('blog-images', imagePath, featuredImage);
+        const { data: uploadData, error: uploadError } = await uploadFile('blog-images', imagePath, processedImage);
         
         if (uploadError) {
           console.error('Featured image upload failed:', uploadError);
@@ -495,10 +613,23 @@ function Blog() {
                     <p className="text-gray-600 mb-2">Drop featured image here or click to browse</p>
                     <input 
                       type="file" 
-                      accept="image/*" 
+                      accept="image/jpeg,image/jpg,image/png,image/webp,image/avif" 
                       className="hidden" 
                       id="blog-featured-image"
-                      onChange={(e) => setFeaturedImage(e.target.files?.[0] || null)}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const validationError = validateImageFile(file);
+                          if (validationError) {
+                            alert(`Invalid featured image: ${validationError}`);
+                            e.target.value = '';
+                            return;
+                          }
+                          setFeaturedImage(file);
+                        } else {
+                          setFeaturedImage(null);
+                        }
+                      }}
                     />
                     <label 
                       htmlFor="blog-featured-image" 
@@ -509,7 +640,7 @@ function Blog() {
                     {featuredImage && (
                       <p className="text-sm text-green-600 mt-2">Selected: {featuredImage.name}</p>
                     )}
-                    <p className="text-xs text-gray-500 mt-2">PNG, JPG up to 5MB. Recommended: 1200x600px</p>
+                    <p className="text-xs text-gray-500 mt-2">JPG, PNG, WebP, AVIF up to 10MB. Recommended: 1200x600px</p>
                   </div>
                 </div>
 
