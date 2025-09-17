@@ -5,6 +5,8 @@ import { getFeaturedProperties, getFeaturedReviews, getSearchSuggestions } from 
 import { getStorageUrl } from '@/lib/supabase';
 import type { Property, Review } from '@/lib/supabase';
 import PageLayout from '@/components/layout/PageLayout';
+import LoadingScreen from '@/components/LoadingScreen';
+import { useFirstVisit } from '@/hooks/useFirstVisit';
 
 interface PropertyCardProps {
   id: string;
@@ -926,6 +928,11 @@ function PropertiesCarousel() {
 }
 
 export default function Home() {
+  const { shouldShowLoading, handleLoadingComplete } = useFirstVisit();
+
+  if (shouldShowLoading) {
+    return <LoadingScreen onComplete={handleLoadingComplete} />;
+  }
 
   return (
     <PageLayout>
