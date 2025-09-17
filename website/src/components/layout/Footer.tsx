@@ -56,7 +56,7 @@ export default function Footer() {
 
           {/* Contact Information */}
           <div className="flex flex-col space-y-3">
-            <div className="flex items-center space-x-3">
+            <a href="mailto:eunice@irotorealty.com" className="flex items-center space-x-3 hover:text-gray-300 transition-colors duration-200">
               <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
                 <svg className="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M1.5 8.67v8.58a3 3 0 003 3h15a3 3 0 003-3V8.67l-8.928 5.493a3 3 0 01-3.144 0L1.5 8.67z"/>
@@ -64,9 +64,9 @@ export default function Footer() {
                 </svg>
               </div>
               <span className="text-white">eunice@irotorealty.com</span>
-            </div>
+            </a>
             
-            <div className="flex items-center space-x-3">
+            <a href="mailto:info@irotorealty.com" className="flex items-center space-x-3 hover:text-gray-300 transition-colors duration-200">
               <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
                 <svg className="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M1.5 8.67v8.58a3 3 0 003 3h15a3 3 0 003-3V8.67l-8.928 5.493a3 3 0 01-3.144 0L1.5 8.67z"/>
@@ -74,16 +74,16 @@ export default function Footer() {
                 </svg>
               </div>
               <span className="text-white">info@irotorealty.com</span>
-            </div>
+            </a>
 
-            <div className="flex items-center space-x-3">
+            <a href="tel:+254712345679" className="flex items-center space-x-3 hover:text-gray-300 transition-colors duration-200">
               <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
                 <svg className="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                 </svg>
               </div>
               <span className="text-white">07123456789</span>
-            </div>
+            </a>
           </div>
         </div>
       </div>
