@@ -4,14 +4,14 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
-import ProtectedRoute from '@/components/ProtectedRoute';
-import { useAuth } from '@/contexts/AuthContext';
+import SimpleProtectedRoute from '@/components/SimpleProtectedRoute';
+import { useSimpleAuth } from '@/contexts/SimpleAuthContext';
 import { getBlogPosts, getBlogCategories, createBlogPost, generateSlug, deleteBlogPost, updateBlogPost, getBlogPost } from '@/lib/blog';
 import { uploadFile, supabase } from '@/lib/supabase';
 import type { BlogPost, BlogCategory } from '@/lib/supabase';
 
 function Blog() {
-  const { signOut } = useAuth();
+  const { signOut } = useSimpleAuth();
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [categories, setCategories] = useState<BlogCategory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -872,8 +872,8 @@ function Blog() {
 
 export default function BlogPage() {
   return (
-    <ProtectedRoute requireAdmin={true}>
+    <SimpleProtectedRoute>
       <Blog />
-    </ProtectedRoute>
+    </SimpleProtectedRoute>
   );
 }

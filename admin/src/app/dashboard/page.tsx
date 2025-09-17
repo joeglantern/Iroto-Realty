@@ -3,15 +3,15 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSimpleAuth } from '@/contexts/SimpleAuthContext';
 import { getProperties } from '@/lib/properties';
 import { getBlogPosts } from '@/lib/blog';
 import { getReviews } from '@/lib/reviews';
-import ProtectedRoute from '@/components/ProtectedRoute';
+import SimpleProtectedRoute from '@/components/SimpleProtectedRoute';
 import type { Property } from '@/lib/supabase';
 
 function Dashboard() {
-  const { signOut } = useAuth();
+  const { signOut } = useSimpleAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState([
@@ -354,9 +354,9 @@ function Dashboard() {
 
 export default function DashboardPage() {
   return (
-    <ProtectedRoute requireAdmin={true}>
+    <SimpleProtectedRoute>
       <Dashboard />
-    </ProtectedRoute>
+    </SimpleProtectedRoute>
   );
 }
 

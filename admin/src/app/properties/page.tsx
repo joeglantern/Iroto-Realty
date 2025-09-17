@@ -3,15 +3,15 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import ProtectedRoute from '@/components/ProtectedRoute';
+import SimpleProtectedRoute from '@/components/SimpleProtectedRoute';
 import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSimpleAuth } from '@/contexts/SimpleAuthContext';
 import { getProperties, getPropertyCategories, getPropertyTypes, createProperty, createPropertyCategory, generateSlug, deleteProperty, deletePropertyCategory, updateProperty, getProperty } from '@/lib/properties';
 import { uploadFile, getStorageUrl, supabase } from '@/lib/supabase';
 import type { Property, PropertyCategory, PropertyType } from '@/lib/supabase';
 
 export default function Properties() {
-  const { signOut, userRole, user } = useAuth();
+  const { signOut, user, isAdmin } = useSimpleAuth();
   const [properties, setProperties] = useState<any[]>([]);
   const [categories, setCategories] = useState<PropertyCategory[]>([]);
   const [propertyTypes, setPropertyTypes] = useState<PropertyType[]>([]);
@@ -520,7 +520,7 @@ export default function Properties() {
   }
 
   return (
-    <ProtectedRoute requireAdmin>
+    <SimpleProtectedRoute>
       <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
@@ -571,7 +571,7 @@ export default function Properties() {
             {/* User Menu */}
             <div className="flex items-center space-x-4">
               <div className="text-sm text-gray-600">
-                {user?.email} ({userRole?.role})
+                {user?.email} ({isAdmin ? 'admin' : 'user'})
               </div>
               <button
                 onClick={signOut}
@@ -1243,6 +1243,6 @@ export default function Properties() {
         isDeleting={deleting}
       />
     </div>
-    </ProtectedRoute>
+    </SimpleProtectedRoute>
   );
 }

@@ -4,14 +4,14 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import ProtectedRoute from '@/components/ProtectedRoute';
-import { useAuth } from '@/contexts/AuthContext';
+import SimpleProtectedRoute from '@/components/SimpleProtectedRoute';
+import { useSimpleAuth } from '@/contexts/SimpleAuthContext';
 import { getProperty, updateProperty, getPropertyCategories, getPropertyTypes } from '@/lib/properties';
 import { uploadFile, getStorageUrl, supabase } from '@/lib/supabase';
 import type { Property, PropertyCategory, PropertyType } from '@/lib/supabase';
 
 export default function EditProperty() {
-  const { signOut } = useAuth();
+  const { signOut } = useSimpleAuth();
   const router = useRouter();
   const params = useParams();
   const propertyId = params.id as string;
@@ -351,20 +351,20 @@ export default function EditProperty() {
 
   if (loading) {
     return (
-      <ProtectedRoute requireAdmin>
+      <SimpleProtectedRoute>
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
             <p className="text-gray-600">Loading property...</p>
           </div>
         </div>
-      </ProtectedRoute>
+      </SimpleProtectedRoute>
     );
   }
 
   if (error) {
     return (
-      <ProtectedRoute requireAdmin>
+      <SimpleProtectedRoute>
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
           <div className="text-center">
             <div className="text-red-600 text-xl mb-4">{error}</div>
@@ -373,12 +373,12 @@ export default function EditProperty() {
             </Link>
           </div>
         </div>
-      </ProtectedRoute>
+      </SimpleProtectedRoute>
     );
   }
 
   return (
-    <ProtectedRoute requireAdmin>
+    <SimpleProtectedRoute>
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <header className="bg-white shadow-sm border-b">
@@ -992,6 +992,6 @@ export default function EditProperty() {
           </div>
         </main>
       </div>
-    </ProtectedRoute>
+    </SimpleProtectedRoute>
   );
 }

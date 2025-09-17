@@ -2,11 +2,11 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSimpleAuth } from '@/contexts/SimpleAuthContext';
 
 export default function HomePage() {
   const router = useRouter();
-  const { loading, isAdmin } = useAuth();
+  const { loading, isAdmin } = useSimpleAuth();
 
   useEffect(() => {
     if (!loading) {

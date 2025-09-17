@@ -4,15 +4,15 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
-import ProtectedRoute from '@/components/ProtectedRoute';
-import { useAuth } from '@/contexts/AuthContext';
+import SimpleProtectedRoute from '@/components/SimpleProtectedRoute';
+import { useSimpleAuth } from '@/contexts/SimpleAuthContext';
 import { getReviews, createReview, deleteReview, updateReview, getReview } from '@/lib/reviews';
 import { getProperties } from '@/lib/properties';
 import { uploadFile, supabase } from '@/lib/supabase';
 import type { Review, Property } from '@/lib/supabase';
 
 function Reviews() {
-  const { signOut } = useAuth();
+  const { signOut } = useSimpleAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -730,8 +730,8 @@ function Reviews() {
 
 export default function ReviewsPage() {
   return (
-    <ProtectedRoute requireAdmin={true}>
+    <SimpleProtectedRoute>
       <Reviews />
-    </ProtectedRoute>
+    </SimpleProtectedRoute>
   );
 }

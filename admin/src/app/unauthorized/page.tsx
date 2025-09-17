@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSimpleAuth } from '@/contexts/SimpleAuthContext';
 
 export default function UnauthorizedPage() {
-  const { user, userRole, signOut } = useAuth();
+  const { user, isAdmin, signOut } = useSimpleAuth();
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -26,13 +26,13 @@ export default function UnauthorizedPage() {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          {user && userRole && (
+          {user && (
             <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
               <h3 className="text-sm font-medium text-yellow-800 mb-2">Your Account Details:</h3>
               <div className="text-xs text-yellow-700 space-y-1">
                 <p><strong>Email:</strong> {user.email}</p>
-                <p><strong>Role:</strong> {userRole.role}</p>
-                <p><strong>Status:</strong> {userRole.is_active ? 'Active' : 'Inactive'}</p>
+                <p><strong>Role:</strong> {isAdmin ? 'admin' : 'user'}</p>
+                <p><strong>Status:</strong> Active</p>
               </div>
             </div>
           )}

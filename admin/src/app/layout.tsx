@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { SimpleAuthProvider } from "@/contexts/SimpleAuthContext";
 
 export const metadata: Metadata = {
   title: "Iroto Realty Admin",
@@ -21,9 +21,9 @@ export default function RootLayout({
         />
       </head>
       <body className="font-sans antialiased bg-white">
-        <AuthProvider>
+        <SimpleAuthProvider>
           {children}
-        </AuthProvider>
+        </SimpleAuthProvider>
       </body>
     </html>
   );

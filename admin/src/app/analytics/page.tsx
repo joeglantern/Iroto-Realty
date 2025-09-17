@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import ProtectedRoute from '@/components/ProtectedRoute';
-import { useAuth } from '@/contexts/AuthContext';
+import SimpleProtectedRoute from '@/components/SimpleProtectedRoute';
+import { useSimpleAuth } from '@/contexts/SimpleAuthContext';
 import { getAnalytics } from '@/lib/analytics';
 
 interface AnalyticsData {
@@ -18,7 +18,7 @@ interface AnalyticsData {
 }
 
 function Analytics() {
-  const { signOut } = useAuth();
+  const { signOut } = useSimpleAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [analytics, setAnalytics] = useState<AnalyticsData>({
@@ -503,8 +503,8 @@ function Analytics() {
 
 export default function AnalyticsPage() {
   return (
-    <ProtectedRoute requireAdmin={true}>
+    <SimpleProtectedRoute>
       <Analytics />
-    </ProtectedRoute>
+    </SimpleProtectedRoute>
   );
 }
