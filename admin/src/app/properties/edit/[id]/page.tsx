@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -9,6 +9,7 @@ import { useSimpleAuth } from '@/contexts/SimpleAuthContext';
 import { getProperty, updateProperty, getPropertyCategories, getPropertyTypes } from '@/lib/properties';
 import { uploadFile, getStorageUrl, supabase } from '@/lib/supabase';
 import type { Property, PropertyCategory, PropertyType } from '@/lib/supabase';
+import RichTextEditor from '@/components/RichTextEditor';
 
 export default function EditProperty() {
   const { signOut } = useSimpleAuth();
@@ -66,6 +67,19 @@ export default function EditProperty() {
   useEffect(() => {
     loadData();
   }, [propertyId]);
+
+  // Memoized onChange handlers for rich text editors
+  const handleDescriptionChange = useCallback((value: string) => {
+    setFormData(prev => ({ ...prev, description: value }));
+  }, []);
+
+  const handlePropertyInfo1Change = useCallback((value: string) => {
+    setFormData(prev => ({ ...prev, property_info_1: value }));
+  }, []);
+
+  const handlePropertyInfo2Change = useCallback((value: string) => {
+    setFormData(prev => ({ ...prev, property_info_2: value }));
+  }, []);
 
   // Image processing functions
   const validateImageFile = (file: File): string | null => {
@@ -557,34 +571,27 @@ export default function EditProperty() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                    <textarea
-                      rows={4}
+                    <RichTextEditor
                       value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                      onChange={handleDescriptionChange}
                       placeholder="Describe your property in detail..."
-                      required
                     />
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Property Info 1</label>
-                      <textarea
-                        rows={3}
+                      <RichTextEditor
                         value={formData.property_info_1}
-                        onChange={(e) => setFormData({ ...formData, property_info_1: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                        onChange={handlePropertyInfo1Change}
                         placeholder="Additional property information, highlights, features..."
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Property Info 2</label>
-                      <textarea
-                        rows={3}
+                      <RichTextEditor
                         value={formData.property_info_2}
-                        onChange={(e) => setFormData({ ...formData, property_info_2: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                        onChange={handlePropertyInfo2Change}
                         placeholder="More details, nearby attractions, local information..."
                       />
                     </div>

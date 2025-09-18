@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import SimpleProtectedRoute from '@/components/SimpleProtectedRoute';
@@ -9,6 +9,7 @@ import { useSimpleAuth } from '@/contexts/SimpleAuthContext';
 import { getProperties, getPropertyCategories, getPropertyTypes, createProperty, createPropertyCategory, generateSlug, deleteProperty, deletePropertyCategory, updateProperty, getProperty } from '@/lib/properties';
 import { uploadFile, getStorageUrl, supabase } from '@/lib/supabase';
 import type { Property, PropertyCategory, PropertyType } from '@/lib/supabase';
+import RichTextEditor from '@/components/RichTextEditor';
 
 export default function Properties() {
   const { signOut, user, isAdmin } = useSimpleAuth();
@@ -150,6 +151,19 @@ export default function Properties() {
   // Load data on component mount
   useEffect(() => {
     loadData();
+  }, []);
+
+  // Memoized onChange handlers for rich text editors
+  const handleDescriptionChange = useCallback((value: string) => {
+    setFormData(prev => ({ ...prev, description: value }));
+  }, []);
+
+  const handlePropertyInfo1Change = useCallback((value: string) => {
+    setFormData(prev => ({ ...prev, property_info_1: value }));
+  }, []);
+
+  const handlePropertyInfo2Change = useCallback((value: string) => {
+    setFormData(prev => ({ ...prev, property_info_2: value }));
   }, []);
 
   const loadData = async () => {
@@ -778,11 +792,9 @@ export default function Properties() {
                 {/* Description */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                  <textarea
-                    rows={4}
+                  <RichTextEditor
                     value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    onChange={handleDescriptionChange}
                     placeholder="Describe the property features, amenities, and location highlights..."
                   />
                 </div>
@@ -791,22 +803,18 @@ export default function Properties() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Property Info - Section 1</label>
-                    <textarea
-                      rows={4}
+                    <RichTextEditor
                       value={formData.property_info_1}
-                      onChange={(e) => setFormData({ ...formData, property_info_1: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                      onChange={handlePropertyInfo1Change}
                       placeholder="Content for the first INFO section (left side)..."
                     />
                     <p className="text-xs text-gray-500 mt-1">This will appear in the first INFO box on the property page</p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Property Info - Section 2</label>
-                    <textarea
-                      rows={4}
+                    <RichTextEditor
                       value={formData.property_info_2}
-                      onChange={(e) => setFormData({ ...formData, property_info_2: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                      onChange={handlePropertyInfo2Change}
                       placeholder="Content for the second INFO section (right side)..."
                     />
                     <p className="text-xs text-gray-500 mt-1">This will appear in the second INFO box on the property page</p>
