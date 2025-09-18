@@ -47,7 +47,7 @@ function Blog() {
     is_featured: false
   });
   
-  const [newCategory, setNewCategory] = useState({ name: '', description: '' });
+  const [newCategory, setNewCategory] = useState({ name: '' });
   const [featuredImage, setFeaturedImage] = useState<File | null>(null);
 
   // Image format constants
@@ -361,15 +361,15 @@ function Blog() {
       
       const categoryData = {
         name: newCategory.name.trim(),
-        description: newCategory.description.trim(),
-        slug: generateSlug(newCategory.name)
+        slug: generateSlug(newCategory.name),
+        is_active: true
       };
 
       const category = await createBlogCategory(categoryData);
       
       if (category) {
         setCategories([...categories, category]);
-        setNewCategory({ name: '', description: '' });
+        setNewCategory({ name: '' });
         alert('Category created successfully!');
       }
     } catch (error) {
@@ -966,16 +966,6 @@ function Blog() {
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                       placeholder="Travel & Lifestyle"
                       required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Description (Optional)</label>
-                    <textarea
-                      rows={3}
-                      value={newCategory.description}
-                      onChange={(e) => setNewCategory({ ...newCategory, description: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                      placeholder="Brief description of this blog category..."
                     />
                   </div>
                   <button
