@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { getBlogPosts, getBlogCategories } from '@/lib/data';
 import { getStorageUrl } from '@/lib/supabase';
 import type { BlogPost, BlogCategory } from '@/lib/supabase';
+import { renderRichText } from '@/utils/sanitizeHtml';
 import PageLayout from '@/components/layout/PageLayout';
 
 export default function Blog() {
@@ -79,6 +80,56 @@ export default function Blog() {
   return (
     <PageLayout>
       <div>
+        {/* Add custom CSS for rich text content */}
+        <style jsx global>{`
+          .rich-text-content ul {
+            list-style-type: disc !important;
+            margin-left: 1.5rem !important;
+            margin-bottom: 1rem !important;
+          }
+          
+          .rich-text-content ol {
+            list-style-type: decimal !important;
+            margin-left: 1.5rem !important;
+            margin-bottom: 1rem !important;
+          }
+          
+          .rich-text-content li {
+            margin-bottom: 0.5rem !important;
+            display: list-item !important;
+          }
+          
+          .rich-text-content p {
+            margin-bottom: 1rem !important;
+          }
+          
+          .rich-text-content h1, .rich-text-content h2, .rich-text-content h3 {
+            font-weight: bold !important;
+            margin-bottom: 0.75rem !important;
+            margin-top: 1.5rem !important;
+          }
+          
+          .rich-text-content h1 { font-size: 1.875rem !important; }
+          .rich-text-content h2 { font-size: 1.5rem !important; }
+          .rich-text-content h3 { font-size: 1.25rem !important; }
+          
+          .rich-text-content strong, .rich-text-content b {
+            font-weight: bold !important;
+          }
+          
+          .rich-text-content em, .rich-text-content i {
+            font-style: italic !important;
+          }
+          
+          .rich-text-content u {
+            text-decoration: underline !important;
+          }
+          
+          .rich-text-content a {
+            color: #713900 !important;
+            text-decoration: underline !important;
+          }
+        `}</style>
         {/* Hero Section */}
         <section className="relative h-96 flex items-center justify-center">
           <div 
@@ -161,9 +212,10 @@ export default function Blog() {
                     <h2 className="text-3xl lg:text-4xl font-bold text-black mb-4">
                       {filteredPosts[0].title}
                     </h2>
-                    <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-                      {filteredPosts[0].excerpt}
-                    </p>
+                    <div 
+                      className="text-lg text-gray-600 mb-6 leading-relaxed rich-text-content"
+                      dangerouslySetInnerHTML={renderRichText(filteredPosts[0].excerpt || '')}
+                    />
                     <div className="flex items-center justify-between mb-6">
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 bg-brown rounded-full flex items-center justify-center text-white font-semibold">
@@ -259,9 +311,10 @@ export default function Blog() {
                         <h3 className="text-xl font-bold text-black mb-3 group-hover:text-brown transition-colors duration-200">
                           {post.title}
                         </h3>
-                        <p className="text-gray-600 text-sm mb-4 leading-relaxed">
-                          {post.excerpt}
-                        </p>
+                        <div 
+                          className="text-gray-600 text-sm mb-4 leading-relaxed rich-text-content"
+                          dangerouslySetInnerHTML={renderRichText(post.excerpt || '')}
+                        />
                         <div className="flex items-center space-x-3">
                           <div className="w-8 h-8 bg-brown rounded-full flex items-center justify-center text-white text-xs font-semibold">
                             {post.author_name?.charAt(0) || 'A'}
