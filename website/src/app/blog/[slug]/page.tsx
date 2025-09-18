@@ -23,6 +23,8 @@ export default function BlogPostDetail({ params }: BlogPostDetailProps) {
   const [blogCategories, setBlogCategories] = useState<BlogCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [showShareMenu, setShowShareMenu] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   // Data loading
   useEffect(() => {
@@ -83,6 +85,34 @@ export default function BlogPostDetail({ params }: BlogPostDetailProps) {
       return getStorageUrl('blog-images', imagePath);
     }
     return 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80';
+  };
+
+  const shareOnWhatsApp = () => {
+    if (!currentPost) return;
+    const url = window.location.href;
+    const text = `Check out this article: "${currentPost.title}"\n\n${url}`;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
+  const copyToClipboard = async () => {
+    try {
+      const url = window.location.href;
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+      const url = window.location.href;
+      const textArea = document.createElement('textarea');
+      textArea.value = url;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   // Loading state
@@ -153,113 +183,235 @@ export default function BlogPostDetail({ params }: BlogPostDetailProps) {
   return (
     <PageLayout>
       <div>
+        {/* Floating Share Buttons */}
+        <div className="fixed right-8 top-1/3 transform -translate-y-1/2 z-40 hidden xl:block">
+          <div className="flex flex-col space-y-3">
+            <button
+              onClick={shareOnWhatsApp}
+              className="w-12 h-12 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center transition-colors duration-200 shadow-lg"
+              title="Share on WhatsApp"
+            >
+              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.890-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
+              </svg>
+            </button>
+            <button
+              onClick={copyToClipboard}
+              className={`w-12 h-12 ${copied ? 'bg-green-500' : 'bg-gray-600 hover:bg-gray-700'} text-white rounded-full flex items-center justify-center transition-colors duration-200 shadow-lg`}
+              title={copied ? 'Copied!' : 'Copy link'}
+            >
+              {copied ? (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Share Menu */}
+        <div className="xl:hidden">
+          <button
+            onClick={() => setShowShareMenu(!showShareMenu)}
+            className="fixed bottom-6 right-6 w-14 h-14 bg-brown text-white rounded-full flex items-center justify-center shadow-lg z-40"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+            </svg>
+          </button>
+          
+          {showShareMenu && (
+            <div className="fixed bottom-20 right-6 bg-white rounded-lg shadow-xl border border-gray-200 p-4 z-40">
+              <div className="flex flex-col space-y-3">
+                <button
+                  onClick={shareOnWhatsApp}
+                  className="flex items-center space-x-3 text-gray-700 hover:text-green-500 transition-colors duration-200"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.890-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
+                  </svg>
+                  <span>WhatsApp</span>
+                </button>
+                <button
+                  onClick={copyToClipboard}
+                  className="flex items-center space-x-3 text-gray-700 hover:text-gray-900 transition-colors duration-200"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  <span>{copied ? 'Copied!' : 'Copy Link'}</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
         {/* Article Header */}
         <article className="bg-white">
-          {/* Article Content */}
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="py-16">
-              {/* Article Meta */}
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center space-x-4">
-                  <span className="px-4 py-2 bg-brown/10 text-brown text-sm font-medium rounded-full">
-                    {blogCategories.find(cat => cat.id === currentPost.category_id)?.name || 'General'}
-                  </span>
-                  <span className="text-sm text-gray-500">{calculateReadTime(currentPost.content || '')}</span>
-                </div>
-                <div className="flex space-x-4">
-                  <button className="text-gray-500 hover:text-brown">
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M18.77 11h-4.23l1.52-4.94C16.38 5.03 15.54 4 14.38 4c-.58 0-1.14.24-1.52.65L7.11 10.3C6.85 10.63 6.8 11.15 7.11 11.53c.29.35.75.47 1.15.47h4.23l-1.52 4.94C10.62 18.97 11.46 20 12.62 20c.58 0 1.14-.24 1.52-.65l5.75-5.65c.26-.33.31-.85 0-1.23-.29-.35-.75-.47-1.12-.47z"/>
+          {/* Main Content with Sidebar Layout */}
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col lg:flex-row gap-12">
+              {/* Main Article Content - Centered and Focused */}
+              <div className="flex-1 max-w-4xl mx-auto lg:mx-0">
+                <div className="py-12">
+                  {/* Breadcrumb Navigation */}
+                  <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-8">
+                    <a href="/" className="hover:text-brown transition-colors">Home</a>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
-                  </button>
-                  <button className="text-gray-500 hover:text-brown">
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.50-.31 2.04-.81l7.05 4.11c-.05.23-.09.46-.09.7 0 1.66 1.34 3 3 3s3-1.34 3-3-1.34-3-3-3z"/>
+                    <a href="/blog" className="hover:text-brown transition-colors">Blog</a>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
-                  </button>
+                    <span className="text-gray-900 truncate">{currentPost.title}</span>
+                  </nav>
+
+                  {/* Article Header */}
+                  <header className="max-w-4xl mb-12">
+                    {/* Category Tag */}
+                    <div className="mb-6">
+                      <span className="inline-block px-4 py-2 bg-brown/10 text-brown text-sm font-semibold rounded-full">
+                        {blogCategories.find(cat => cat.id === currentPost.category_id)?.name || 'General'}
+                      </span>
+                    </div>
+                    
+                    {/* Title */}
+                    <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+                      {currentPost.title}
+                    </h1>
+                    
+                    {/* Article Meta & Author Info */}
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8 pb-6 border-b border-gray-200">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-12 h-12 bg-gradient-to-br from-brown to-brown/80 rounded-full flex items-center justify-center text-white text-lg font-semibold">
+                          {currentPost.author_name?.charAt(0) || 'A'}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900">{currentPost.author_name || 'Author'}</p>
+                          <p className="text-sm text-gray-500">
+                            {formatDate(currentPost.created_at)} • {calculateReadTime(currentPost.content || '')}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {/* Article Actions */}
+                      <div className="flex items-center space-x-3">
+                        <button
+                          onClick={shareOnWhatsApp}
+                          className="flex items-center space-x-2 px-3 py-2 text-sm bg-green-50 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
+                        >
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.890-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
+                          </svg>
+                          <span>Share</span>
+                        </button>
+                        <button
+                          onClick={copyToClipboard}
+                          className={`flex items-center space-x-2 px-3 py-2 text-sm rounded-lg transition-colors ${
+                            copied 
+                              ? 'bg-green-100 text-green-700' 
+                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          }`}
+                        >
+                          {copied ? (
+                            <>
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                              <span>Copied!</span>
+                            </>
+                          ) : (
+                            <>
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                              </svg>
+                              <span>Copy</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </header>
+                  
+                  {/* Featured Image */}
+                  <div className="relative aspect-[16/9] mb-12 rounded-2xl overflow-hidden shadow-lg">
+                    <Image
+                      src={getImageUrl(currentPost.featured_image_path)}
+                      alt={currentPost.title}
+                      fill
+                      className="object-cover"
+                      priority
+                    />
+                  </div>
+                  
+                  {/* Article Content */}
+                  <div className="max-w-4xl">
+                    <div 
+                      className="prose prose-xl max-w-none prose-headings:text-gray-900 prose-headings:font-bold prose-p:text-gray-700 prose-p:leading-relaxed prose-a:text-brown hover:prose-a:text-brown/80 prose-strong:text-gray-900 prose-blockquote:border-brown prose-blockquote:text-gray-700 rich-text-content"
+                      dangerouslySetInnerHTML={renderRichText(currentPost.content || '')}
+                    />
+                  </div>
+              </div>
+              </div>
+
+              {/* Sidebar with Related Articles */}
+              <div className="w-full lg:w-80 lg:flex-shrink-0">
+                <div className="sticky top-8 space-y-8 py-12">
+                  {/* Related Articles Sidebar */}
+                  <div className="bg-gray-50 rounded-2xl p-6">
+                    <h2 className="text-2xl font-bold text-black mb-6">Related Articles</h2>
+                    
+                    <div className="space-y-6">
+                      {relatedPosts.slice(0, 4).map((post) => (
+                        <Link key={post.id} href={`/blog/${post.slug}`} className="group block">
+                          <article className="space-y-3">
+                            <div className="aspect-[16/9] overflow-hidden rounded-lg">
+                              <Image
+                                src={getImageUrl(post.featured_image_path)}
+                                alt={post.title}
+                                width={300}
+                                height={200}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              />
+                            </div>
+                            <div>
+                              <span className="px-2 py-1 bg-white text-gray-600 text-xs font-medium rounded-full">
+                                {blogCategories.find(cat => cat.id === post.category_id)?.name || 'General'}
+                              </span>
+                              <h3 className="text-lg font-semibold text-black mt-2 mb-2 group-hover:text-brown transition-colors duration-200 line-clamp-2">
+                                {post.title}
+                              </h3>
+                              <p className="text-sm text-gray-600 line-clamp-2">
+                                {post.excerpt ? post.excerpt.replace(/<[^>]*>/g, '').substring(0, 100) + '...' : ''}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-2">
+                                {formatDate(post.created_at)}
+                              </p>
+                            </div>
+                          </article>
+                        </Link>
+                      ))}
+                    </div>
+                    
+                    <div className="mt-8">
+                      <Link
+                        href="/blog"
+                        className="w-full inline-block text-center border-2 border-brown text-brown hover:bg-brown hover:text-white px-4 py-3 rounded-lg font-semibold transition-colors duration-200"
+                      >
+                        View All Articles
+                      </Link>
+                    </div>
+                  </div>
                 </div>
               </div>
-              
-              {/* Title */}
-              <h1 className="text-3xl lg:text-5xl font-bold text-black mb-8 leading-tight">
-                {currentPost.title}
-              </h1>
-              
-              {/* Featured Image */}
-              <div className="relative h-64 md:h-80 lg:h-96 mb-8 rounded-xl overflow-hidden">
-                <Image
-                  src={getImageUrl(currentPost.featured_image_path)}
-                  alt={currentPost.title}
-                  fill
-                  className="object-cover"
-                />
-              </div>
-              
-              {/* Author Info */}
-              <div className="flex items-center space-x-4 pb-8 border-b border-gray-200 mb-12">
-                <div className="w-12 h-12 bg-brown rounded-full flex items-center justify-center text-white text-lg font-semibold">
-                  {currentPost.author_name?.charAt(0) || 'A'}
-                </div>
-                <div>
-                  <p className="font-semibold text-gray-900">{currentPost.author_name || 'Author'}</p>
-                  <p className="text-sm text-gray-500">Published on {formatDate(currentPost.created_at)}</p>
-                </div>
-              </div>
-              
-              {/* Article Content */}
-              <div 
-                className="prose prose-lg max-w-none prose-headings:text-black prose-headings:font-bold prose-p:text-gray-700 prose-p:leading-relaxed prose-a:text-brown hover:prose-a:text-brown/80 rich-text-content"
-                dangerouslySetInnerHTML={renderRichText(currentPost.content || '')}
-              />
             </div>
           </div>
         </article>
 
-        {/* Related Articles */}
-        <section className="py-20 bg-gray-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-3xl font-bold text-black mb-12 text-center">Related Articles</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {relatedPosts.map((post) => (
-                <Link key={post.id} href={`/blog/${post.slug}`} className="group">
-                  <article className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300">
-                    <div className="aspect-[4/3] overflow-hidden">
-                      <Image
-                        src={getImageUrl(post.featured_image_path)}
-                        alt={post.title}
-                        width={400}
-                        height={300}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                    <div className="p-6">
-                      <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">
-                        {blogCategories.find(cat => cat.id === post.category_id)?.name || 'General'}
-                      </span>
-                      <h3 className="text-xl font-bold text-black mt-3 mb-3 group-hover:text-brown transition-colors duration-200">
-                        {post.title}
-                      </h3>
-                      <div 
-                        className="text-gray-600 text-sm leading-relaxed rich-text-content"
-                        dangerouslySetInnerHTML={renderRichText(post.excerpt || '')}
-                      />
-                    </div>
-                  </article>
-                </Link>
-              ))}
-            </div>
-            
-            <div className="text-center mt-12">
-              <Link
-                href="/blog"
-                className="inline-block border-2 border-brown text-brown hover:bg-brown hover:text-white px-8 py-3 rounded-md font-semibold transition-colors duration-200"
-              >
-                View All Articles
-              </Link>
-            </div>
-          </div>
-        </section>
       </div>
     </PageLayout>
   );
