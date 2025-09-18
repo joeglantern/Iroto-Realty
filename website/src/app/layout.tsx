@@ -4,6 +4,19 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Iroto Realty - Premium Real Estate in Kenya",
   description: "Discover luxury properties in Lamu and Watamu with Iroto Realty. Vacation rentals, sales collection, and premium real estate services.",
+  icons: {
+    icon: [
+      { url: '/favicon-96x96.png', sizes: '96x96', type: 'image/png' },
+      { url: '/favicon-64x64.png', sizes: '64x64', type: 'image/png' },
+      { url: '/favicon-48x48.png', sizes: '48x48', type: 'image/png' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon.ico', sizes: '64x64', type: 'image/x-icon' }
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }
+    ],
+  },
 };
 
 export default function RootLayout({
