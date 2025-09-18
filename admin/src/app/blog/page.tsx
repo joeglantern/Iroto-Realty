@@ -989,9 +989,6 @@ function Blog() {
                       <div key={category.id} className="flex items-center justify-between p-3 border rounded-md">
                         <div>
                           <h5 className="font-medium text-gray-900">{category.name}</h5>
-                          {category.description && (
-                            <p className="text-sm text-gray-500">{category.description}</p>
-                          )}
                         </div>
                         <button
                           onClick={() => {
