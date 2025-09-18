@@ -1,14 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
 import SimpleProtectedRoute from '@/components/SimpleProtectedRoute';
 import { useSimpleAuth } from '@/contexts/SimpleAuthContext';
-import { getBlogPosts, getBlogCategories, createBlogPost, generateSlug, deleteBlogPost, updateBlogPost, getBlogPost } from '@/lib/blog';
+import { getBlogPosts, getBlogCategories, createBlogPost, createBlogCategory, deleteBlogCategory, generateSlug, deleteBlogPost, updateBlogPost, getBlogPost } from '@/lib/blog';
 import { uploadFile, supabase } from '@/lib/supabase';
 import type { BlogPost, BlogCategory } from '@/lib/supabase';
+import RichTextEditor from '@/components/RichTextEditor';
 
 function Blog() {
   const { signOut } = useSimpleAuth();
@@ -17,6 +18,7 @@ function Blog() {
   const [loading, setLoading] = useState(true);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [editingPost, setEditingPost] = useState<any>(null);
@@ -26,20 +28,26 @@ function Blog() {
   const [postToDelete, setPostToDelete] = useState<{id: string, title: string} | null>(null);
   const [deleting, setDeleting] = useState(false);
   
+  // Category delete modal states
+  const [showCategoryDeleteModal, setShowCategoryDeleteModal] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<{id: string, name: string} | null>(null);
+  const [deletingCategory, setDeletingCategory] = useState(false);
+  
   // Form states
   const [formData, setFormData] = useState({
-    title: '',
-    excerpt: '',
-    content: '',
+    title: 'Complete Guide: How to Create and Manage Blog Posts in Iroto Realty Admin',
+    excerpt: '<p>Learn how to effectively create, format, and manage <strong>blog posts</strong> using our rich text editor. This comprehensive guide covers everything from basic formatting to advanced features.</p><ul><li>Rich text formatting options</li><li>Image upload best practices</li><li>SEO optimization tips</li></ul>',
+    content: '<h1>How to Create and Manage Blog Posts</h1><p>Welcome to the <strong>Iroto Realty</strong> blog management system! This guide will help you create engaging, well-formatted blog posts that showcase our properties and expertise.</p><h2>Getting Started</h2><p>Creating a new blog post is simple and intuitive. Follow these steps to publish professional content:</p><ol><li><strong>Title</strong>: Create compelling headlines that capture attention</li><li><strong>Category</strong>: Choose the most relevant category for your post</li><li><strong>Content</strong>: Use our rich text editor for professional formatting</li><li><strong>Images</strong>: Upload high-quality photos to enhance your content</li></ol><h2>Rich Text Formatting Features</h2><p>Our editor supports various formatting options to make your content shine:</p><h3>Text Formatting</h3><ul><li><strong>Bold text</strong> for emphasis</li><li><em>Italic text</em> for subtle emphasis</li><li><u>Underlined text</u> for important points</li></ul><h3>Lists and Structure</h3><p>Create organized content with:</p><ul><li>Bullet points for easy reading</li><li>Numbered lists for step-by-step guides</li><li>Headers to organize your content</li></ul><h3>Links and References</h3><p>Add <a href="#">relevant links</a> to enhance your content and provide additional value to readers.</p><h2>Best Practices for Property Blogs</h2><p>When writing about properties, consider these tips:</p><ol><li><strong>Tell a Story</strong>: Make properties come alive with descriptive language</li><li><strong>Include Local Information</strong>: Highlight nearby amenities and attractions</li><li><strong>Use High-Quality Images</strong>: Showcase properties with professional photography</li><li><strong>SEO Optimization</strong>: Use relevant keywords naturally throughout your content</li></ol><h3>Image Guidelines</h3><p>For the best results with blog images:</p><ul><li>Use JPG, PNG, WebP, or AVIF formats</li><li>Keep file sizes under 10MB</li><li>Recommended size: 1200x600px for featured images</li><li>Ensure images are high-quality and properly lit</li></ul><h2>SEO and Meta Information</h2><p>Don\'t forget to optimize your posts for search engines:</p><ul><li><strong>Meta Description</strong>: Write compelling descriptions under 155 characters</li><li><strong>Focus Keywords</strong>: Choose 1-2 main keywords for each post</li><li><strong>Categories</strong>: Use consistent categorization for better organization</li></ul><p><em>Remember: Quality content that provides value to our clients is always the priority!</em></p>',
     category_id: '',
-    author_name: '',
-    read_time: '',
-    meta_description: '',
-    focus_keyword: '',
+    author_name: 'Admin User',
+    read_time: '5',
+    meta_description: 'Learn how to create and manage professional blog posts using the Iroto Realty admin system. Complete guide with formatting tips, SEO best practices, and content guidelines.',
+    focus_keyword: 'blog management guide',
     status: 'draft' as 'draft' | 'published',
     is_featured: false
   });
   
+  const [newCategory, setNewCategory] = useState({ name: '', description: '' });
   const [featuredImage, setFeaturedImage] = useState<File | null>(null);
 
   // Image format constants
@@ -154,6 +162,15 @@ function Blog() {
   // Load data on component mount
   useEffect(() => {
     loadData();
+  }, []);
+
+  // Memoized onChange handlers for rich text editors
+  const handleExcerptChange = useCallback((value: string) => {
+    setFormData(prev => ({ ...prev, excerpt: value }));
+  }, []);
+
+  const handleContentChange = useCallback((value: string) => {
+    setFormData(prev => ({ ...prev, content: value }));
   }, []);
 
   const loadData = async () => {
@@ -331,6 +348,64 @@ function Blog() {
     }
   };
 
+  // Category management functions
+  const handleCategorySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCategory.name.trim()) {
+      alert('Please enter a category name');
+      return;
+    }
+
+    try {
+      setUploading(true);
+      
+      const categoryData = {
+        name: newCategory.name.trim(),
+        description: newCategory.description.trim(),
+        slug: generateSlug(newCategory.name)
+      };
+
+      const category = await createBlogCategory(categoryData);
+      
+      if (category) {
+        setCategories([...categories, category]);
+        setNewCategory({ name: '', description: '' });
+        alert('Category created successfully!');
+      }
+    } catch (error) {
+      console.error('Error creating category:', error);
+      alert('Error creating category. Please try again.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleCategoryDelete = async () => {
+    if (!categoryToDelete) return;
+
+    try {
+      setDeletingCategory(true);
+      await deleteBlogCategory(categoryToDelete.id);
+      
+      setCategories(categories.filter(c => c.id !== categoryToDelete.id));
+      setShowCategoryDeleteModal(false);
+      setCategoryToDelete(null);
+      alert('Category deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting category:', error);
+      alert('Error deleting category. Please try again.');
+    } finally {
+      setDeletingCategory(false);
+    }
+  };
+
+  const handleCategoryDeleteModalClose = () => {
+    if (!deletingCategory) {
+      setShowCategoryDeleteModal(false);
+      setCategoryToDelete(null);
+    }
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -445,12 +520,20 @@ function Blog() {
               <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Blog Management</h1>
               <p className="mt-2 text-sm md:text-base text-gray-600">Create and manage blog posts</p>
             </div>
-            <button 
-              onClick={() => setShowUploadModal(true)}
-              className="px-3 sm:px-4 py-2 text-sm bg-primary text-white rounded-md hover:bg-primary/90 transition-colors text-center"
-            >
-              Create New Post
-            </button>
+            <div className="flex flex-col sm:flex-row gap-3 sm:space-x-3">
+              <button 
+                onClick={() => setShowCategoryModal(true)}
+                className="px-3 sm:px-4 py-2 text-sm border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors text-center"
+              >
+                Manage Categories
+              </button>
+              <button 
+                onClick={() => setShowUploadModal(true)}
+                className="px-3 sm:px-4 py-2 text-sm bg-primary text-white rounded-md hover:bg-primary/90 transition-colors text-center"
+              >
+                Create New Post
+              </button>
+            </div>
           </div>
         </div>
 
@@ -652,24 +735,19 @@ function Blog() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Excerpt</label>
-                  <textarea
-                    rows={3}
+                  <RichTextEditor
                     value={formData.excerpt}
-                    onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    onChange={handleExcerptChange}
                     placeholder="Brief description of the blog post for preview..."
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Content</label>
-                  <textarea
-                    rows={12}
+                  <RichTextEditor
                     value={formData.content}
-                    onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    onChange={handleContentChange}
                     placeholder="Write your blog post content here..."
-                    required
                   />
                 </div>
 
@@ -824,13 +902,10 @@ function Blog() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Content</label>
-                  <textarea
-                    rows={8}
+                  <RichTextEditor
                     value={formData.content}
-                    onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    onChange={handleContentChange}
                     placeholder="Write your blog post content here..."
-                    required
                   />
                 </div>
 
@@ -860,6 +935,105 @@ function Blog() {
           </div>
         </div>
       )}
+
+      {/* Category Management Modal */}
+      {showCategoryModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">Manage Blog Categories</h3>
+              <button 
+                onClick={() => setShowCategoryModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+                disabled={uploading}
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-6">
+              {/* Add New Category Form */}
+              <form onSubmit={handleCategorySubmit} className="mb-6 pb-6 border-b">
+                <h4 className="text-md font-semibold text-gray-900 mb-4">Add New Category</h4>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Category Name</label>
+                    <input
+                      type="text"
+                      value={newCategory.name}
+                      onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                      placeholder="Travel & Lifestyle"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Description (Optional)</label>
+                    <textarea
+                      rows={3}
+                      value={newCategory.description}
+                      onChange={(e) => setNewCategory({ ...newCategory, description: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                      placeholder="Brief description of this blog category..."
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={uploading}
+                    className="w-full px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50"
+                  >
+                    {uploading ? 'Creating...' : 'Create Category'}
+                  </button>
+                </div>
+              </form>
+
+              {/* Existing Categories */}
+              <div>
+                <h4 className="text-md font-semibold text-gray-900 mb-4">Existing Categories</h4>
+                {categories.length === 0 ? (
+                  <p className="text-gray-500 text-sm">No categories created yet.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {categories.map((category) => (
+                      <div key={category.id} className="flex items-center justify-between p-3 border rounded-md">
+                        <div>
+                          <h5 className="font-medium text-gray-900">{category.name}</h5>
+                          {category.description && (
+                            <p className="text-sm text-gray-500">{category.description}</p>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => {
+                            setCategoryToDelete({ id: category.id, name: category.name });
+                            setShowCategoryDeleteModal(true);
+                          }}
+                          className="text-red-600 hover:text-red-800 text-sm font-medium"
+                          disabled={deletingCategory}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Category Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={showCategoryDeleteModal}
+        onClose={handleCategoryDeleteModalClose}
+        onConfirm={handleCategoryDelete}
+        title="Delete Blog Category"
+        message="Are you sure you want to delete this blog category? This action cannot be undone."
+        itemName={categoryToDelete?.name}
+        deleteButtonText="Delete Category"
+        isDeleting={deletingCategory}
+      />
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmationModal
