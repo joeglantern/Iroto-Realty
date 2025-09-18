@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { getBlogPostBySlug, getBlogPosts, getBlogCategories } from '@/lib/data';
 import { getStorageUrl } from '@/lib/supabase';
 import type { BlogPost, BlogCategory } from '@/lib/supabase';
+import { renderRichText } from '@/utils/sanitizeHtml';
 import PageLayout from '@/components/layout/PageLayout';
 
 interface BlogPostDetailProps {
@@ -154,17 +155,6 @@ export default function BlogPostDetail({ params }: BlogPostDetailProps) {
       <div>
         {/* Article Header */}
         <article className="bg-white">
-          {/* Hero Image */}
-          <div className="relative h-96 lg:h-[500px]">
-            <Image
-              src={getImageUrl(currentPost.featured_image_path)}
-              alt={currentPost.title}
-              fill
-              className="object-cover"
-            />
-            <div className="absolute inset-0 bg-black/30" />
-          </div>
-          
           {/* Article Content */}
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="py-16">
@@ -195,6 +185,16 @@ export default function BlogPostDetail({ params }: BlogPostDetailProps) {
                 {currentPost.title}
               </h1>
               
+              {/* Featured Image */}
+              <div className="relative h-64 md:h-80 lg:h-96 mb-8 rounded-xl overflow-hidden">
+                <Image
+                  src={getImageUrl(currentPost.featured_image_path)}
+                  alt={currentPost.title}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              
               {/* Author Info */}
               <div className="flex items-center space-x-4 pb-8 border-b border-gray-200 mb-12">
                 <div className="w-12 h-12 bg-brown rounded-full flex items-center justify-center text-white text-lg font-semibold">
@@ -208,8 +208,8 @@ export default function BlogPostDetail({ params }: BlogPostDetailProps) {
               
               {/* Article Content */}
               <div 
-                className="prose prose-lg max-w-none prose-headings:text-black prose-headings:font-bold prose-p:text-gray-700 prose-p:leading-relaxed prose-a:text-brown hover:prose-a:text-brown/80"
-                dangerouslySetInnerHTML={{ __html: currentPost.content || '' }}
+                className="prose prose-lg max-w-none prose-headings:text-black prose-headings:font-bold prose-p:text-gray-700 prose-p:leading-relaxed prose-a:text-brown hover:prose-a:text-brown/80 rich-text-content"
+                dangerouslySetInnerHTML={renderRichText(currentPost.content || '')}
               />
             </div>
           </div>
@@ -240,9 +240,10 @@ export default function BlogPostDetail({ params }: BlogPostDetailProps) {
                       <h3 className="text-xl font-bold text-black mt-3 mb-3 group-hover:text-brown transition-colors duration-200">
                         {post.title}
                       </h3>
-                      <p className="text-gray-600 text-sm leading-relaxed">
-                        {post.excerpt}
-                      </p>
+                      <div 
+                        className="text-gray-600 text-sm leading-relaxed rich-text-content"
+                        dangerouslySetInnerHTML={renderRichText(post.excerpt || '')}
+                      />
                     </div>
                   </article>
                 </Link>
@@ -262,4 +263,59 @@ export default function BlogPostDetail({ params }: BlogPostDetailProps) {
       </div>
     </PageLayout>
   );
+}
+
+// Add custom CSS for rich text content
+if (typeof document !== 'undefined') {
+  const style = document.createElement('style');
+  style.textContent = `
+    .rich-text-content ul {
+      list-style-type: disc !important;
+      margin-left: 1.5rem !important;
+      margin-bottom: 1rem !important;
+    }
+    
+    .rich-text-content ol {
+      list-style-type: decimal !important;
+      margin-left: 1.5rem !important;
+      margin-bottom: 1rem !important;
+    }
+    
+    .rich-text-content li {
+      margin-bottom: 0.5rem !important;
+      display: list-item !important;
+    }
+    
+    .rich-text-content p {
+      margin-bottom: 1rem !important;
+    }
+    
+    .rich-text-content h1, .rich-text-content h2, .rich-text-content h3 {
+      font-weight: bold !important;
+      margin-bottom: 0.75rem !important;
+      margin-top: 1.5rem !important;
+    }
+    
+    .rich-text-content h1 { font-size: 1.875rem !important; }
+    .rich-text-content h2 { font-size: 1.5rem !important; }
+    .rich-text-content h3 { font-size: 1.25rem !important; }
+    
+    .rich-text-content strong, .rich-text-content b {
+      font-weight: bold !important;
+    }
+    
+    .rich-text-content em, .rich-text-content i {
+      font-style: italic !important;
+    }
+    
+    .rich-text-content u {
+      text-decoration: underline !important;
+    }
+    
+    .rich-text-content a {
+      color: #713900 !important;
+      text-decoration: underline !important;
+    }
+  `;
+  document.head.appendChild(style);
 }

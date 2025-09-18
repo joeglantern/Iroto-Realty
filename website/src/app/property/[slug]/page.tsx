@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { getPropertyBySlug, getPropertyReviews } from '@/lib/data';
 import { getStorageUrl } from '@/lib/supabase';
 import type { Property, Review } from '@/lib/supabase';
+import { renderRichText } from '@/utils/sanitizeHtml';
 import PageLayout from '@/components/layout/PageLayout';
 
 interface PropertyDetailProps {
@@ -270,9 +271,10 @@ export default function PropertyDetail({ params }: PropertyDetailProps) {
                   </div>
                 </div>
                 
-                <p className="text-gray-700 text-lg leading-relaxed mb-8">
-                  {property.description}
-                </p>
+                <div 
+                  className="text-gray-700 text-lg leading-relaxed mb-8 prose prose-gray max-w-none rich-text-content"
+                  dangerouslySetInnerHTML={renderRichText(property.description)}
+                />
                 
                 {/* Amenities */}
                 {property.amenities && property.amenities.length > 0 && (
@@ -352,9 +354,13 @@ export default function PropertyDetail({ params }: PropertyDetailProps) {
                 <div className="text-center mb-6">
                   <h3 className="text-2xl font-bold text-gray-800 mb-4">INFO</h3>
                 </div>
-                <div className="text-gray-700 leading-relaxed">
-                  <p>{property.property_info_1 || 'Additional property information will be available soon.'}</p>
-                </div>
+                <div 
+                  className="text-gray-700 leading-relaxed prose prose-gray max-w-none rich-text-content"
+                  dangerouslySetInnerHTML={renderRichText(
+                    property.property_info_1, 
+                    'Additional property information will be available soon.'
+                  )}
+                />
               </div>
               
               {/* Second INFO Section */}
@@ -362,9 +368,13 @@ export default function PropertyDetail({ params }: PropertyDetailProps) {
                 <div className="text-center mb-6">
                   <h3 className="text-2xl font-bold text-gray-800 mb-4">INFO</h3>
                 </div>
-                <div className="text-gray-700 leading-relaxed">
-                  <p>{property.property_info_2 || 'More details about this property will be available soon.'}</p>
-                </div>
+                <div 
+                  className="text-gray-700 leading-relaxed prose prose-gray max-w-none rich-text-content"
+                  dangerouslySetInnerHTML={renderRichText(
+                    property.property_info_2, 
+                    'More details about this property will be available soon.'
+                  )}
+                />
               </div>
             </div>
           </div>
@@ -519,4 +529,59 @@ export default function PropertyDetail({ params }: PropertyDetailProps) {
       </div>
     </PageLayout>
   );
+}
+
+// Add custom CSS for rich text content
+if (typeof document !== 'undefined') {
+  const style = document.createElement('style');
+  style.textContent = `
+    .rich-text-content ul {
+      list-style-type: disc !important;
+      margin-left: 1.5rem !important;
+      margin-bottom: 1rem !important;
+    }
+    
+    .rich-text-content ol {
+      list-style-type: decimal !important;
+      margin-left: 1.5rem !important;
+      margin-bottom: 1rem !important;
+    }
+    
+    .rich-text-content li {
+      margin-bottom: 0.5rem !important;
+      display: list-item !important;
+    }
+    
+    .rich-text-content p {
+      margin-bottom: 1rem !important;
+    }
+    
+    .rich-text-content h1, .rich-text-content h2, .rich-text-content h3 {
+      font-weight: bold !important;
+      margin-bottom: 0.75rem !important;
+      margin-top: 1.5rem !important;
+    }
+    
+    .rich-text-content h1 { font-size: 1.875rem !important; }
+    .rich-text-content h2 { font-size: 1.5rem !important; }
+    .rich-text-content h3 { font-size: 1.25rem !important; }
+    
+    .rich-text-content strong, .rich-text-content b {
+      font-weight: bold !important;
+    }
+    
+    .rich-text-content em, .rich-text-content i {
+      font-style: italic !important;
+    }
+    
+    .rich-text-content u {
+      text-decoration: underline !important;
+    }
+    
+    .rich-text-content a {
+      color: #713900 !important;
+      text-decoration: underline !important;
+    }
+  `;
+  document.head.appendChild(style);
 }
