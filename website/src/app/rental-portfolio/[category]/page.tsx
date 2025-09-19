@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
-import { getProperties, getCategoryBySlug } from '@/lib/data';
+import { getProperties, getCategoryBySlug, getSearchSuggestions } from '@/lib/data';
 import { getStorageUrl } from '@/lib/supabase';
 import type { Property, PropertyCategory } from '@/lib/supabase';
 import PageLayout from '@/components/layout/PageLayout';
@@ -152,6 +152,18 @@ export default function CategoryPage() {
   const [category, setCategory] = useState<PropertyCategory | null>(null);
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchData, setSearchData] = useState({
+    search: '',
+    location: categorySlug || '',
+    type: 'rental',
+    maxPrice: ''
+  });
+  const [suggestions, setSuggestions] = useState<Property[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
+  const [isLoading, setIsLoading] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function loadData() {
@@ -178,6 +190,104 @@ export default function CategoryPage() {
     
     loadData();
   }, [categorySlug]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchData({
+      ...searchData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setShowSuggestions(false);
+
+    // Create search parameters
+    const params = new URLSearchParams();
+    if (searchData.search) params.append('q', searchData.search);
+    if (searchData.location) params.append('location', searchData.location);
+    if (searchData.type) params.append('type', searchData.type);
+
+    // Navigate to search page with results
+    window.location.href = `/search?${params.toString()}`;
+  };
+
+  // Debounced search for suggestions (category rental properties only)
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (searchData.search.trim().length > 2) {
+        setIsLoading(true);
+        try {
+          const results = await getSearchSuggestions(searchData.search, 5);
+          // Filter for category rental properties
+          const categoryResults = results.filter(property =>
+            (property.listing_type === 'rental' || property.listing_type === 'both') &&
+            (property.specific_location?.toLowerCase().includes(categorySlug.toLowerCase()) ||
+             property.title.toLowerCase().includes(categorySlug.toLowerCase()))
+          );
+          setSuggestions(categoryResults);
+          setShowSuggestions(true);
+          setSelectedSuggestionIndex(-1);
+        } catch (error) {
+          console.error('Error fetching suggestions:', error);
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchData.search, categorySlug]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!showSuggestions) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedSuggestionIndex(prev =>
+          prev < suggestions.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedSuggestionIndex(prev => prev > 0 ? prev - 1 : -1);
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (selectedSuggestionIndex >= 0) {
+          const selectedProperty = suggestions[selectedSuggestionIndex];
+          window.location.href = `/property/${selectedProperty.slug}`;
+        } else {
+          handleSearchSubmit(e);
+        }
+        break;
+      case 'Escape':
+        setShowSuggestions(false);
+        setSelectedSuggestionIndex(-1);
+        break;
+    }
+  };
+
+  // Handle click outside to close suggestions
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        suggestionsRef.current &&
+        !suggestionsRef.current.contains(event.target as Node) &&
+        searchInputRef.current &&
+        !searchInputRef.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   if (loading) {
     return (
@@ -244,15 +354,157 @@ export default function CategoryPage() {
               {category.name}
             </h1>
             {category.description && (
-              <p className="text-xl lg:text-2xl text-white/90">
+              <p className="text-xl lg:text-2xl text-white/90 mb-8">
                 {category.description}
               </p>
             )}
+
+            {/* Search Bar for Category Properties */}
+            <div className="max-w-2xl mx-auto px-2 sm:px-0 relative">
+              <form onSubmit={handleSearchSubmit} className="relative">
+                <div className="bg-white rounded-lg shadow-xl p-1 sm:p-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-0">
+                  <div className="flex-1 flex items-center pl-3 sm:pl-4 relative min-h-[48px]">
+                    <input
+                      ref={searchInputRef}
+                      type="text"
+                      name="search"
+                      value={searchData.search}
+                      onChange={handleSearchChange}
+                      onKeyDown={handleKeyDown}
+                      onFocus={() => {
+                        if (suggestions.length > 0) setShowSuggestions(true);
+                      }}
+                      placeholder={`Search ${category.name} rental properties...`}
+                      className="flex-1 bg-transparent border-none outline-none text-gray-800 placeholder-gray-500 text-sm sm:text-base py-2 sm:py-3"
+                      autoComplete="off"
+                    />
+                    {isLoading && (
+                      <div className="absolute right-3 sm:right-4">
+                        <div className="w-4 h-4 border-2 border-gray-300 border-t-brown rounded-full animate-spin"></div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Search Button */}
+                  <button
+                    type="submit"
+                    className="bg-brown hover:bg-brown/90 text-white px-4 sm:px-8 py-2 sm:py-3 rounded-md font-semibold transition-colors duration-200 flex items-center justify-center shadow-md min-h-[44px]"
+                  >
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <span className="text-sm sm:text-base">Search</span>
+                  </button>
+                </div>
+
+                {/* Loading State for Suggestions */}
+                {isLoading && searchData.search.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 z-[9999] overflow-hidden">
+                    <div className="py-8 px-4 text-center">
+                      <div className="w-8 h-8 border-2 border-gray-300 border-t-brown rounded-full animate-spin mx-auto mb-3"></div>
+                      <p className="text-sm text-gray-500">Searching {category.name} properties...</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Empty State for Suggestions */}
+                {showSuggestions && !isLoading && suggestions.length === 0 && searchData.search.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 z-[9999] overflow-hidden">
+                    <div className="py-8 px-4 text-center">
+                      <svg className="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                      <p className="text-sm font-medium text-gray-900 mb-1">No {category.name} properties found</p>
+                      <p className="text-xs text-gray-500 mb-4">Try searching for a different property type</p>
+                      <button
+                        onClick={() => {
+                          setSearchData({ ...searchData, search: '' });
+                          setShowSuggestions(false);
+                        }}
+                        className="text-xs text-brown hover:text-brown/80 font-medium"
+                      >
+                        Clear search
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Autocomplete Suggestions */}
+                {showSuggestions && !isLoading && suggestions.length > 0 && (
+                  <div
+                    ref={suggestionsRef}
+                    className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 z-[9999] overflow-hidden max-h-96 sm:max-h-80"
+                    style={{
+                      boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05)'
+                    }}
+                  >
+                    <div className="max-h-72 sm:max-h-64 overflow-y-auto py-2">
+                      {suggestions.map((property, index) => {
+                        // Get property image with fallbacks
+                        let imageUrl = '';
+
+                        if (property.hero_image_path) {
+                          imageUrl = getStorageUrl('property-images', property.hero_image_path);
+                        } else if ((property as any).property_images?.[0]?.image_path) {
+                          imageUrl = getStorageUrl('property-images', (property as any).property_images[0].image_path);
+                        } else {
+                          imageUrl = 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80';
+                        }
+
+                        return (
+                          <button
+                            key={property.id}
+                            onClick={() => window.location.href = `/property/${property.slug}`}
+                            className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors duration-150 border-b border-gray-100 last:border-b-0 flex items-center space-x-3 ${
+                              index === selectedSuggestionIndex ? 'bg-gray-50' : ''
+                            }`}
+                          >
+                            <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-gray-200">
+                              <img
+                                src={imageUrl}
+                                alt={property.title}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.src = 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80';
+                                }}
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-gray-900 text-sm truncate">{property.title}</p>
+                              <p className="text-xs text-gray-500 truncate">{category.name}</p>
+                              {property.rental_price && (
+                                <p className="text-xs text-brown font-medium">KES {property.rental_price.toLocaleString()}/night</p>
+                              )}
+                            </div>
+                            <div className="flex-shrink-0">
+                              <span className="bg-gray-700 text-white px-2 py-1 rounded-full text-xs font-medium">
+                                RENTAL
+                              </span>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Results count footer */}
+                    <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 text-center">
+                      <div className="flex items-center justify-center text-xs text-gray-500">
+                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        {suggestions.length} {category.name} propert{suggestions.length === 1 ? 'y' : 'ies'} found
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </form>
+            </div>
           </div>
         </section>
 
         {/* Properties Grid */}
-        <section className="py-20 bg-white">
+        <section className="pb-20 pt-8 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="text-3xl lg:text-4xl font-bold text-black mb-4">
@@ -300,6 +552,25 @@ export default function CategoryPage() {
                 })
               )}
             </div>
+
+            {/* Info Cards Section - Only show if category has description */}
+            {category.description && (
+              <div className="mb-16">
+                <div className="bg-gray-50 rounded-2xl p-8">
+                  <div className="flex items-center mb-4">
+                    <div className="w-12 h-12 bg-brown rounded-full flex items-center justify-center mr-4">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-2xl font-bold text-black">About {category.name}</h3>
+                  </div>
+                  <p className="text-gray-600 leading-relaxed">
+                    {category.description}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </section>
 
@@ -331,6 +602,32 @@ export default function CategoryPage() {
                 </svg>
                 Send Email
               </a>
+            </div>
+          </div>
+        </section>
+
+        {/* YouTube Video Section Placeholder */}
+        <section className="py-20 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl lg:text-4xl font-bold text-black mb-4">
+                Experience {category.name}
+              </h2>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                Watch our video tour of this magnificent destination
+              </p>
+            </div>
+
+            <div className="max-w-4xl mx-auto">
+              <div className="aspect-video bg-gray-200 rounded-lg flex items-center justify-center">
+                <div className="text-center">
+                  <svg className="w-20 h-20 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <p className="text-gray-600">YouTube Video Placeholder</p>
+                  <p className="text-sm text-gray-500 mt-2">Video integration coming soon</p>
+                </div>
+              </div>
             </div>
           </div>
         </section>
