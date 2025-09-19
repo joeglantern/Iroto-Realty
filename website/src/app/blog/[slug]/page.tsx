@@ -253,12 +253,12 @@ export default function BlogPostDetail({ params }: BlogPostDetailProps) {
         <article className="bg-white">
           {/* Main Content with Sidebar Layout */}
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col lg:flex-row gap-12">
+            <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
               {/* Main Article Content - Centered and Focused */}
               <div className="flex-1 max-w-4xl mx-auto lg:mx-0">
-                <div className="py-12">
+                <div className="py-6 sm:py-8 lg:py-12">
                   {/* Breadcrumb Navigation */}
-                  <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-8">
+                  <nav className="flex items-center space-x-2 text-xs sm:text-sm text-gray-500 mb-6 sm:mb-8">
                     <a href="/" className="hover:text-brown transition-colors">Home</a>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -267,42 +267,42 @@ export default function BlogPostDetail({ params }: BlogPostDetailProps) {
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
-                    <span className="text-gray-900 truncate">{currentPost.title}</span>
+                    <span className="text-gray-900 truncate max-w-[200px] sm:max-w-none">{currentPost.title}</span>
                   </nav>
 
                   {/* Article Header */}
-                  <header className="max-w-4xl mb-12">
+                  <header className="max-w-4xl mb-8 sm:mb-12">
                     {/* Category Tag */}
-                    <div className="mb-6">
-                      <span className="inline-block px-4 py-2 bg-brown/10 text-brown text-sm font-semibold rounded-full">
+                    <div className="mb-4 sm:mb-6">
+                      <span className="inline-block px-3 py-1.5 sm:px-4 sm:py-2 bg-brown/10 text-brown text-xs sm:text-sm font-semibold rounded-full">
                         {blogCategories.find(cat => cat.id === currentPost.category_id)?.name || 'General'}
                       </span>
                     </div>
                     
                     {/* Title */}
-                    <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 sm:mb-6 leading-tight">
                       {currentPost.title}
                     </h1>
                     
                     {/* Article Meta & Author Info */}
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8 pb-6 border-b border-gray-200">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-brown to-brown/80 rounded-full flex items-center justify-center text-white text-lg font-semibold">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-gray-200">
+                      <div className="flex items-center space-x-3 sm:space-x-4">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-brown to-brown/80 rounded-full flex items-center justify-center text-white text-base sm:text-lg font-semibold">
                           {currentPost.author_name?.charAt(0) || 'A'}
                         </div>
                         <div>
-                          <p className="font-semibold text-gray-900">{currentPost.author_name || 'Author'}</p>
-                          <p className="text-sm text-gray-500">
+                          <p className="text-sm sm:text-base font-semibold text-gray-900">{currentPost.author_name || 'Author'}</p>
+                          <p className="text-xs sm:text-sm text-gray-500">
                             {formatDate(currentPost.created_at)} • {calculateReadTime(currentPost.content || '')}
                           </p>
                         </div>
                       </div>
                       
                       {/* Article Actions */}
-                      <div className="flex items-center space-x-3">
+                      <div className="flex items-center space-x-2 sm:space-x-3">
                         <button
                           onClick={shareOnWhatsApp}
-                          className="flex items-center space-x-2 px-3 py-2 text-sm bg-green-50 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
+                          className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-green-50 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
                         >
                           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.890-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
@@ -311,7 +311,7 @@ export default function BlogPostDetail({ params }: BlogPostDetailProps) {
                         </button>
                         <button
                           onClick={copyToClipboard}
-                          className={`flex items-center space-x-2 px-3 py-2 text-sm rounded-lg transition-colors ${
+                          className={`flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm rounded-lg transition-colors ${
                             copied 
                               ? 'bg-green-100 text-green-700' 
                               : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -338,7 +338,7 @@ export default function BlogPostDetail({ params }: BlogPostDetailProps) {
                   </header>
                   
                   {/* Featured Image */}
-                  <div className="relative aspect-[16/9] mb-12 rounded-2xl overflow-hidden shadow-lg">
+                  <div className="relative aspect-[16/9] mb-8 sm:mb-12 rounded-lg sm:rounded-2xl overflow-hidden shadow-lg">
                     <Image
                       src={getImageUrl(currentPost.featured_image_path)}
                       alt={currentPost.title}
@@ -351,7 +351,7 @@ export default function BlogPostDetail({ params }: BlogPostDetailProps) {
                   {/* Article Content */}
                   <div className="max-w-4xl">
                     <div 
-                      className="prose prose-xl max-w-none prose-headings:text-gray-900 prose-headings:font-bold prose-p:text-gray-700 prose-p:leading-relaxed prose-a:text-brown hover:prose-a:text-brown/80 prose-strong:text-gray-900 prose-blockquote:border-brown prose-blockquote:text-gray-700 rich-text-content"
+                      className="prose prose-base sm:prose-lg lg:prose-xl max-w-none prose-headings:text-gray-900 prose-headings:font-bold prose-p:text-gray-700 prose-p:leading-relaxed prose-a:text-brown hover:prose-a:text-brown/80 prose-strong:text-gray-900 prose-blockquote:border-brown prose-blockquote:text-gray-700 rich-text-content"
                       dangerouslySetInnerHTML={renderRichText(currentPost.content || '')}
                     />
                   </div>
@@ -360,12 +360,12 @@ export default function BlogPostDetail({ params }: BlogPostDetailProps) {
 
               {/* Sidebar with Related Articles */}
               <div className="w-full lg:w-80 lg:flex-shrink-0">
-                <div className="sticky top-8 space-y-8 py-12">
+                <div className="lg:sticky lg:top-8 space-y-6 lg:space-y-8 py-6 lg:py-12">
                   {/* Related Articles Sidebar */}
-                  <div className="bg-gray-50 rounded-2xl p-6">
-                    <h2 className="text-2xl font-bold text-black mb-6">Related Articles</h2>
+                  <div className="bg-gray-50 rounded-xl lg:rounded-2xl p-4 sm:p-6">
+                    <h2 className="text-xl sm:text-2xl font-bold text-black mb-4 sm:mb-6">Related Articles</h2>
                     
-                    <div className="space-y-6">
+                    <div className="space-y-4 sm:space-y-6">
                       {relatedPosts.slice(0, 4).map((post) => (
                         <Link key={post.id} href={`/blog/${post.slug}`} className="group block">
                           <article className="space-y-3">
@@ -382,13 +382,13 @@ export default function BlogPostDetail({ params }: BlogPostDetailProps) {
                               <span className="px-2 py-1 bg-white text-gray-600 text-xs font-medium rounded-full">
                                 {blogCategories.find(cat => cat.id === post.category_id)?.name || 'General'}
                               </span>
-                              <h3 className="text-lg font-semibold text-black mt-2 mb-2 group-hover:text-brown transition-colors duration-200 line-clamp-2">
+                              <h3 className="text-base sm:text-lg font-semibold text-black mt-2 mb-2 group-hover:text-brown transition-colors duration-200 line-clamp-2">
                                 {post.title}
                               </h3>
-                              <p className="text-sm text-gray-600 line-clamp-2">
+                              <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">
                                 {post.excerpt ? post.excerpt.replace(/<[^>]*>/g, '').substring(0, 100) + '...' : ''}
                               </p>
-                              <p className="text-xs text-gray-500 mt-2">
+                              <p className="text-xs text-gray-500 mt-1 sm:mt-2">
                                 {formatDate(post.created_at)}
                               </p>
                             </div>
