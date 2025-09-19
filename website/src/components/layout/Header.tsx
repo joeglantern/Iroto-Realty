@@ -186,24 +186,24 @@ export default function Header() {
 
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
-          <div className="lg:hidden border-t border-gray-200">
+          <div className="lg:hidden border-t border-gray-200 bg-white">
             <div className="px-2 pt-2 pb-3 space-y-1">
               {navigation.map((item) => (
                 <div key={item.label}>
                   <Link
                     href={item.href}
-                    className="block px-3 py-2 text-base font-medium text-[#713900] hover:text-brown hover:bg-gray-50 transition-colors duration-200"
+                    className="block px-3 py-3 text-base font-medium text-[#713900] hover:text-brown hover:bg-gray-50 transition-colors duration-200 touch-manipulation"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     {item.label}
                   </Link>
-                  {item.children && (
-                    <div className="pl-6">
+                  {item.children && item.children.length > 0 && (
+                    <div className="pl-4 border-l-2 border-gray-100 ml-3">
                       {item.children.map((child) => (
                         <Link
                           key={child.label}
                           href={child.href}
-                          className="block px-3 py-2 text-sm text-[#713900] hover:text-brown hover:bg-gray-50 transition-colors duration-200"
+                          className="block px-3 py-2 text-sm text-[#713900] hover:text-brown hover:bg-gray-50 transition-colors duration-200 touch-manipulation"
                           onClick={() => setMobileMenuOpen(false)}
                         >
                           {child.label}

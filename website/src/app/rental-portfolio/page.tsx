@@ -586,10 +586,10 @@ export default function RentalPortfolio() {
             </p>
             
             {/* Advanced Search Bar with Autocomplete */}
-            <div className="max-w-2xl mx-auto px-2 sm:px-0 relative">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative">
               <form onSubmit={handleSearchSubmit} className="relative">
-                <div className="bg-white rounded-lg shadow-xl p-1 sm:p-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-0">
-                  <div className="flex-1 flex items-center pl-3 sm:pl-4 relative min-h-[48px]">
+                <div className="bg-white rounded-full shadow-xl p-1.5 sm:p-2 flex items-center gap-1 sm:gap-2">
+                  <div className="flex-1 flex items-center pl-4 sm:pl-5 relative min-h-[40px] sm:min-h-[48px]">
                     <input
                       ref={searchInputRef}
                       type="text"
@@ -600,8 +600,8 @@ export default function RentalPortfolio() {
                       onFocus={() => {
                         if (suggestions.length > 0) setShowSuggestions(true);
                       }}
-                      placeholder="Search rental properties, locations..."
-                      className="flex-1 bg-transparent border-none outline-none text-gray-800 placeholder-gray-500 text-sm sm:text-base py-2 sm:py-3"
+                      placeholder="Search properties..."
+                      className="flex-1 bg-transparent border-none outline-none text-gray-800 placeholder-gray-500 text-base sm:text-lg py-2 sm:py-3"
                       autoComplete="off"
                     />
                     {isLoading && (
@@ -614,40 +614,39 @@ export default function RentalPortfolio() {
                   {/* Search Button */}
                   <button
                     type="submit"
-                    className="bg-brown hover:bg-brown/90 text-white px-4 sm:px-8 py-2 sm:py-3 rounded-md font-semibold transition-colors duration-200 flex items-center justify-center shadow-md min-h-[44px]"
+                    className="bg-brown hover:bg-brown/90 text-white w-10 h-10 sm:w-12 sm:h-12 rounded-full font-semibold transition-colors duration-200 flex items-center justify-center shadow-md flex-shrink-0"
                   >
-                    <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
-                    <span className="text-sm sm:text-base">Search</span>
                   </button>
                 </div>
 
                 {/* Loading State for Suggestions */}
                 {isLoading && searchData.search.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 z-[9999] overflow-hidden">
-                    <div className="py-8 px-4 text-center">
-                      <div className="w-8 h-8 border-2 border-gray-300 border-t-brown rounded-full animate-spin mx-auto mb-3"></div>
-                      <p className="text-sm text-gray-500">Searching rental properties...</p>
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-200 z-[9999] overflow-hidden">
+                    <div className="py-6 sm:py-8 px-4 text-center">
+                      <div className="w-6 h-6 sm:w-8 sm:h-8 border-2 border-gray-300 border-t-brown rounded-full animate-spin mx-auto mb-3"></div>
+                      <p className="text-sm sm:text-base text-gray-500">Searching properties...</p>
                     </div>
                   </div>
                 )}
 
                 {/* Empty State for Suggestions */}
                 {showSuggestions && !isLoading && suggestions.length === 0 && searchData.search.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 z-[9999] overflow-hidden">
-                    <div className="py-8 px-4 text-center">
-                      <svg className="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-200 z-[9999] overflow-hidden">
+                    <div className="py-6 sm:py-8 px-4 text-center">
+                      <svg className="w-10 h-10 sm:w-12 sm:h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                       </svg>
-                      <p className="text-sm font-medium text-gray-900 mb-1">No rental properties found</p>
-                      <p className="text-xs text-gray-500 mb-4">Try searching for a different location or property type</p>
+                      <p className="text-sm sm:text-base font-medium text-gray-900 mb-1">No properties found</p>
+                      <p className="text-xs sm:text-sm text-gray-500 mb-4">Try searching for a different location or property type</p>
                       <button
                         onClick={() => {
                           setSearchData({ ...searchData, search: '' });
                           setShowSuggestions(false);
                         }}
-                        className="text-xs text-brown hover:text-brown/80 font-medium"
+                        className="text-xs sm:text-sm text-brown hover:text-brown/80 font-medium"
                       >
                         Clear search
                       </button>
@@ -659,12 +658,12 @@ export default function RentalPortfolio() {
                 {showSuggestions && !isLoading && suggestions.length > 0 && (
                   <div 
                     ref={suggestionsRef}
-                    className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 z-[9999] overflow-hidden max-h-96 sm:max-h-80"
+                    className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-200 z-[9999] overflow-hidden max-h-[70vh] sm:max-h-96"
                     style={{ 
                       boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05)' 
                     }}
                   >
-                    <div className="max-h-72 sm:max-h-64 overflow-y-auto py-2">
+                    <div className="max-h-[60vh] sm:max-h-80 overflow-y-auto py-2">
                       {suggestions.map((property, index) => {
                         // Get property image with fallbacks
                         let imageUrl = '';
@@ -685,88 +684,76 @@ export default function RentalPortfolio() {
                         }
                         
                         return (
-                          <button
+                          <div
                             key={property.id}
                             onClick={() => window.location.href = `/property/${property.slug}`}
-                            className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors duration-150 border-b border-gray-100 last:border-b-0 flex items-center space-x-3 ${
-                              index === selectedSuggestionIndex ? 'bg-gray-50' : ''
+                            className={`flex items-start sm:items-center px-4 sm:px-5 py-3 sm:py-4 hover:bg-gray-50 cursor-pointer transition-colors border-l-4 ${
+                              index === selectedSuggestionIndex 
+                                ? 'bg-blue-50 border-l-blue-500' 
+                                : 'border-l-transparent hover:border-l-gray-300'
                             }`}
                           >
-                            <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-gray-200">
-                              <img 
-                                src={imageUrl} 
+                            <div className="w-16 h-12 sm:w-20 sm:h-14 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0 mr-3 sm:mr-4 relative">
+                              <img
+                                src={imageUrl}
                                 alt={property.title}
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
                                   const target = e.target as HTMLImageElement;
-                                  target.src = 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80';
+                                  target.src = 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80';
                                 }}
                               />
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-gray-900 text-sm truncate">{property.title}</p>
-                              <p className="text-xs text-gray-500 truncate">{property.specific_location}</p>
-                              {property.rental_price && (
-                                <p className="text-xs text-brown font-medium">KES {property.rental_price.toLocaleString()}/night</p>
-                              )}
+                            <div className="flex-1 min-w-0 space-y-1">
+                              <div className="flex items-start justify-between">
+                                <h4 className="font-medium text-gray-900 text-base sm:text-lg truncate pr-2">
+                                  {property.title}
+                                </h4>
+                                <span className="bg-gray-700 text-white px-2 py-0.5 rounded-full text-xs sm:text-sm font-medium flex-shrink-0">
+                                  FOR RENT
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between text-sm sm:text-base">
+                                <p className="text-gray-500 truncate flex items-center">
+                                  <svg className="w-3 h-3 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                  </svg>
+                                  {property.specific_location || 'Kenya Coast'}
+                                </p>
+                                <p className="font-semibold text-brown ml-2 text-sm sm:text-base">
+                                  {property.rental_price ? `From KES ${property.rental_price.toLocaleString()}/night` : 'Contact for price'}
+                                </p>
+                              </div>
                             </div>
-                            <div className="flex-shrink-0">
-                              <span className="bg-gray-700 text-white px-2 py-1 rounded-full text-xs font-medium">
-                                RENTAL
-                              </span>
-                            </div>
-                          </button>
+                          </div>
                         );
                       })}
                     </div>
                     
-                    {/* Results count footer */}
-                    <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 text-center">
-                      <div className="flex items-center justify-center text-xs text-gray-500">
-                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        {suggestions.length} rental propert{suggestions.length === 1 ? 'y' : 'ies'} found
+                    {/* Enhanced Footer with Better Instructions */}
+                    <div className="border-t border-gray-200 px-4 sm:px-5 py-3 bg-gray-50">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <div className="flex items-center text-xs sm:text-sm text-gray-500">
+                          <svg className="w-3 h-3 sm:w-4 sm:h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          {suggestions.length} propert{suggestions.length === 1 ? 'y' : 'ies'} found
+                        </div>
+                        <div className="text-xs sm:text-sm text-gray-500 hidden sm:block">
+                          <kbd className="px-1.5 py-1 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded">↑↓</kbd> navigate • 
+                          <kbd className="px-1.5 py-1 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded ml-1">Enter</kbd> search • 
+                          <kbd className="px-1.5 py-1 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded ml-1">Esc</kbd> close
+                        </div>
+                        <div className="text-xs sm:text-sm text-gray-500 sm:hidden">
+                          Tap any property to view details
+                        </div>
                       </div>
                     </div>
                   </div>
                 )}
               </form>
               
-              {/* Quick Filters */}
-              <div className="mt-6">
-                <p className="text-white/80 text-sm text-center mb-3">Popular searches:</p>
-                <div className="flex flex-wrap gap-2 justify-center">
-                  <button
-                    type="button"
-                    onClick={() => setSearchData({ ...searchData, search: 'beachfront' })}
-                    className="px-3 py-1 text-sm bg-white/20 text-white rounded-full hover:bg-brown hover:text-white transition-colors duration-200 backdrop-blur-sm"
-                  >
-                    Beachfront
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setSearchData({ ...searchData, search: 'villa' })}
-                    className="px-3 py-1 text-sm bg-white/20 text-white rounded-full hover:bg-brown hover:text-white transition-colors duration-200 backdrop-blur-sm"
-                  >
-                    Villa
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setSearchData({ ...searchData, search: 'luxury' })}
-                    className="px-3 py-1 text-sm bg-white/20 text-white rounded-full hover:bg-brown hover:text-white transition-colors duration-200 backdrop-blur-sm"
-                  >
-                    Luxury
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setSearchData({ ...searchData, search: 'pool' })}
-                    className="px-3 py-1 text-sm bg-white/20 text-white rounded-full hover:bg-brown hover:text-white transition-colors duration-200 backdrop-blur-sm"
-                  >
-                    Pool
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
         </section>
