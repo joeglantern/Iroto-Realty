@@ -2,6 +2,10 @@ import PageLayout from '@/components/layout/PageLayout';
 import { getTravelSections } from '@/lib/travel-sections';
 import RichTextRenderer from '@/components/RichTextRenderer';
 
+// Force dynamic rendering to always fetch fresh data
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function PreArrivalGuide() {
   // Get dynamic content from CMS
   const sections = await getTravelSections('pre_arrival');
