@@ -366,7 +366,7 @@ export async function searchProperties(query: string, filters?: {
   min_price?: number
   max_price?: number
   bedrooms?: number
-  bathrooms?: number
+  beds?: number
   max_guests?: number
   amenities?: string[]
   has_video?: boolean
@@ -448,9 +448,9 @@ export async function searchProperties(query: string, filters?: {
       supabaseQuery = supabaseQuery.gte('bedrooms', filters.bedrooms)
     }
 
-    // Fixed bathroom filter - should be "X or more" not "exactly X"
-    if (filters?.bathrooms) {
-      supabaseQuery = supabaseQuery.gte('bathrooms', filters.bathrooms)
+    // Fixed beds filter - should be "X or more" not "exactly X"
+    if (filters?.beds) {
+      supabaseQuery = supabaseQuery.gte('beds', filters.beds)
     }
 
     // Max guests filter
@@ -691,13 +691,13 @@ export async function getAvailableAmenities(): Promise<string[]> {
 export async function getPropertyStats(): Promise<{
   priceRange: { min: number; max: number }
   bedroomRange: { min: number; max: number }
-  bathroomRange: { min: number; max: number }
+  bedRange: { min: number; max: number }
   guestRange: { min: number; max: number }
 }> {
   try {
     const { data, error } = await supabase
       .from('properties')
-      .select('rental_price, sale_price, bedrooms, bathrooms, max_guests')
+      .select('rental_price, sale_price, bedrooms, beds, max_guests')
       .eq('status', 'published')
       .eq('is_active', true)
 
@@ -706,7 +706,7 @@ export async function getPropertyStats(): Promise<{
       return {
         priceRange: { min: 0, max: 100000 },
         bedroomRange: { min: 1, max: 10 },
-        bathroomRange: { min: 1, max: 10 },
+        bedRange: { min: 1, max: 10 },
         guestRange: { min: 1, max: 20 }
       }
     }
@@ -714,14 +714,14 @@ export async function getPropertyStats(): Promise<{
     // Calculate ranges from actual data
     const prices: number[] = []
     const bedrooms: number[] = []
-    const bathrooms: number[] = []
+    const beds: number[] = []
     const guests: number[] = []
 
     data?.forEach(property => {
       if (property.rental_price) prices.push(property.rental_price)
       if (property.sale_price) prices.push(property.sale_price)
       if (property.bedrooms) bedrooms.push(property.bedrooms)
-      if (property.bathrooms) bathrooms.push(property.bathrooms)
+      if (property.beds) beds.push(property.beds)
       if (property.max_guests) guests.push(property.max_guests)
     })
 
@@ -734,9 +734,9 @@ export async function getPropertyStats(): Promise<{
         min: bedrooms.length > 0 ? Math.min(...bedrooms) : 1,
         max: bedrooms.length > 0 ? Math.max(...bedrooms) : 10
       },
-      bathroomRange: {
-        min: bathrooms.length > 0 ? Math.min(...bathrooms) : 1,
-        max: bathrooms.length > 0 ? Math.max(...bathrooms) : 10
+      bedRange: {
+        min: beds.length > 0 ? Math.min(...beds) : 1,
+        max: beds.length > 0 ? Math.max(...beds) : 10
       },
       guestRange: {
         min: guests.length > 0 ? Math.min(...guests) : 1,

@@ -33,7 +33,7 @@ export interface Property {
   price?: number;
   currency: string;
   bedrooms?: number;
-  bathrooms?: number;
+  beds?: number;
   area_sqm?: number;
   featured_image?: string;
   video_url?: string;
