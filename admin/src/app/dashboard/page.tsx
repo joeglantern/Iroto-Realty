@@ -174,6 +174,12 @@ function Dashboard() {
                   Reviews
                 </Link>
                 <Link
+                  href="/travel-pages"
+                  className="px-3 py-2 text-sm font-medium text-gray-600 hover:text-primary rounded-md transition-colors"
+                >
+                  Travel Pages
+                </Link>
+                <Link
                   href="/analytics"
                   className="px-3 py-2 text-sm font-medium text-gray-600 hover:text-primary rounded-md transition-colors"
                 >
@@ -231,6 +237,13 @@ function Dashboard() {
                 className="block w-full text-left px-3 py-2 text-sm font-medium text-gray-600 hover:text-primary hover:bg-gray-50 rounded-md transition-colors"
               >
                 Reviews
+              </Link>
+              <Link
+                href="/travel-pages"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="block w-full text-left px-3 py-2 text-sm font-medium text-gray-600 hover:text-primary hover:bg-gray-50 rounded-md transition-colors"
+              >
+                Travel Pages
               </Link>
               <Link
                 href="/analytics"

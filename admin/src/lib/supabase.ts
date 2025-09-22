@@ -124,6 +124,17 @@ export interface Review {
   updated_by?: string
 }
 
+export interface TravelSection {
+  id: string
+  page_type: 'pre_arrival' | 'getting_there'
+  title: string
+  content: string
+  sort_order: number
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
 // Helper function to get storage URL
 export function getStorageUrl(bucket: string, path: string): string {
   if (!path) return ''
