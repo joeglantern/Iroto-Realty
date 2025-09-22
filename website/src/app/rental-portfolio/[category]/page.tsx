@@ -15,11 +15,11 @@ interface PropertyCardProps {
   price: string;
   slug: string;
   bedrooms: number;
-  bathrooms: number;
+  beds: number;
   listingType?: 'rental' | 'sale' | 'both';
 }
 
-function PropertyCard({ id, images, title, location, price, slug, bedrooms, bathrooms, listingType = 'rental' }: PropertyCardProps) {
+function PropertyCard({ id, images, title, location, price, slug, bedrooms, beds, listingType = 'rental' }: PropertyCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const nextImage = () => {
@@ -136,7 +136,7 @@ function PropertyCard({ id, images, title, location, price, slug, bedrooms, bath
               {price}
             </p>
             <p className="text-gray-500 text-sm">
-              {bedrooms} bedrooms • {bathrooms} bathrooms
+              {bedrooms} bedrooms • {beds} beds
             </p>
           </div>
         </div>
@@ -545,7 +545,7 @@ export default function CategoryPage() {
                       }
                       slug={property.slug}
                       bedrooms={property.bedrooms || 0}
-                      bathrooms={property.bathrooms || 0}
+                      beds={property.beds || 0}
                       listingType={property.listing_type}
                     />
                   );

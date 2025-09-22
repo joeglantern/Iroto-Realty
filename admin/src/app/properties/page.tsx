@@ -40,7 +40,7 @@ export default function Properties() {
     rental_price: '',
     sale_price: '',
     bedrooms: '',
-    bathrooms: '',
+    beds: '',
     max_guests: '',
     video_url: '',
     amenities: '',
@@ -203,7 +203,7 @@ export default function Properties() {
         rental_price: formData.rental_price ? parseFloat(formData.rental_price) : undefined,
         sale_price: formData.sale_price ? parseFloat(formData.sale_price) : undefined,
         bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : undefined,
-        bathrooms: formData.bathrooms ? parseInt(formData.bathrooms) : undefined,
+        beds: formData.beds ? parseInt(formData.beds) : undefined,
         max_guests: formData.max_guests ? parseInt(formData.max_guests) : undefined,
         amenities: formData.amenities ? formData.amenities.split(',').map(a => a.trim()) : [],
         currency: 'KES',
@@ -465,7 +465,7 @@ export default function Properties() {
       rental_price: '',
       sale_price: '',
       bedrooms: '',
-      bathrooms: '',
+      beds: '',
       max_guests: '',
       video_url: '',
       amenities: '',
@@ -883,11 +883,11 @@ export default function Properties() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Bathrooms</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Beds</label>
                     <input
                       type="number"
-                      value={formData.bathrooms}
-                      onChange={(e) => setFormData({ ...formData, bathrooms: e.target.value })}
+                      value={formData.beds}
+                      onChange={(e) => setFormData({ ...formData, beds: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                       placeholder="2"
                     />

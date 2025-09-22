@@ -21,7 +21,7 @@ export interface Property {
   sale_price?: number
   currency: string
   bedrooms?: number
-  bathrooms?: number
+  beds?: number
   max_guests?: number
   hero_image_path?: string
   video_url?: string

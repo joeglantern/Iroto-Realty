@@ -237,18 +237,21 @@ export default function PropertyDetail({ params }: PropertyDetailProps) {
                   <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                     {property.bedrooms && (
                       <span className="flex items-center">
-                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h18v16H3V4zm0 0v4h18V4M9 12v4m6-4v4" />
+                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 21H7C4.79086 21 3 19.2091 3 17V10.7076C3 9.30887 3.73061 8.01175 4.92679 7.28679L9.92679 4.25649C11.2011 3.48421 12.7989 3.48421 14.0732 4.25649L19.0732 7.28679C20.2694 8.01175 21 9.30887 21 10.7076V17C21 19.2091 19.2091 21 17 21H15M9 21V17C9 15.3431 10.3431 14 12 14V14C13.6569 14 15 15.3431 15 17V21M9 21H15" />
                         </svg>
                         {property.bedrooms} bedrooms
                       </span>
                     )}
-                    {property.bathrooms && (
+                    {property.beds && (
                       <span className="flex items-center">
-                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10v11M20 10v11" />
+                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M7 9m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M22 17v-3h-20" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M2 8v9" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 14h10v-2a3 3 0 0 0 -3 -3h-7v5z" />
                         </svg>
-                        {property.bathrooms} bathrooms
+                        {property.beds} beds
                       </span>
                     )}
                     {property.max_guests && (

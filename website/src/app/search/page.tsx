@@ -16,11 +16,11 @@ interface PropertyCardProps {
   price: string;
   slug: string;
   bedrooms: number;
-  bathrooms: number;
+  beds: number;
   listingType?: 'rental' | 'sale' | 'both';
 }
 
-function PropertyCard({ images, title, location, price, slug, bedrooms, bathrooms, listingType }: PropertyCardProps) {
+function PropertyCard({ images, title, location, price, slug, bedrooms, beds, listingType }: PropertyCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const nextImage = () => {
@@ -111,7 +111,7 @@ function PropertyCard({ images, title, location, price, slug, bedrooms, bathroom
               {price}
             </p>
             <p className="text-gray-500 text-sm">
-              {bedrooms} bedrooms • {bathrooms} bathrooms
+              {bedrooms} bedrooms • {beds} beds
             </p>
           </div>
         </div>
@@ -126,7 +126,7 @@ interface FilterState {
   minPrice: string;
   maxPrice: string;
   bedrooms: string;
-  bathrooms: string;
+  beds: string;
   maxGuests: string;
   amenities: string[];
   hasVideo: 'all' | 'yes' | 'no';
@@ -246,7 +246,7 @@ function SearchPageContent() {
     minPrice: searchParams.get('minPrice') || '',
     maxPrice: searchParams.get('maxPrice') || '',
     bedrooms: searchParams.get('bedrooms') || '',
-    bathrooms: searchParams.get('bathrooms') || '',
+    beds: searchParams.get('beds') || '',
     maxGuests: searchParams.get('maxGuests') || '',
     amenities: searchParams.get('amenities')?.split(',').filter(Boolean) || [],
     hasVideo: (searchParams.get('hasVideo') as any) || 'all',
@@ -274,7 +274,7 @@ function SearchPageContent() {
         min_price?: number;
         max_price?: number;
         bedrooms?: number;
-        bathrooms?: number;
+        beds?: number;
         max_guests?: number;
         amenities?: string[];
         has_video?: boolean;
@@ -303,8 +303,8 @@ function SearchPageContent() {
         searchFilters.bedrooms = parseInt(filters.bedrooms);
       }
       
-      if (filters.bathrooms) {
-        searchFilters.bathrooms = parseInt(filters.bathrooms);
+      if (filters.beds) {
+        searchFilters.beds = parseInt(filters.beds);
       }
 
       if (filters.maxGuests) {
@@ -394,7 +394,7 @@ function SearchPageContent() {
     if (newFilters.minPrice) params.set('minPrice', newFilters.minPrice);
     if (newFilters.maxPrice) params.set('maxPrice', newFilters.maxPrice);
     if (newFilters.bedrooms) params.set('bedrooms', newFilters.bedrooms);
-    if (newFilters.bathrooms) params.set('bathrooms', newFilters.bathrooms);
+    if (newFilters.beds) params.set('beds', newFilters.beds);
     if (newFilters.maxGuests) params.set('maxGuests', newFilters.maxGuests);
     if (newFilters.amenities.length > 0) params.set('amenities', newFilters.amenities.join(','));
     if (newFilters.hasVideo !== 'all') params.set('hasVideo', newFilters.hasVideo);
@@ -437,7 +437,7 @@ function SearchPageContent() {
       minPrice: '',
       maxPrice: '',
       bedrooms: '',
-      bathrooms: '',
+      beds: '',
       maxGuests: '',
       amenities: [],
       hasVideo: 'all',
@@ -554,8 +554,8 @@ function SearchPageContent() {
 
               {/* Bathrooms Filter */}
               <CustomDropdown
-                value={filters.bathrooms}
-                onChange={(value) => handleFilterChange('bathrooms', value)}
+                value={filters.beds}
+                onChange={(value) => handleFilterChange('beds', value)}
                 options={[
                   { value: '', label: 'Bathrooms' },
                   { value: '1', label: '1+' },
@@ -844,7 +844,7 @@ function SearchPageContent() {
                     price={price}
                     slug={property.slug}
                     bedrooms={property.bedrooms || 0}
-                    bathrooms={property.bathrooms || 0}
+                    beds={property.beds || 0}
                     listingType={property.listing_type}
                   />
                 );
