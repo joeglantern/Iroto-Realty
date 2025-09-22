@@ -25,8 +25,78 @@ export default function TravelInsights() {
           </div>
         </section>
 
+        {/* Complete Travel Guide Navigation */}
+        <section className="py-16 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl lg:text-4xl font-bold text-black mb-4">
+                Complete Travel Guide
+              </h2>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                Everything you need for your Kenyan coastal adventure, organized by travel phase
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {/* Current Page - Travel Insights */}
+              <div className="relative group">
+                <div className="bg-brown text-white rounded-lg p-8 text-center">
+                  <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-bold mb-2">Travel Insights</h3>
+                  <p className="text-white/90 mb-4">Essential tips, guides, and local knowledge</p>
+                  <div className="bg-white/20 text-white px-4 py-2 rounded-md font-semibold">
+                    Current Page
+                  </div>
+                </div>
+              </div>
+
+              {/* Pre-arrival Guide */}
+              <Link href="/travel-insights/pre-arrival" className="group">
+                <div className="bg-white border-2 border-gray-200 rounded-lg p-8 text-center hover:border-brown hover:shadow-lg transition-all duration-300">
+                  <div className="w-16 h-16 bg-gray-100 group-hover:bg-brown/10 rounded-full flex items-center justify-center mx-auto mb-4 transition-colors duration-300">
+                    <svg className="w-8 h-8 text-gray-600 group-hover:text-brown transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-bold mb-2 text-black group-hover:text-brown transition-colors duration-300">Pre-arrival</h3>
+                  <p className="text-gray-600 mb-4">Documentation, packing, and preparation essentials</p>
+                  <div className="inline-flex items-center text-brown group-hover:bg-brown group-hover:text-white px-4 py-2 rounded-md font-semibold transition-colors duration-300">
+                    View Guide
+                    <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </div>
+              </Link>
+
+              {/* Getting There Guide */}
+              <Link href="/travel-insights/getting-there" className="group">
+                <div className="bg-white border-2 border-gray-200 rounded-lg p-8 text-center hover:border-brown hover:shadow-lg transition-all duration-300">
+                  <div className="w-16 h-16 bg-gray-100 group-hover:bg-brown/10 rounded-full flex items-center justify-center mx-auto mb-4 transition-colors duration-300">
+                    <svg className="w-8 h-8 text-gray-600 group-hover:text-brown transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-bold mb-2 text-black group-hover:text-brown transition-colors duration-300">Getting There</h3>
+                  <p className="text-gray-600 mb-4">Transportation, routes, and arrival information</p>
+                  <div className="inline-flex items-center text-brown group-hover:bg-brown group-hover:text-white px-4 py-2 rounded-md font-semibold transition-colors duration-300">
+                    View Guide
+                    <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </div>
+              </Link>
+            </div>
+          </div>
+        </section>
+
         {/* Travel Guides Section */}
-        <section className="pb-20 pt-8 bg-white">
+        <section className="pb-20 pt-8 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="text-3xl lg:text-4xl font-bold text-black mb-4">
