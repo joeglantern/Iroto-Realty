@@ -1,4 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,28 +28,66 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // In a real application, you would:
-    // 1. Send an email using a service like SendGrid, Nodemailer, or AWS SES
-    // 2. Save the inquiry to a database
-    // 3. Send notifications to staff
-    
-    // For now, we'll simulate a successful submission
-    console.log('Contact form submission:', {
-      name,
-      email,
-      phone,
-      subject,
-      message,
-      timestamp: new Date().toISOString(),
+    // Get user IP and User Agent for tracking
+    const userIP = request.headers.get('x-forwarded-for') ||
+                   request.headers.get('x-real-ip') ||
+                   'unknown';
+    const userAgent = request.headers.get('user-agent') || 'unknown';
+
+    // Map subject to inquiry type
+    const getInquiryType = (subject: string) => {
+      if (!subject) return 'general';
+      const subjectLower = subject.toLowerCase();
+      if (subjectLower.includes('rental')) return 'property';
+      if (subjectLower.includes('purchase')) return 'property';
+      if (subjectLower.includes('investment')) return 'investment';
+      return 'general';
+    };
+
+    // Save to database
+    const { data, error } = await supabase
+      .from('contact_inquiries')
+      .insert({
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        phone: phone?.trim() || null,
+        subject: subject?.trim() || null,
+        message: message.trim(),
+        inquiry_type: getInquiryType(subject),
+        status: 'new',
+        priority: 'normal',
+        source: 'contact_form',
+        user_ip: userIP,
+        user_agent: userAgent
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Database error:', error);
+      return NextResponse.json(
+        { error: 'Failed to save your message. Please try again.' },
+        { status: 500 }
+      );
+    }
+
+    // Log successful submission
+    console.log('Contact form submission saved:', {
+      id: data.id,
+      name: data.name,
+      email: data.email,
+      inquiry_type: data.inquiry_type,
+      timestamp: data.created_at,
     });
 
-    // Simulate processing time
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // TODO: Send notification email to admin
+    // TODO: Send auto-responder email to customer
 
     return NextResponse.json(
-      { 
-        success: true, 
-        message: 'Thank you for your inquiry! We will get back to you within 24 hours.' 
+      {
+        success: true,
+        message: 'Thank you for your inquiry! We will get back to you within 24 hours.',
+        id: data.id
       },
       { status: 200 }
     );
