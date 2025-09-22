@@ -31,22 +31,32 @@ export default function RichTextEditor({
     setMounted(true);
   }, []);
 
-  // Simple toolbar configuration for property descriptions
+  // Enhanced toolbar configuration for travel content
   const modules = {
     toolbar: [
-      [{ 'header': [1, 2, 3, false] }],
-      ['bold', 'italic', 'underline'],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-      ['link'],
+      [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+      [{ 'size': ['small', false, 'large', 'huge'] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ 'color': [] }, { 'background': [] }],
+      [{ 'script': 'sub'}, { 'script': 'super' }],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }, { 'indent': '-1'}, { 'indent': '+1' }],
+      [{ 'direction': 'rtl' }],
+      [{ 'align': [] }],
+      ['blockquote', 'code-block'],
+      ['link', 'image', 'video'],
       ['clean']
     ],
   };
 
   const formats = [
-    'header',
-    'bold', 'italic', 'underline',
-    'list', 'bullet',
-    'link'
+    'header', 'size',
+    'bold', 'italic', 'underline', 'strike',
+    'color', 'background',
+    'script',
+    'list', 'bullet', 'indent',
+    'direction', 'align',
+    'blockquote', 'code-block',
+    'link', 'image', 'video'
   ];
 
   if (!mounted) {

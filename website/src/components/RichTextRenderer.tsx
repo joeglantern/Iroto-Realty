@@ -18,7 +18,7 @@ export default function RichTextRenderer({ content, className = "" }: RichTextRe
 
   return (
     <div
-      className={`prose prose-lg max-w-none ${className}`}
+      className={`prose prose-lg max-w-none rich-text-content ${className}`}
       dangerouslySetInnerHTML={{ __html: sanitizedContent }}
     />
   );
