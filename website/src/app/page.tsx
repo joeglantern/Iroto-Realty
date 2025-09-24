@@ -315,7 +315,7 @@ function HeroCarousel() {
         </h1>
         
         {/* Advanced Search Bar with Autocomplete */}
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+        <div className="max-w-xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <form onSubmit={handleSearchSubmit} className="relative">
             <div className="bg-white rounded-full shadow-xl p-1.5 sm:p-2 flex items-center gap-1 sm:gap-2">
               <div className="flex-1 flex items-center pl-4 sm:pl-5 relative min-h-[40px] sm:min-h-[48px]">
