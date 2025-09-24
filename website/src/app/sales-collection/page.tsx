@@ -577,14 +577,14 @@ export default function SalesCollection() {
           <div 
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
             style={{
-              backgroundImage: 'url("https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80")'
+              backgroundImage: 'url("/Sales collection.jpeg")'
             }}
           />
           <div className="absolute inset-0 bg-black/40" />
           
           <div className="relative z-10 text-center text-white max-w-6xl mx-auto px-4">
-            <h1 className="text-4xl lg:text-6xl font-bold mb-6">
-              Sales <span className="text-brown">Collection</span>
+            <h1 className="text-4xl lg:text-6xl font-bold mb-6 text-[#713900]">
+              Sales <span className="text-[#713900]">Collection</span>
             </h1>
             <p className="text-xl lg:text-2xl text-white/90 mb-8">
               Own your dream home in Kenya's most prestigious coastal locations

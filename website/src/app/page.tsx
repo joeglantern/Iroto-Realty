@@ -155,13 +155,13 @@ function HeroCarousel() {
   const slides = [
     {
       id: 1,
-      image: 'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
+      image: '/Home Page.jpg',
       title: 'IROTO',
       highlight: 'REALTY'
     },
     {
       id: 4,
-      image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
+      image: '/Home Page.jpg',
       title: 'IROTO',
       highlight: 'REALTY'
     }
@@ -309,7 +309,7 @@ function HeroCarousel() {
       </div>
       
       {/* Hero Content */}
-      <div className="relative z-10 text-center text-white">
+      <div className="relative z-10 text-center">
         <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold mb-6 sm:mb-8 transition-all duration-1000 text-[#713900] drop-shadow-lg">
           IROTO REALTY
         </h1>

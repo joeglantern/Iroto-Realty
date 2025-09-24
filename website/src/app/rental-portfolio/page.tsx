@@ -572,14 +572,14 @@ export default function RentalPortfolio() {
           <div 
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
             style={{
-              backgroundImage: 'url("https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80")'
+              backgroundImage: 'url("/Rental Portfolio_.jpg")'
             }}
           />
           <div className="absolute inset-0 bg-black/40" />
           
           <div className="relative z-10 text-center text-white max-w-6xl mx-auto px-4">
-            <h1 className="text-4xl lg:text-6xl font-bold mb-6">
-              Rental <span className="text-brown">Portfolio</span>
+            <h1 className="text-4xl lg:text-6xl font-bold mb-6 text-[#713900]">
+              Rental <span className="text-[#713900]">Portfolio</span>
             </h1>
             <p className="text-xl lg:text-2xl text-white/90 mb-8">
               Discover luxury vacation rentals in Kenya's premier coastal destinations

@@ -70,7 +70,7 @@ export default function Messages() {
     }
   };
 
-  const updateMessageStatus = async (messageId: string, status: string) => {
+  const updateMessageStatus = async (messageId: string, status: 'new' | 'in_progress' | 'replied' | 'closed') => {
     try {
       const { error } = await supabase
         .from('contact_inquiries')
