@@ -8,11 +8,11 @@ import { getProperties } from '@/lib/properties';
 import { getBlogPosts } from '@/lib/blog';
 import { getReviews } from '@/lib/reviews';
 import SimpleProtectedRoute from '@/components/SimpleProtectedRoute';
+import AdminHeader from '@/components/layout/AdminHeader';
 import type { Property } from '@/lib/supabase';
 
 function Dashboard() {
   const { signOut } = useSimpleAuth();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState([
     { label: 'Total Properties', value: '0', change: 'Loading...', positive: true },
@@ -123,139 +123,8 @@ function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            {/* Logo and Mobile Menu Button */}
-            <div className="flex items-center">
-              <Image
-                src="/logo/iroto-logo.png"
-                alt="Iroto Realty"
-                width={120}
-                height={40}
-                className="mr-4 md:mr-8"
-              />
-              
-              {/* Mobile Menu Button */}
-              <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="md:hidden p-2 text-gray-600 hover:text-primary focus:outline-none focus:text-primary"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-
-              {/* Desktop Navigation */}
-              <nav className="hidden md:flex space-x-8">
-                <Link
-                  href="/dashboard"
-                  className="px-3 py-2 text-sm font-medium text-primary bg-primary/10 rounded-md transition-colors"
-                >
-                  Overview
-                </Link>
-                <Link
-                  href="/properties"
-                  className="px-3 py-2 text-sm font-medium text-gray-600 hover:text-primary rounded-md transition-colors"
-                >
-                  Properties
-                </Link>
-                <Link
-                  href="/blog"
-                  className="px-3 py-2 text-sm font-medium text-gray-600 hover:text-primary rounded-md transition-colors"
-                >
-                  Blog
-                </Link>
-                <Link
-                  href="/reviews"
-                  className="px-3 py-2 text-sm font-medium text-gray-600 hover:text-primary rounded-md transition-colors"
-                >
-                  Reviews
-                </Link>
-                <Link
-                  href="/travel-pages"
-                  className="px-3 py-2 text-sm font-medium text-gray-600 hover:text-primary rounded-md transition-colors"
-                >
-                  Travel Pages
-                </Link>
-                <Link
-                  href="/analytics"
-                  className="px-3 py-2 text-sm font-medium text-gray-600 hover:text-primary rounded-md transition-colors"
-                >
-                  Analytics
-                </Link>
-              </nav>
-            </div>
-
-            {/* User Menu */}
-            <div className="flex items-center space-x-4">
-              <button className="p-2 text-gray-600 hover:text-primary rounded-md">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </button>
-              <button 
-                onClick={signOut}
-                className="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-md transition-colors"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile Navigation Menu */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden border-t bg-white">
-            <div className="px-4 py-2 space-y-1">
-              <Link
-                href="/dashboard"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="block w-full text-left px-3 py-2 text-sm font-medium text-primary bg-primary/10 rounded-md transition-colors"
-              >
-                Overview
-              </Link>
-              <Link
-                href="/properties"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="block w-full text-left px-3 py-2 text-sm font-medium text-gray-600 hover:text-primary hover:bg-gray-50 rounded-md transition-colors"
-              >
-                Properties
-              </Link>
-              <Link
-                href="/blog"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="block w-full text-left px-3 py-2 text-sm font-medium text-gray-600 hover:text-primary hover:bg-gray-50 rounded-md transition-colors"
-              >
-                Blog
-              </Link>
-              <Link
-                href="/reviews"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="block w-full text-left px-3 py-2 text-sm font-medium text-gray-600 hover:text-primary hover:bg-gray-50 rounded-md transition-colors"
-              >
-                Reviews
-              </Link>
-              <Link
-                href="/travel-pages"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="block w-full text-left px-3 py-2 text-sm font-medium text-gray-600 hover:text-primary hover:bg-gray-50 rounded-md transition-colors"
-              >
-                Travel Pages
-              </Link>
-              <Link
-                href="/analytics"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="block w-full text-left px-3 py-2 text-sm font-medium text-gray-600 hover:text-primary hover:bg-gray-50 rounded-md transition-colors"
-              >
-                Analytics
-              </Link>
-            </div>
-          </div>
-        )}
-      </header>
+      {/* Shared Header */}
+      <AdminHeader />
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
@@ -372,4 +241,5 @@ export default function DashboardPage() {
     </SimpleProtectedRoute>
   );
 }
+
 
