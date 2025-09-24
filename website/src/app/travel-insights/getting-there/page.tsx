@@ -23,8 +23,8 @@ export default async function GettingThere() {
           <div className="absolute inset-0 bg-black/40" />
           
           <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-4">
-            <h1 className="text-4xl lg:text-6xl font-bold mb-6">
-              Getting <span className="text-brown">There</span>
+            <h1 className="text-4xl lg:text-6xl font-bold mb-6 text-[#713900]">
+              Getting <span className="text-[#713900]">There</span>
             </h1>
             <p className="text-xl lg:text-2xl text-white/90">
               Your complete transportation guide to Kenya's coastal destinations

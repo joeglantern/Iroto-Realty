@@ -9,14 +9,14 @@ export default function About() {
           <div 
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
             style={{
-              backgroundImage: 'url("https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80")'
+              backgroundImage: 'url("/About Us_.jpg")'
             }}
           />
           <div className="absolute inset-0 bg-black/40" />
           
           <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-4">
-            <h1 className="text-4xl lg:text-6xl font-bold mb-6">
-              About <span className="text-brown">Iroto Realty</span>
+            <h1 className="text-4xl lg:text-6xl font-bold mb-6 text-[#713900]">
+              About <span className="text-[#713900]">Iroto Realty</span>
             </h1>
             <p className="text-xl lg:text-2xl text-white/90">
               Your trusted partner in premium Kenyan real estate
