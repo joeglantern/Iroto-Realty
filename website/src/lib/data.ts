@@ -748,7 +748,7 @@ export async function getPropertyStats(): Promise<{
     return {
       priceRange: { min: 0, max: 100000 },
       bedroomRange: { min: 1, max: 10 },
-      bathroomRange: { min: 1, max: 10 },
+      bedRange: { min: 1, max: 10 },
       guestRange: { min: 1, max: 20 }
     }
   }
