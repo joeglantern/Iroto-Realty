@@ -598,7 +598,7 @@ function SearchPageContent() {
               </FilterPill>
 
               {/* Clear Filters Button */}
-              {(filters.listingType !== 'all' || filters.location || filters.minPrice || filters.maxPrice || filters.bedrooms || filters.bathrooms || filters.maxGuests || filters.amenities.length > 0 || filters.hasVideo !== 'all' || filters.isFeatured !== 'all' || filters.propertyAge !== 'all') && (
+              {(filters.listingType !== 'all' || filters.location || filters.minPrice || filters.maxPrice || filters.bedrooms || filters.beds || filters.maxGuests || filters.amenities.length > 0 || filters.hasVideo !== 'all' || filters.isFeatured !== 'all' || filters.propertyAge !== 'all') && (
                 <button
                   onClick={clearFilters}
                   className="flex items-center px-4 py-2.5 rounded-full text-sm font-medium text-red-600 hover:bg-red-50 border-2 border-red-200 hover:border-red-300 transition-colors duration-200"
