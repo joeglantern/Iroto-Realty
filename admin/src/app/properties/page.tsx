@@ -15,12 +15,22 @@ import RichTextEditor from '@/components/RichTextEditor';
 export default function Properties() {
   const { signOut, user, isAdmin } = useSimpleAuth();
   const [properties, setProperties] = useState<any[]>([]);
+  const [filteredProperties, setFilteredProperties] = useState<any[]>([]);
   const [categories, setCategories] = useState<PropertyCategory[]>([]);
   const [propertyTypes, setPropertyTypes] = useState<PropertyType[]>([]);
   const [loading, setLoading] = useState(true);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [uploading, setUploading] = useState(false);
+  
+  // Search and pagination states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all'); // all, draft, published
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [listingTypeFilter, setListingTypeFilter] = useState('all'); // all, rental, sale
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
   
   // Delete modal states
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -178,6 +188,7 @@ export default function Properties() {
       setProperties(propertiesData);
       setCategories(categoriesData);
       setPropertyTypes(typesData);
+      filterAndPaginateProperties(propertiesData);
     } catch (error) {
       console.error('Error loading data:', error);
       alert('Error loading data. Please try again.');
@@ -185,6 +196,71 @@ export default function Properties() {
       setLoading(false);
     }
   };
+
+  // Filter and paginate properties
+  const filterAndPaginateProperties = useCallback((propertiesData?: any[]) => {
+    const dataToFilter = propertiesData || properties;
+    let filtered = [...dataToFilter];
+
+    // Apply search filter
+    if (searchTerm.trim()) {
+      const search = searchTerm.toLowerCase();
+      filtered = filtered.filter(property => 
+        property.title?.toLowerCase().includes(search) ||
+        property.specific_location?.toLowerCase().includes(search) ||
+        property.property_categories?.name?.toLowerCase().includes(search)
+      );
+    }
+
+    // Apply status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(property => property.status === statusFilter);
+    }
+
+    // Apply category filter
+    if (categoryFilter !== 'all') {
+      filtered = filtered.filter(property => property.category_id === categoryFilter);
+    }
+
+    // Apply listing type filter
+    if (listingTypeFilter !== 'all') {
+      filtered = filtered.filter(property => property.listing_type === listingTypeFilter);
+    }
+
+    setTotalItems(filtered.length);
+
+    // Apply pagination
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedProperties = filtered.slice(startIndex, endIndex);
+
+    setFilteredProperties(paginatedProperties);
+  }, [properties, searchTerm, statusFilter, categoryFilter, listingTypeFilter, currentPage, itemsPerPage]);
+
+  // Update filtered properties when filters change
+  useEffect(() => {
+    if (properties.length > 0) {
+      filterAndPaginateProperties();
+    }
+  }, [filterAndPaginateProperties]);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, categoryFilter, listingTypeFilter]);
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('all');
+    setCategoryFilter('all');
+    setListingTypeFilter('all');
+    setCurrentPage(1);
+  };
+
+  // Pagination helpers
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const hasFilters = searchTerm || statusFilter !== 'all' || categoryFilter !== 'all' || listingTypeFilter !== 'all';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -565,16 +641,122 @@ export default function Properties() {
           </div>
         </div>
 
+        {/* Search and Filter Controls */}
+        <div className="bg-white rounded-lg shadow-sm border mb-6">
+          <div className="p-4 sm:p-6">
+            <div className="flex flex-col lg:flex-row gap-4">
+              {/* Search Input */}
+              <div className="flex-1">
+                <div className="relative">
+                  <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  <input
+                    type="text"
+                    placeholder="Search properties by title, location, or category..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              {/* Filter Controls */}
+              <div className="flex flex-wrap gap-3">
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                >
+                  <option value="all">All Status</option>
+                  <option value="draft">Draft</option>
+                  <option value="published">Published</option>
+                </select>
+
+                <select
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                >
+                  <option value="all">All Categories</option>
+                  {categories.map(category => (
+                    <option key={category.id} value={category.id}>{category.name}</option>
+                  ))}
+                </select>
+
+                <select
+                  value={listingTypeFilter}
+                  onChange={(e) => setListingTypeFilter(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                >
+                  <option value="all">All Types</option>
+                  <option value="rental">Rental</option>
+                  <option value="sale">Sale</option>
+                </select>
+
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    setItemsPerPage(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                >
+                  <option value={5}>5 per page</option>
+                  <option value={10}>10 per page</option>
+                  <option value={20}>20 per page</option>
+                  <option value={50}>50 per page</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Clear Filters Button */}
+            {hasFilters && (
+              <div className="mt-4 flex justify-between items-center">
+                <button
+                  onClick={clearFilters}
+                  className="text-sm text-gray-600 hover:text-gray-800 flex items-center space-x-1"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  <span>Clear all filters</span>
+                </button>
+                <p className="text-sm text-gray-600">
+                  Showing {filteredProperties.length} of {totalItems} properties
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Properties List */}
         <div className="bg-white rounded-lg shadow-sm border">
           <div className="p-4 sm:p-6">
-            {properties.length === 0 ? (
+            {loading ? (
               <div className="text-center py-8">
-                <p className="text-gray-500">No properties found. Create your first property!</p>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                <p className="text-gray-500 mt-2">Loading properties...</p>
+              </div>
+            ) : filteredProperties.length === 0 ? (
+              <div className="text-center py-8">
+                {hasFilters ? (
+                  <div>
+                    <p className="text-gray-500 mb-2">No properties match your filters.</p>
+                    <button
+                      onClick={clearFilters}
+                      className="text-primary hover:text-primary/80 text-sm font-medium"
+                    >
+                      Clear filters to see all properties
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-gray-500">No properties found. Create your first property!</p>
+                )}
               </div>
             ) : (
               <div className="space-y-4">
-                {properties.map((property) => (
+                {filteredProperties.map((property) => (
                   <div key={property.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 border rounded-lg hover:bg-gray-50 space-y-3 sm:space-y-0">
                     <div className="flex items-center space-x-3 sm:space-x-4 min-w-0 flex-1">
                       <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
@@ -633,6 +815,81 @@ export default function Properties() {
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="text-sm text-gray-600">
+                  Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} properties
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  
+                  <div className="flex items-center space-x-1">
+                    {/* First page */}
+                    {currentPage > 3 && (
+                      <>
+                        <button
+                          onClick={() => setCurrentPage(1)}
+                          className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
+                        >
+                          1
+                        </button>
+                        {currentPage > 4 && <span className="text-gray-400">...</span>}
+                      </>
+                    )}
+                    
+                    {/* Current page and neighbors */}
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                      if (pageNum > totalPages) return null;
+                      
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => setCurrentPage(pageNum)}
+                          className={`px-3 py-2 text-sm border rounded-lg ${
+                            currentPage === pageNum
+                              ? 'border-primary bg-primary text-white'
+                              : 'border-gray-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                    
+                    {/* Last page */}
+                    {currentPage < totalPages - 2 && (
+                      <>
+                        {currentPage < totalPages - 3 && <span className="text-gray-400">...</span>}
+                        <button
+                          onClick={() => setCurrentPage(totalPages)}
+                          className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
+                        >
+                          {totalPages}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                  
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
               </div>
             )}
           </div>
