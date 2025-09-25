@@ -10,6 +10,16 @@ import { getReviews } from '@/lib/reviews';
 import SimpleProtectedRoute from '@/components/SimpleProtectedRoute';
 import AdminHeader from '@/components/layout/AdminHeader';
 import type { Property } from '@/lib/supabase';
+import {
+  HomeIcon,
+  EyeIcon,
+  DocumentTextIcon,
+  StarIcon,
+  PlusIcon,
+  ClockIcon,
+  ChatBubbleLeftRightIcon,
+  UserGroupIcon
+} from '@heroicons/react/24/outline';
 
 function Dashboard() {
   const { signOut } = useSimpleAuth();
@@ -136,24 +146,42 @@ function Dashboard() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
-          {stats.map((stat, index) => (
-            <div key={index} className="bg-white p-6 rounded-lg shadow-sm border">
+          {stats.map((stat, index) => {
+            // Define icons for each stat
+            const icons = [
+              <HomeIcon key="home" className="w-6 h-6" />, // Total Properties
+              <EyeIcon key="eye" className="w-6 h-6" />,   // Active Listings
+              <DocumentTextIcon key="doc" className="w-6 h-6" />, // Blog Posts
+              <StarIcon key="star" className="w-6 h-6" />  // Reviews
+            ];
+            
+            // Define colors for each stat
+            const colors = [
+              { bg: 'bg-blue-100', text: 'text-blue-600' },    // Properties - Blue
+              { bg: 'bg-green-100', text: 'text-green-600' },  // Active Listings - Green
+              { bg: 'bg-purple-100', text: 'text-purple-600' }, // Blog Posts - Purple
+              { bg: 'bg-yellow-100', text: 'text-yellow-600' }  // Reviews - Yellow
+            ];
+
+            return (
+              <div key={index} className="bg-white p-6 rounded-lg shadow-sm border hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">{stat.label}</p>
                   <p className="text-3xl font-bold text-gray-900 mt-1">{stat.value}</p>
                 </div>
-                <div className={`p-3 rounded-full ${stat.positive ? 'bg-green-100' : 'bg-yellow-100'}`}>
-                  <svg className={`w-6 h-6 ${stat.positive ? 'text-green-600' : 'text-yellow-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                  </svg>
+                  <div className={`p-3 rounded-full ${colors[index]?.bg || 'bg-gray-100'}`}>
+                    <div className={colors[index]?.text || 'text-gray-600'}>
+                      {icons[index]}
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <p className={`text-sm mt-3 ${stat.positive ? 'text-green-600' : 'text-yellow-600'}`}>
+                <p className={`text-sm mt-3 ${stat.positive ? 'text-green-600' : 'text-gray-500'}`}>
                 {stat.change}
               </p>
             </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Overview Content */}
@@ -161,13 +189,26 @@ function Dashboard() {
           {/* Recent Properties */}
           <div className="bg-white p-6 rounded-lg shadow-sm border">
             <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <HomeIcon className="w-5 h-5 text-gray-600" />
               <h3 className="text-lg font-semibold text-gray-900">Recent Properties</h3>
-              <Link href="/properties" className="text-primary hover:text-primary/80 text-sm font-medium">View All</Link>
+              </div>
+              <Link href="/properties" className="text-primary hover:text-primary/80 text-sm font-medium flex items-center space-x-1">
+                <span>View All</span>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
             </div>
             <div className="space-y-4">
               {recentProperties.length === 0 ? (
-                <div className="text-center py-4">
-                  <p className="text-gray-500 text-sm">No properties found. Add your first property!</p>
+                <div className="text-center py-8">
+                  <HomeIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500 text-sm">No properties found.</p>
+                  <Link href="/properties" className="text-primary hover:text-primary/80 text-sm font-medium mt-2 inline-flex items-center">
+                    <PlusIcon className="w-4 h-4 mr-1" />
+                    Add your first property
+                  </Link>
                 </div>
               ) : (
                 recentProperties.map((property) => (
@@ -203,20 +244,46 @@ function Dashboard() {
 
           {/* Recent Activity */}
           <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
+            <div className="flex items-center space-x-2 mb-4">
+              <ClockIcon className="w-5 h-5 text-gray-600" />
+              <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
+            </div>
             <div className="space-y-4">
               {recentActivity.length === 0 ? (
-                <div className="text-center py-4">
+                <div className="text-center py-8">
+                  <ClockIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                   <p className="text-gray-500 text-sm">No recent activity found.</p>
+                  <p className="text-gray-400 text-xs mt-1">Activity will appear here as you manage your content</p>
                 </div>
               ) : (
-                recentActivity.map((activity, i) => (
+                recentActivity.map((activity, i) => {
+                  // Define icons based on activity type
+                  const getActivityIcon = (type: string) => {
+                    switch (type) {
+                      case 'success':
+                        return <PlusIcon className="w-4 h-4 text-green-600" />;
+                      case 'info':
+                        return <DocumentTextIcon className="w-4 h-4 text-blue-600" />;
+                      case 'review':
+                        return <StarIcon className="w-4 h-4 text-yellow-600" />;
+                      case 'message':
+                        return <ChatBubbleLeftRightIcon className="w-4 h-4 text-purple-600" />;
+                      default:
+                        return <ClockIcon className="w-4 h-4 text-gray-600" />;
+                    }
+                  };
+
+                  return (
                   <div key={i} className="flex items-start space-x-3">
-                    <div className={`w-3 h-3 rounded-full mt-2 ${
-                      activity.type === 'success' ? 'bg-green-400' :
-                      activity.type === 'info' ? 'bg-blue-400' :
-                      'bg-yellow-400'
-                    }`}></div>
+                      <div className={`p-2 rounded-full mt-0.5 ${
+                        activity.type === 'success' ? 'bg-green-100' :
+                        activity.type === 'info' ? 'bg-blue-100' :
+                        activity.type === 'review' ? 'bg-yellow-100' :
+                        activity.type === 'message' ? 'bg-purple-100' :
+                        'bg-gray-100'
+                      }`}>
+                        {getActivityIcon(activity.type)}
+                      </div>
                     <div className="flex-1">
                       <p className="text-sm text-gray-900">
                         {activity.action}: <span className="font-medium">{activity.item}</span>
@@ -224,7 +291,8 @@ function Dashboard() {
                       <p className="text-xs text-gray-500">{activity.time}</p>
                     </div>
                   </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>

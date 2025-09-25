@@ -6,6 +6,14 @@ import { supabase, TravelSection } from '@/lib/supabase';
 import SimpleProtectedRoute from '@/components/SimpleProtectedRoute';
 import AdminHeader from '@/components/layout/AdminHeader';
 import RichTextEditor from '@/components/RichTextEditor';
+import {
+  MapIcon,
+  PlusIcon,
+  PencilIcon,
+  TrashIcon,
+  ClockIcon,
+  GlobeAltIcon
+} from '@heroicons/react/24/outline';
 
 function TravelPages() {
   const [selectedPage, setSelectedPage] = useState<'pre_arrival' | 'getting_there'>('pre_arrival');
@@ -177,9 +185,12 @@ function TravelPages() {
           {/* Header */}
           <div className="mb-8">
             <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">Travel Pages</h1>
-                <p className="mt-2 text-gray-600">Manage content for pre-arrival and getting there pages</p>
+              <div className="flex items-center space-x-3">
+                <MapIcon className="w-8 h-8 text-blue-600" />
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900">Travel Pages</h1>
+                  <p className="mt-2 text-gray-600">Manage content for pre-arrival and getting there pages</p>
+                </div>
               </div>
               <Link
                 href="/dashboard"
@@ -197,23 +208,25 @@ function TravelPages() {
               <div className="flex space-x-4">
                 <button
                   onClick={() => setSelectedPage('pre_arrival')}
-                  className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                  className={`px-4 py-2 rounded-md font-medium transition-colors inline-flex items-center space-x-2 ${
                     selectedPage === 'pre_arrival'
                       ? 'bg-primary text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  Pre-Arrival Guide
+                  <ClockIcon className="w-4 h-4" />
+                  <span>Pre-Arrival Guide</span>
                 </button>
                 <button
                   onClick={() => setSelectedPage('getting_there')}
-                  className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                  className={`px-4 py-2 rounded-md font-medium transition-colors inline-flex items-center space-x-2 ${
                     selectedPage === 'getting_there'
                       ? 'bg-primary text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  Getting There
+                  <GlobeAltIcon className="w-4 h-4" />
+                  <span>Getting There</span>
                 </button>
               </div>
             </div>
@@ -224,9 +237,10 @@ function TravelPages() {
             <div className="mb-6">
               <button
                 onClick={() => setShowForm(true)}
-                className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-md font-medium transition-colors"
+                className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-md font-medium transition-colors inline-flex items-center space-x-2"
               >
-                Add New Section
+                <PlusIcon className="w-5 h-5" />
+                <span>Add New Section</span>
               </button>
             </div>
           )}

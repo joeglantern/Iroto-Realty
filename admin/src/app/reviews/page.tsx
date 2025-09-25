@@ -11,6 +11,15 @@ import { getReviews, createReview, deleteReview, updateReview, getReview } from 
 import { getProperties } from '@/lib/properties';
 import { uploadFile, supabase } from '@/lib/supabase';
 import type { Review, Property } from '@/lib/supabase';
+import {
+  StarIcon,
+  UserIcon,
+  PlusIcon,
+  FunnelIcon,
+  PencilIcon,
+  TrashIcon
+} from '@heroicons/react/24/outline';
+import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 
 function Reviews() {
   const { signOut } = useSimpleAuth();
@@ -259,24 +268,33 @@ function Reviews() {
         <div className="mb-6 md:mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Review Management</h1>
-              <p className="mt-2 text-sm md:text-base text-gray-600">Create and manage customer reviews</p>
+              <div className="flex items-center space-x-3">
+                <StarIcon className="w-8 h-8 text-yellow-500" />
+                <div>
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Review Management</h1>
+                  <p className="mt-1 text-sm md:text-base text-gray-600">Create and manage customer reviews</p>
+                </div>
+              </div>
             </div>
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-              <select 
-                value={selectedFilter}
-                onChange={(e) => setSelectedFilter(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-              >
-                <option value="all">All Reviews</option>
-                <option value="featured">Featured Reviews</option>
-                <option value="regular">Regular Reviews</option>
-              </select>
+              <div className="relative">
+                <FunnelIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <select 
+                  value={selectedFilter}
+                  onChange={(e) => setSelectedFilter(e.target.value)}
+                  className="pl-9 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                >
+                  <option value="all">All Reviews</option>
+                  <option value="featured">Featured Reviews</option>
+                  <option value="regular">Regular Reviews</option>
+                </select>
+              </div>
               <button 
                 onClick={() => setShowUploadModal(true)}
-                className="px-3 sm:px-4 py-2 text-sm bg-primary text-white rounded-md hover:bg-primary/90 transition-colors text-center"
+                className="px-3 sm:px-4 py-2 text-sm bg-primary text-white rounded-md hover:bg-primary/90 transition-colors text-center flex items-center space-x-2"
               >
-                Add New Review
+                <PlusIcon className="w-4 h-4" />
+                <span>Add New Review</span>
               </button>
             </div>
           </div>
@@ -286,8 +304,16 @@ function Reviews() {
         <div className="bg-white rounded-lg shadow-sm border">
           <div className="p-4 sm:p-6">
             {filteredReviews.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500">No reviews found. Add your first review!</p>
+              <div className="text-center py-12">
+                <StarIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500 mb-3">No reviews found.</p>
+                <button 
+                  onClick={() => setShowUploadModal(true)}
+                  className="text-primary hover:text-primary/80 text-sm font-medium inline-flex items-center"
+                >
+                  <PlusIcon className="w-4 h-4 mr-1" />
+                  Add your first review
+                </button>
               </div>
             ) : (
               <div className="space-y-4">
@@ -331,25 +357,37 @@ function Reviews() {
                     <div className="flex flex-wrap gap-2">
                       <button 
                         onClick={() => handleEditClick(review.id)}
-                        className="px-3 py-1 text-primary border border-primary text-sm rounded hover:bg-primary/10 transition-colors"
+                        className="px-3 py-1 text-primary border border-primary text-sm rounded hover:bg-primary/10 transition-colors inline-flex items-center space-x-1"
                       >
-                        Edit
+                        <PencilIcon className="w-3 h-3" />
+                        <span>Edit</span>
                       </button>
                       <button 
                         onClick={() => handleDeleteClick(review.id, review.reviewer_name)}
-                        className="px-3 py-1 text-red-600 text-sm hover:text-red-800 transition-colors"
+                        className="px-3 py-1 text-red-600 text-sm hover:text-red-800 transition-colors inline-flex items-center space-x-1"
                       >
-                        Delete
+                        <TrashIcon className="w-3 h-3" />
+                        <span>Delete</span>
                       </button>
                       <button 
                         onClick={() => handleToggleFeatured(review.id, review.is_featured)}
-                        className={`px-3 py-1 text-sm rounded transition-colors ${
+                        className={`px-3 py-1 text-sm rounded transition-colors inline-flex items-center space-x-1 ${
                           review.is_featured 
                             ? 'text-yellow-700 border border-yellow-300 hover:bg-yellow-50' 
                             : 'text-gray-700 border border-gray-300 hover:bg-gray-50'
                         }`}
                       >
-                        {review.is_featured ? 'Remove from Featured' : 'Mark as Featured'}
+                        {review.is_featured ? (
+                          <>
+                            <StarSolidIcon className="w-3 h-3" />
+                            <span>Remove Featured</span>
+                          </>
+                        ) : (
+                          <>
+                            <StarIcon className="w-3 h-3" />
+                            <span>Mark Featured</span>
+                          </>
+                        )}
                       </button>
                     </div>
                   </div>
