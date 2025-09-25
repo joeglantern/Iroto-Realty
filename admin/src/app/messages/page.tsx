@@ -395,7 +395,7 @@ export default function Messages() {
                             {selectedMessage.phone}
                           </a>
                           <button
-                            onClick={() => copyToClipboard(selectedMessage.phone)}
+                            onClick={() => copyToClipboard(selectedMessage.phone || '')}
                             className="p-1 hover:bg-gray-100 rounded transition-colors"
                             title="Copy phone number"
                           >
