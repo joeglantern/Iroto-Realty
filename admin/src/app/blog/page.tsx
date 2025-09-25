@@ -15,6 +15,7 @@ import RichTextEditor from '@/components/RichTextEditor';
 function Blog() {
   const { signOut } = useSimpleAuth();
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [filteredBlogPosts, setFilteredBlogPosts] = useState<BlogPost[]>([]);
   const [categories, setCategories] = useState<BlogCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -22,6 +23,14 @@ function Blog() {
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [editingPost, setEditingPost] = useState<any>(null);
+  
+  // Search and pagination states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all'); // all, draft, published
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
   
   // Delete modal states
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -183,6 +192,7 @@ function Blog() {
       
       setBlogPosts(postsData || []);
       setCategories(categoriesData || []);
+      filterAndPaginateBlogPosts(postsData || []);
     } catch (error) {
       console.error('Error loading blog data:', error);
       alert('Error loading blog data. Please try again.');
@@ -190,6 +200,65 @@ function Blog() {
       setLoading(false);
     }
   };
+
+  // Filter and paginate blog posts
+  const filterAndPaginateBlogPosts = useCallback((postsData?: BlogPost[]) => {
+    const dataToFilter = postsData || blogPosts;
+    let filtered = [...dataToFilter];
+
+    // Apply search filter
+    if (searchTerm.trim()) {
+      const search = searchTerm.toLowerCase();
+      filtered = filtered.filter(post => 
+        post.title?.toLowerCase().includes(search) ||
+        post.author_name?.toLowerCase().includes(search) ||
+        categories.find(c => c.id === post.category_id)?.name?.toLowerCase().includes(search)
+      );
+    }
+
+    // Apply status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(post => post.status === statusFilter);
+    }
+
+    // Apply category filter
+    if (categoryFilter !== 'all') {
+      filtered = filtered.filter(post => post.category_id === categoryFilter);
+    }
+
+    setTotalItems(filtered.length);
+
+    // Apply pagination
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedPosts = filtered.slice(startIndex, endIndex);
+
+    setFilteredBlogPosts(paginatedPosts);
+  }, [blogPosts, categories, searchTerm, statusFilter, categoryFilter, currentPage, itemsPerPage]);
+
+  // Update filtered posts when filters change
+  useEffect(() => {
+    if (blogPosts.length > 0) {
+      filterAndPaginateBlogPosts();
+    }
+  }, [filterAndPaginateBlogPosts]);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, categoryFilter]);
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('all');
+    setCategoryFilter('all');
+    setCurrentPage(1);
+  };
+
+  // Pagination helpers
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const hasFilters = searchTerm || statusFilter !== 'all' || categoryFilter !== 'all';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -461,16 +530,112 @@ function Blog() {
           </div>
         </div>
 
+        {/* Search and Filter Controls */}
+        <div className="bg-white rounded-lg shadow-sm border mb-6">
+          <div className="p-4 sm:p-6">
+            <div className="flex flex-col lg:flex-row gap-4">
+              {/* Search Input */}
+              <div className="flex-1">
+                <div className="relative">
+                  <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  <input
+                    type="text"
+                    placeholder="Search blog posts by title, author, or category..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              {/* Filter Controls */}
+              <div className="flex flex-wrap gap-3">
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                >
+                  <option value="all">All Status</option>
+                  <option value="draft">Draft</option>
+                  <option value="published">Published</option>
+                </select>
+
+                <select
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                >
+                  <option value="all">All Categories</option>
+                  {categories.map(category => (
+                    <option key={category.id} value={category.id}>{category.name}</option>
+                  ))}
+                </select>
+
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    setItemsPerPage(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                >
+                  <option value={5}>5 per page</option>
+                  <option value={10}>10 per page</option>
+                  <option value={20}>20 per page</option>
+                  <option value={50}>50 per page</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Clear Filters Button */}
+            {hasFilters && (
+              <div className="mt-4 flex justify-between items-center">
+                <button
+                  onClick={clearFilters}
+                  className="text-sm text-gray-600 hover:text-gray-800 flex items-center space-x-1"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  <span>Clear all filters</span>
+                </button>
+                <p className="text-sm text-gray-600">
+                  Showing {filteredBlogPosts.length} of {totalItems} blog posts
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Blog Posts List */}
         <div className="bg-white rounded-lg shadow-sm border">
           <div className="p-4 sm:p-6">
-            {blogPosts.length === 0 ? (
+            {loading ? (
               <div className="text-center py-8">
-                <p className="text-gray-500">No blog posts found. Create your first post!</p>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                <p className="text-gray-500 mt-2">Loading blog posts...</p>
+              </div>
+            ) : filteredBlogPosts.length === 0 ? (
+              <div className="text-center py-8">
+                {hasFilters ? (
+                  <div>
+                    <p className="text-gray-500 mb-2">No blog posts match your filters.</p>
+                    <button
+                      onClick={clearFilters}
+                      className="text-primary hover:text-primary/80 text-sm font-medium"
+                    >
+                      Clear filters to see all blog posts
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-gray-500">No blog posts found. Create your first post!</p>
+                )}
               </div>
             ) : (
               <div className="space-y-4">
-                {blogPosts.map((post) => (
+                {filteredBlogPosts.map((post) => (
                   <div key={post.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 border rounded-lg hover:bg-gray-50 space-y-3 sm:space-y-0">
                     <div className="flex-1 min-w-0">
                       <h4 className="font-medium text-gray-900 text-sm sm:text-base truncate">{post.title}</h4>
@@ -514,6 +679,81 @@ function Blog() {
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="text-sm text-gray-600">
+                  Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} blog posts
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  
+                  <div className="flex items-center space-x-1">
+                    {/* First page */}
+                    {currentPage > 3 && (
+                      <>
+                        <button
+                          onClick={() => setCurrentPage(1)}
+                          className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
+                        >
+                          1
+                        </button>
+                        {currentPage > 4 && <span className="text-gray-400">...</span>}
+                      </>
+                    )}
+                    
+                    {/* Current page and neighbors */}
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                      if (pageNum > totalPages) return null;
+                      
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => setCurrentPage(pageNum)}
+                          className={`px-3 py-2 text-sm border rounded-lg ${
+                            currentPage === pageNum
+                              ? 'border-primary bg-primary text-white'
+                              : 'border-gray-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                    
+                    {/* Last page */}
+                    {currentPage < totalPages - 2 && (
+                      <>
+                        {currentPage < totalPages - 3 && <span className="text-gray-400">...</span>}
+                        <button
+                          onClick={() => setCurrentPage(totalPages)}
+                          className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
+                        >
+                          {totalPages}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                  
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
               </div>
             )}
           </div>
