@@ -1,0 +1,5 @@
+# This file maps commit authors to their canonical identities
+# It prevents unwanted contributors from showing up in GitHub insights
+
+# Map Claude Code bot commits to be excluded
+# The format is: Proper Name <proper@email.com> <commit@email.com>
