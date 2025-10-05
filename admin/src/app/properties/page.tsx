@@ -7,7 +7,7 @@ import SimpleProtectedRoute from '@/components/SimpleProtectedRoute';
 import AdminHeader from '@/components/layout/AdminHeader';
 import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
 import { useSimpleAuth } from '@/contexts/SimpleAuthContext';
-import { getProperties, getPropertyCategories, getPropertyTypes, createProperty, createPropertyCategory, generateSlug, deleteProperty, deletePropertyCategory, updateProperty, getProperty } from '@/lib/properties';
+import { getProperties, getPropertyCategories, getPropertyTypes, createProperty, createPropertyCategory, generateSlug, deleteProperty, deletePropertyCategory, updateProperty, updatePropertyCategory, getProperty } from '@/lib/properties';
 import { uploadFile, getStorageUrl, supabase } from '@/lib/supabase';
 import type { Property, PropertyCategory, PropertyType } from '@/lib/supabase';
 import RichTextEditor from '@/components/RichTextEditor';
@@ -63,6 +63,8 @@ export default function Properties() {
 
   const [newCategory, setNewCategory] = useState({ name: '', description: '' });
   const [categoryImage, setCategoryImage] = useState<File | null>(null);
+  const [editingCategory, setEditingCategory] = useState<PropertyCategory | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
   const [heroImage, setHeroImage] = useState<File | null>(null);
   const [galleryImages, setGalleryImages] = useState<File[]>([]);
 
@@ -470,61 +472,125 @@ export default function Properties() {
     }
   };
 
+  const handleCategoryEditClick = (category: PropertyCategory) => {
+    setEditingCategory(category);
+    setIsEditMode(true);
+    setNewCategory({
+      name: category.name,
+      description: category.description || ''
+    });
+    // Note: We don't load the existing image file, user can optionally upload a new one
+  };
+
+  const handleCancelEdit = () => {
+    setEditingCategory(null);
+    setIsEditMode(false);
+    setNewCategory({ name: '', description: '' });
+    setCategoryImage(null);
+  };
+
   const handleCategorySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      console.log('Creating category...');
-      
-      // Create category first
-      const categoryData = {
-        name: newCategory.name,
-        slug: generateSlug(newCategory.name),
-        description: newCategory.description,
-        is_active: true,
-        sort_order: categories.length
-      };
+      if (isEditMode && editingCategory) {
+        // UPDATE MODE
+        console.log('Updating category...');
 
-      console.log('Category data:', categoryData);
-      const category = await createPropertyCategory(categoryData);
-      console.log('Category created:', category);
+        const categoryData = {
+          name: newCategory.name,
+          slug: generateSlug(newCategory.name),
+          description: newCategory.description
+        };
 
-      // Upload category image if provided
-      if (categoryImage && category) {
-        console.log('Starting category image upload...');
-        const imagePath = `categories/${category.id}/${Date.now()}-${categoryImage.name}`;
-        console.log('Upload path:', imagePath);
-        
-        const { data: uploadData, error: uploadError } = await uploadFile('property-images', imagePath, categoryImage);
-        
-        if (uploadError) {
-          console.error('Category image upload failed:', uploadError);
-          alert(`Category created but image upload failed: ${uploadError.message}`);
-        } else {
-          console.log('Category image uploaded successfully:', uploadData);
-          // Update category with hero image path using Supabase directly
-          const { error: updateError } = await supabase
-            .from('property_categories')
-            .update({ hero_image_path: imagePath })
-            .eq('id', category.id);
-            
-          if (updateError) {
-            console.error('Error updating category image path:', updateError);
-            alert(`Category created but failed to link image: ${updateError.message}`);
+        console.log('Category update data:', categoryData);
+        const updatedCategory = await updatePropertyCategory(editingCategory.id, categoryData);
+        console.log('Category updated:', updatedCategory);
+
+        // Upload new category image if provided
+        if (categoryImage && updatedCategory) {
+          console.log('Starting category image upload...');
+          const imagePath = `categories/${updatedCategory.id}/${Date.now()}-${categoryImage.name}`;
+          console.log('Upload path:', imagePath);
+
+          const { data: uploadData, error: uploadError } = await uploadFile('property-images', imagePath, categoryImage);
+
+          if (uploadError) {
+            console.error('Category image upload failed:', uploadError);
+            alert(`Category updated but image upload failed: ${uploadError.message}`);
           } else {
-            console.log('Category image path updated successfully');
+            console.log('Category image uploaded successfully:', uploadData);
+            // Update category with hero image path
+            const { error: updateError } = await supabase
+              .from('property_categories')
+              .update({ hero_image_path: imagePath })
+              .eq('id', updatedCategory.id);
+
+            if (updateError) {
+              console.error('Error updating category image path:', updateError);
+              alert(`Category updated but failed to link image: ${updateError.message}`);
+            } else {
+              console.log('Category image path updated successfully');
+            }
           }
         }
+
+        alert('Category updated successfully!');
+        handleCancelEdit();
+        loadData(); // Reload categories
+      } else {
+        // CREATE MODE
+        console.log('Creating category...');
+
+        // Create category first
+        const categoryData = {
+          name: newCategory.name,
+          slug: generateSlug(newCategory.name),
+          description: newCategory.description,
+          is_active: true,
+          sort_order: categories.length
+        };
+
+        console.log('Category data:', categoryData);
+        const category = await createPropertyCategory(categoryData);
+        console.log('Category created:', category);
+
+        // Upload category image if provided
+        if (categoryImage && category) {
+          console.log('Starting category image upload...');
+          const imagePath = `categories/${category.id}/${Date.now()}-${categoryImage.name}`;
+          console.log('Upload path:', imagePath);
+
+          const { data: uploadData, error: uploadError } = await uploadFile('property-images', imagePath, categoryImage);
+
+          if (uploadError) {
+            console.error('Category image upload failed:', uploadError);
+            alert(`Category created but image upload failed: ${uploadError.message}`);
+          } else {
+            console.log('Category image uploaded successfully:', uploadData);
+            // Update category with hero image path using Supabase directly
+            const { error: updateError } = await supabase
+              .from('property_categories')
+              .update({ hero_image_path: imagePath })
+              .eq('id', category.id);
+
+            if (updateError) {
+              console.error('Error updating category image path:', updateError);
+              alert(`Category created but failed to link image: ${updateError.message}`);
+            } else {
+              console.log('Category image path updated successfully');
+            }
+          }
+        }
+
+        alert('Category created successfully!');
+        setNewCategory({ name: '', description: '' });
+        setCategoryImage(null);
+        loadData(); // Reload categories
       }
-      
-      alert('Category created successfully!');
-      setShowCategoryModal(false);
-      setNewCategory({ name: '', description: '' });
-      setCategoryImage(null);
-      loadData(); // Reload categories
     } catch (error) {
-      console.error('Error creating category:', error);
+      console.error('Error with category:', error);
       console.error('Error details:', JSON.stringify(error, null, 2));
-      alert(`Error creating category: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`);
+      alert(`Error ${isEditMode ? 'updating' : 'creating'} category: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`);
     }
   };
 
@@ -1334,9 +1400,11 @@ export default function Properties() {
               </button>
             </div>
             <div className="p-6">
-              {/* Add New Category Form */}
+              {/* Add/Edit Category Form */}
               <form onSubmit={handleCategorySubmit} className="mb-6 pb-6 border-b">
-                <h4 className="text-md font-semibold text-gray-900 mb-4">Add New Category</h4>
+                <h4 className="text-md font-semibold text-gray-900 mb-4">
+                  {isEditMode ? 'Edit Category' : 'Add New Category'}
+                </h4>
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Category Name</label>
@@ -1382,12 +1450,23 @@ export default function Properties() {
                       </label>
                     </div>
                   </div>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
-                  >
-                    Add Category
-                  </button>
+                  <div className="flex gap-3">
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+                    >
+                      {isEditMode ? 'Update Category' : 'Add Category'}
+                    </button>
+                    {isEditMode && (
+                      <button
+                        type="button"
+                        onClick={handleCancelEdit}
+                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
                 </div>
               </form>
 
@@ -1404,8 +1483,15 @@ export default function Properties() {
                         )}
                       </div>
                       <div className="flex space-x-2">
-                        <button className="text-primary hover:text-primary/80 text-sm">Edit</button>
-                        <button 
+                        <button
+                          type="button"
+                          onClick={() => handleCategoryEditClick(category)}
+                          className="text-primary hover:text-primary/80 text-sm"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
                           onClick={() => handleDeleteClick(category.id, category.name, 'category')}
                           className="text-red-600 hover:text-red-800 text-sm"
                         >
