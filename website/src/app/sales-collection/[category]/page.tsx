@@ -342,8 +342,8 @@ export default function CategoryPage() {
             {/* Search Bar for Category Properties */}
             <div className="max-w-2xl mx-auto px-2 sm:px-0 relative">
               <form onSubmit={handleSearchSubmit} className="relative">
-                <div className="bg-white rounded-lg shadow-xl p-1 sm:p-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-0">
-                  <div className="flex-1 flex items-center pl-3 sm:pl-4 relative min-h-[48px]">
+                <div className="bg-white rounded-full shadow-xl p-1.5 sm:p-2 flex items-center gap-1 sm:gap-2">
+                  <div className="flex-1 flex items-center pl-4 sm:pl-5 relative min-h-[40px] sm:min-h-[48px]">
                     <input
                       ref={searchInputRef}
                       type="text"
@@ -354,7 +354,7 @@ export default function CategoryPage() {
                       onFocus={() => {
                         if (suggestions.length > 0) setShowSuggestions(true);
                       }}
-                      placeholder={`Search ${category.name} properties for sale...`}
+                      placeholder="Search properties..."
                       className="flex-1 bg-transparent border-none outline-none text-gray-800 placeholder-gray-500 text-sm sm:text-base py-2 sm:py-3"
                       autoComplete="off"
                     />
@@ -368,12 +368,11 @@ export default function CategoryPage() {
                   {/* Search Button */}
                   <button
                     type="submit"
-                    className="bg-brown hover:bg-brown/90 text-white px-4 sm:px-8 py-2 sm:py-3 rounded-md font-semibold transition-colors duration-200 flex items-center justify-center shadow-md min-h-[44px]"
+                    className="bg-brown hover:bg-brown/90 text-white w-10 h-10 sm:w-12 sm:h-12 rounded-full font-semibold transition-colors duration-200 flex items-center justify-center shadow-md flex-shrink-0"
                   >
-                    <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
-                    <span className="text-sm sm:text-base">Search</span>
                   </button>
                 </div>
 
