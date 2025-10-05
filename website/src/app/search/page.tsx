@@ -724,17 +724,17 @@ function SearchPageContent() {
                   </div>
 
                   <div className="space-y-3">
-                    <label className="block text-sm font-semibold text-gray-700">Property Age</label>
+                    <label className="block text-sm font-semibold text-gray-700">Listing Date</label>
                     <CustomDropdown
                       value={filters.propertyAge}
                       onChange={(value) => handleFilterChange('propertyAge', value)}
                       options={[
-                        { value: 'all', label: 'Any Age' },
-                        { value: 'new', label: 'New (Last 30 days)' },
-                        { value: 'recent', label: 'Recent (1-6 months)' },
-                        { value: 'older', label: 'Older (6+ months)' }
+                        { value: 'all', label: 'Any Time' },
+                        { value: 'new', label: 'Last 30 Days' },
+                        { value: 'recent', label: '1-6 Months Ago' },
+                        { value: 'older', label: 'Over 6 Months' }
                       ]}
-                      placeholder="Property age"
+                      placeholder="Listing date"
                     />
                   </div>
 
