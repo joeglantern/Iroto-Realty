@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useCurrency, Currency } from '@/contexts/CurrencyContext';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import type { Currency } from '@/lib/currency';
 
 const currencies: Currency[] = ['KES', 'USD', 'EUR', 'GBP'];
 
