@@ -514,13 +514,13 @@ export default function CategoryPage() {
                       : ["https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"];
                   
                   return (
-                    <PropertyCard 
+                    <PropertyCard
                       key={property.id}
                       id={parseInt(property.id)}
                       images={propertyImages}
                       title={property.title}
                       location={property.specific_location || category.name}
-                      price={property.listing_type === 'sale' 
+                      price={property.listing_type === 'sale'
                         ? `${property.currency || 'KES'} ${property.sale_price?.toLocaleString()}`
                         : `From ${property.currency || 'KES'} ${property.rental_price?.toLocaleString()}/night`
                       }

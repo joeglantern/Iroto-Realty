@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import Providers from "@/components/Providers";
 
 export const metadata: Metadata = {
   title: "Iroto Realty - Premium Real Estate in Kenya",
@@ -33,7 +34,9 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased font-sans">
-        {children}
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );

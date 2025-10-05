@@ -532,13 +532,13 @@ export default function CategoryPage() {
                     : ["https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"];
                   
                   return (
-                    <PropertyCard 
+                    <PropertyCard
                       key={property.id}
                       id={parseInt(property.id)}
                       images={propertyImages}
                       title={property.title}
                       location={property.specific_location || category.name}
-                      price={property.listing_type === 'sale' 
+                      price={property.listing_type === 'sale'
                         ? `KES ${property.sale_price?.toLocaleString()}`
                         : `From KES ${property.rental_price?.toLocaleString()}/night`
                       }
