@@ -533,7 +533,6 @@ export default function PropertyDetail({ params }: PropertyDetailProps) {
     </PageLayout>
   );
 }
-
 // Add custom CSS for rich text content
 if (typeof document !== 'undefined') {
   const style = document.createElement('style');
