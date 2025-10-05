@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 import { NavigationItem } from '@/types';
 import { getPropertyCategories } from '@/lib/data';
 
@@ -14,7 +15,11 @@ const baseNavigation: NavigationItem[] = [
     href: '/rental-portfolio',
     children: [], // Will be populated dynamically
   },
-  { label: 'Sales Collection', href: '/sales-collection' },
+  {
+    label: 'Sales Collection',
+    href: '/sales-collection',
+    children: [], // Will be populated dynamically
+  },
   {
     label: 'Travel Insights',
     href: '/travel-insights',
@@ -32,6 +37,22 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [navigation, setNavigation] = useState<NavigationItem[]>(baseNavigation);
   const [closeTimeout, setCloseTimeout] = useState<NodeJS.Timeout | null>(null);
+  const pathname = usePathname();
+
+  // Helper function to check if a nav item is active
+  const isActive = (href: string, hasChildren?: boolean) => {
+    if (href === '/') {
+      return pathname === '/';
+    }
+
+    // For parent items with children, check if any child path matches
+    if (hasChildren) {
+      return pathname.startsWith(href);
+    }
+
+    // For regular items, check exact match or if current path starts with href
+    return pathname === href || pathname.startsWith(href + '/');
+  };
 
   // Fetch categories and update navigation
   useEffect(() => {
@@ -40,6 +61,7 @@ export default function Header() {
         const categories = await getPropertyCategories();
 
         const updatedNavigation = baseNavigation.map(item => {
+          // Add categories to Rental Portfolio
           if (item.label === 'Rental Portfolio') {
             return {
               ...item,
@@ -49,6 +71,18 @@ export default function Header() {
               }))
             };
           }
+
+          // Add categories to Sales Collection
+          if (item.label === 'Sales Collection') {
+            return {
+              ...item,
+              children: categories.map(category => ({
+                label: category.name,
+                href: `/sales-collection/${category.slug}`
+              }))
+            };
+          }
+
           return item;
         });
 
@@ -113,27 +147,36 @@ export default function Header() {
                 onMouseEnter={() => item.children && handleMouseEnter(item.label)}
                 onMouseLeave={handleMouseLeave}
               >
-                <Link
-                  href={item.href}
-                  className="text-[#713900] hover:text-brown transition-colors duration-200 font-medium text-sm tracking-wide uppercase"
-                >
-                  {item.label}
-                  {item.children && (
-                    <svg
-                      className="ml-1 inline-block w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
+                <div className="relative inline-flex flex-col items-center">
+                  <Link
+                    href={item.href}
+                    className="text-[#713900] hover:text-brown transition-colors duration-200 font-medium text-sm tracking-wide uppercase"
+                  >
+                    {item.label}
+                    {item.children && (
+                      <svg
+                        className="ml-1 inline-block w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    )}
+                  </Link>
+
+                  {/* Active indicator dot - macOS dock style */}
+                  {isActive(item.href, !!item.children) && (
+                    <div className="absolute -bottom-1.5 left-1/2 transform -translate-x-1/2">
+                      <div className="w-1 h-1 bg-[#713900] rounded-full"></div>
+                    </div>
                   )}
-                </Link>
+                </div>
 
                 {/* Dropdown Menu */}
                 {item.children && activeDropdown === item.label && (
@@ -190,24 +233,41 @@ export default function Header() {
             <div className="px-2 pt-2 pb-3 space-y-1">
               {navigation.map((item) => (
                 <div key={item.label}>
-                  <Link
-                    href={item.href}
-                    className="block px-3 py-3 text-base font-medium text-[#713900] hover:text-brown hover:bg-gray-50 transition-colors duration-200 touch-manipulation"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {item.label}
-                  </Link>
+                  <div className="relative">
+                    <Link
+                      href={item.href}
+                      className="block px-3 py-3 text-base font-medium text-[#713900] hover:text-brown hover:bg-gray-50 transition-colors duration-200 touch-manipulation"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      {item.label}
+                    </Link>
+
+                    {/* Active indicator dot for mobile - positioned on the left */}
+                    {isActive(item.href, !!item.children) && (
+                      <div className="absolute left-0 top-1/2 transform -translate-y-1/2">
+                        <div className="w-1 h-1 bg-[#713900] rounded-full"></div>
+                      </div>
+                    )}
+                  </div>
                   {item.children && item.children.length > 0 && (
                     <div className="pl-4 border-l-2 border-gray-100 ml-3">
                       {item.children.map((child) => (
-                        <Link
-                          key={child.label}
-                          href={child.href}
-                          className="block px-3 py-2 text-sm text-[#713900] hover:text-brown hover:bg-gray-50 transition-colors duration-200 touch-manipulation"
-                          onClick={() => setMobileMenuOpen(false)}
-                        >
-                          {child.label}
-                        </Link>
+                        <div key={child.label} className="relative">
+                          <Link
+                            href={child.href}
+                            className="block px-3 py-2 text-sm text-[#713900] hover:text-brown hover:bg-gray-50 transition-colors duration-200 touch-manipulation"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            {child.label}
+                          </Link>
+
+                          {/* Active indicator dot for child items */}
+                          {isActive(child.href) && (
+                            <div className="absolute left-0 top-1/2 transform -translate-y-1/2">
+                              <div className="w-1 h-1 bg-[#713900] rounded-full"></div>
+                            </div>
+                          )}
+                        </div>
                       ))}
                     </div>
                   )}
