@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
-import { searchProperties, getAvailableAmenities } from '@/lib/data';
+import { searchProperties, getAvailableAmenities, getPropertyStats, getPropertyCategories } from '@/lib/data';
 import { getStorageUrl } from '@/lib/supabase';
-import type { Property } from '@/lib/supabase';
+import type { Property, PropertyCategory } from '@/lib/supabase';
 import PageLayout from '@/components/layout/PageLayout';
 import Link from 'next/link';
 
@@ -238,6 +238,13 @@ function SearchPageContent() {
   const [totalResults, setTotalResults] = useState(0);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [availableAmenities, setAvailableAmenities] = useState<string[]>([]);
+  const [propertyCategories, setPropertyCategories] = useState<PropertyCategory[]>([]);
+  const [propertyStats, setPropertyStats] = useState({
+    priceRange: { min: 0, max: 100000 },
+    bedroomRange: { min: 1, max: 10 },
+    bedRange: { min: 1, max: 10 },
+    guestRange: { min: 1, max: 20 }
+  });
   
   // Initialize filters from URL parameters
   const [filters, setFilters] = useState<FilterState>({
@@ -255,13 +262,20 @@ function SearchPageContent() {
     sortBy: (searchParams.get('sortBy') as any) || 'newest'
   });
 
-  // Load available amenities on component mount
+  // Load available amenities, stats, and categories on component mount
   useEffect(() => {
-    const loadAmenities = async () => {
-      const amenities = await getAvailableAmenities();
+    const loadFilterData = async () => {
+      const [amenities, stats, categories] = await Promise.all([
+        getAvailableAmenities(),
+        getPropertyStats(),
+        getPropertyCategories()
+      ]);
+
       setAvailableAmenities(amenities);
+      setPropertyStats(stats);
+      setPropertyCategories(categories);
     };
-    loadAmenities();
+    loadFilterData();
   }, []);
 
   // Perform search
@@ -302,7 +316,7 @@ function SearchPageContent() {
       if (filters.bedrooms) {
         searchFilters.bedrooms = parseInt(filters.bedrooms);
       }
-      
+
       if (filters.beds) {
         searchFilters.beds = parseInt(filters.beds);
       }
@@ -511,7 +525,7 @@ function SearchPageContent() {
                 className="min-w-[140px]"
               />
 
-              {/* Price Range Filter */}
+              {/* Price Range Filter - Dynamic */}
               <CustomDropdown
                 value={filters.maxPrice ? `0-${filters.maxPrice}` : ''}
                 onChange={(value) => {
@@ -526,44 +540,53 @@ function SearchPageContent() {
                 }}
                 options={[
                   { value: '', label: 'Price' },
-                  { value: '0-50000', label: 'Up to 50K' },
-                  { value: '50000-100000', label: '50K - 100K' },
-                  { value: '100000-200000', label: '100K - 200K' },
-                  { value: '200000-500000', label: '200K - 500K' },
-                  { value: '500000-999999999', label: '500K+' }
+                  ...((() => {
+                    const { min, max } = propertyStats.priceRange;
+                    const ranges = [];
+                    const step = Math.ceil((max - min) / 5);
+
+                    for (let i = 0; i < 5; i++) {
+                      const rangeMin = min + (step * i);
+                      const rangeMax = i === 4 ? max : min + (step * (i + 1));
+                      const label = i === 4
+                        ? `${(rangeMin / 1000).toFixed(0)}K+`
+                        : `${(rangeMin / 1000).toFixed(0)}K - ${(rangeMax / 1000).toFixed(0)}K`;
+                      ranges.push({ value: `${rangeMin}-${rangeMax}`, label });
+                    }
+                    return ranges;
+                  })())
                 ]}
                 placeholder="Price"
                 className="min-w-[120px]"
               />
 
-              {/* Bedrooms Filter */}
+              {/* Bedrooms Filter - Dynamic */}
               <CustomDropdown
                 value={filters.bedrooms}
                 onChange={(value) => handleFilterChange('bedrooms', value)}
                 options={[
                   { value: '', label: 'Bedrooms' },
-                  { value: '1', label: '1+' },
-                  { value: '2', label: '2+' },
-                  { value: '3', label: '3+' },
-                  { value: '4', label: '4+' },
-                  { value: '5', label: '5+' }
+                  ...Array.from({ length: propertyStats.bedroomRange.max }, (_, i) => i + 1).map(num => ({
+                    value: num.toString(),
+                    label: `${num}+`
+                  }))
                 ]}
                 placeholder="Bedrooms"
                 className="min-w-[110px]"
               />
 
-              {/* Bathrooms Filter */}
+              {/* Beds Filter (labeled as Bathrooms) - Dynamic */}
               <CustomDropdown
                 value={filters.beds}
                 onChange={(value) => handleFilterChange('beds', value)}
                 options={[
-                  { value: '', label: 'Bathrooms' },
-                  { value: '1', label: '1+' },
-                  { value: '2', label: '2+' },
-                  { value: '3', label: '3+' },
-                  { value: '4', label: '4+' }
+                  { value: '', label: 'Beds' },
+                  ...Array.from({ length: propertyStats.bedRange.max }, (_, i) => i + 1).map(num => ({
+                    value: num.toString(),
+                    label: `${num}+`
+                  }))
                 ]}
-                placeholder="Bathrooms"
+                placeholder="Beds"
                 className="min-w-[110px]"
               />
 
@@ -637,7 +660,7 @@ function SearchPageContent() {
                     />
                   </div>
 
-                  {/* Max Guests */}
+                  {/* Max Guests - Dynamic */}
                   <div className="space-y-3">
                     <label className="block text-sm font-semibold text-gray-700">Max Guests</label>
                     <CustomDropdown
@@ -645,31 +668,32 @@ function SearchPageContent() {
                       onChange={(value) => handleFilterChange('maxGuests', value)}
                       options={[
                         { value: '', label: 'Any' },
-                        { value: '2', label: '2+ guests' },
-                        { value: '4', label: '4+ guests' },
-                        { value: '6', label: '6+ guests' },
-                        { value: '8', label: '8+ guests' },
-                        { value: '10', label: '10+ guests' }
+                        ...Array.from(
+                          { length: Math.ceil(propertyStats.guestRange.max / 2) },
+                          (_, i) => (i + 1) * 2
+                        ).map(num => ({
+                          value: num.toString(),
+                          label: `${num}+ guests`
+                        }))
                       ]}
                       placeholder="Max guests"
                     />
                   </div>
 
-                  {/* Quick Location Buttons */}
+                  {/* Quick Location Buttons - Dynamic from Categories */}
                   <div className="space-y-3">
                     <label className="block text-sm font-semibold text-gray-700">Popular Locations</label>
                     <div className="flex flex-wrap gap-3">
-                      {['Lamu', 'Watamu', 'Mombasa', 'Malindi', 'Kilifi'].map((loc) => (
+                      {propertyCategories.map((category) => (
                         <FilterPill
-                          key={loc}
-                          label={loc}
-                          isActive={filters.location === loc}
-                          onClick={() => handleFilterChange('location', filters.location === loc ? '' : loc)}
+                          key={category.id}
+                          label={category.name}
+                          isActive={filters.location === category.name}
+                          onClick={() => handleFilterChange('location', filters.location === category.name ? '' : category.name)}
                         />
                       ))}
                     </div>
                   </div>
-
                   {/* Special Features Filters */}
                   <div className="space-y-3">
                     <label className="block text-sm font-semibold text-gray-700">Has Video Tour</label>
