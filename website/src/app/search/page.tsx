@@ -389,7 +389,6 @@ function SearchPageContent() {
       setProperties(sortedResults);
       setTotalResults(sortedResults.length);
     } catch (error) {
-      console.error('Search error:', error);
       setProperties([]);
       setTotalResults(0);
     } finally {

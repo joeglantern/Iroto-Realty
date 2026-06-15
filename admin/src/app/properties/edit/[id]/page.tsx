@@ -96,12 +96,10 @@ export default function EditProperty() {
     const isAVIF = file.type === 'image/avif' || file.name.toLowerCase().endsWith('.avif');
     
     if (isAVIF) {
-      console.log('Converting AVIF to JPEG for Supabase compatibility');
       return convertToJPEG(file);
     }
 
     if (file.size > MAX_FILE_SIZE) {
-      console.log('Compressing large image');
       return compressImage(file);
     }
 
@@ -234,7 +232,6 @@ export default function EditProperty() {
       setExistingImages(propertyData.property_images || []);
       
     } catch (error) {
-      console.error('Error loading property data:', error);
       setError('Error loading property data. Please try again.');
     } finally {
       setLoading(false);
@@ -247,7 +244,6 @@ export default function EditProperty() {
 
     try {
       setSaving(true);
-      console.log('Starting property update...');
 
       // Prepare property data
       const propertyData = {
@@ -262,13 +258,10 @@ export default function EditProperty() {
         is_active: true
       };
 
-      console.log('Updating property with data:', propertyData);
       const updatedProperty = await updateProperty(propertyId, propertyData);
-      console.log('Property updated successfully:', updatedProperty);
 
       // Upload hero image if provided
       if (heroImage && updatedProperty) {
-        console.log('Starting hero image upload...');
         
         // Validate and process hero image
         const validationError = validateImageFile(heroImage);
@@ -279,15 +272,12 @@ export default function EditProperty() {
         
         const processedHeroImage = await processImage(heroImage);
         const heroPath = `properties/hero/${updatedProperty.id}/${Date.now()}-${processedHeroImage.name}`;
-        console.log('Upload path:', heroPath);
         
         const { data: uploadData, error: uploadError } = await uploadFile('property-images', heroPath, processedHeroImage);
         
         if (uploadError) {
-          console.error('Hero image upload failed:', uploadError);
           alert(`Property updated but hero image upload failed: ${uploadError.message}`);
         } else {
-          console.log('Hero image uploaded successfully:', uploadData);
           // Update property with hero image path
           const { error: updateError } = await supabase
             .from('properties')
@@ -295,17 +285,14 @@ export default function EditProperty() {
             .eq('id', updatedProperty.id);
             
           if (updateError) {
-            console.error('Error updating hero image path:', updateError);
             alert(`Property updated but failed to link hero image: ${updateError.message}`);
           } else {
-            console.log('Hero image path updated successfully');
           }
         }
       }
 
       // Upload gallery images if provided
       if (galleryImages.length > 0 && updatedProperty) {
-        console.log('Starting gallery images upload...');
         
         // Validate all gallery images first
         for (const image of galleryImages) {
@@ -318,19 +305,15 @@ export default function EditProperty() {
         
         // Process and upload gallery images
         for (const [index, image] of galleryImages.entries()) {
-          console.log(`Processing gallery image ${index + 1}/${galleryImages.length}: ${image.name}`);
           
           const processedImage = await processImage(image);
           const galleryPath = `properties/gallery/${updatedProperty.id}/${Date.now()}-${index}-${processedImage.name}`;
-          console.log('Uploading gallery image:', galleryPath);
           
           const { data: uploadData, error: uploadError } = await uploadFile('property-images', galleryPath, processedImage);
           
           if (uploadError) {
-            console.error('Gallery image upload failed:', uploadError);
             alert(`Gallery image ${index + 1} upload failed: ${uploadError.message}`);
           } else {
-            console.log('Gallery image uploaded successfully:', uploadData);
             // Add to property_images table
             const { error: insertError } = await supabase
               .from('property_images')
@@ -342,10 +325,8 @@ export default function EditProperty() {
               });
               
             if (insertError) {
-              console.error('Error inserting gallery image record:', insertError);
               alert(`Gallery image uploaded but failed to link: ${insertError.message}`);
             } else {
-              console.log('Gallery image record inserted successfully');
             }
           }
         }
@@ -355,8 +336,6 @@ export default function EditProperty() {
       router.push('/properties'); // Navigate back to properties list
       
     } catch (error) {
-      console.error('Error updating property:', error);
-      console.error('Full error details:', JSON.stringify(error, null, 2));
       alert(`Error updating property: ${error instanceof Error ? error.message : 'Unknown error'}. Check console for details.`);
     } finally {
       setSaving(false);
@@ -793,7 +772,6 @@ export default function EditProperty() {
                               type="button"
                               onClick={() => {
                                 // TODO: Implement image deletion
-                                console.log('Delete image:', image.id);
                               }}
                               className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs flex items-center justify-center hover:bg-red-600"
                             >

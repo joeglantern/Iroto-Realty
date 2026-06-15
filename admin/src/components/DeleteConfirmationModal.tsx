@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 
@@ -33,7 +33,6 @@ export default function DeleteConfirmationModal({
       await onConfirm();
       onClose();
     } catch (error) {
-      console.error('Delete operation failed:', error);
       // Don't close modal on error so user can see the error
     } finally {
       setLocalDeleting(false);

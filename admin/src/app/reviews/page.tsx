@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
@@ -65,7 +65,6 @@ function Reviews() {
       setReviews(reviewsData || []);
       setProperties(propertiesData || []);
     } catch (error) {
-      console.error('Error loading reviews data:', error);
       alert('Error loading reviews data. Please try again.');
     } finally {
       setLoading(false);
@@ -79,7 +78,6 @@ function Reviews() {
     try {
       setUploading(true);
       const isEditing = !!editingReview;
-      console.log(isEditing ? 'Starting review update...' : 'Starting review creation...');
 
       const reviewData = {
         ...formData,
@@ -92,28 +90,20 @@ function Reviews() {
 
       let review;
       if (isEditing) {
-        console.log('Updating review with data:', reviewData);
         review = await updateReview(editingReview.id, reviewData);
-        console.log('Review updated successfully:', review);
       } else {
-        console.log('Creating review with data:', reviewData);
         review = await createReview(reviewData);
-        console.log('Review created successfully:', review);
       }
 
       // Upload reviewer photo if provided
       if (reviewerPhoto && review) {
-        console.log('Starting reviewer photo upload...');
         const photoPath = `reviews/avatars/${review.id}/${Date.now()}-${reviewerPhoto.name}`;
-        console.log('Upload path:', photoPath);
         
         const { data: uploadData, error: uploadError } = await uploadFile('review-images', photoPath, reviewerPhoto);
         
         if (uploadError) {
-          console.error('Reviewer photo upload failed:', uploadError);
           alert(`Review created but photo upload failed: ${uploadError.message}`);
         } else {
-          console.log('Reviewer photo uploaded successfully:', uploadData);
           // Update review with photo path
           const { error: updateError } = await supabase
             .from('reviews')
@@ -121,10 +111,8 @@ function Reviews() {
             .eq('id', review.id);
             
           if (updateError) {
-            console.error('Error updating reviewer photo path:', updateError);
             alert(`Review created but failed to link photo: ${updateError.message}`);
           } else {
-            console.log('Reviewer photo path updated successfully');
           }
         }
       }
@@ -137,8 +125,6 @@ function Reviews() {
       loadData(); // Reload data
     } catch (error) {
       const action = editingReview ? 'updating' : 'creating';
-      console.error(`Error ${action} review:`, error);
-      console.error('Full error details:', JSON.stringify(error, null, 2));
       alert(`Error ${action} review: ${error instanceof Error ? error.message : 'Unknown error'}. Check console for details.`);
     } finally {
       setUploading(false);
@@ -176,7 +162,6 @@ function Reviews() {
       
       setShowEditModal(true);
     } catch (error) {
-      console.error('Error loading review for edit:', error);
       alert('Error loading review details. Please try again.');
     } finally {
       setLoading(false);
@@ -201,7 +186,6 @@ function Reviews() {
       setReviewToDelete(null);
       loadData(); // Reload data
     } catch (error) {
-      console.error('Error deleting review:', error);
       alert(`Error deleting review: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setDeleting(false);
@@ -222,7 +206,6 @@ function Reviews() {
       alert(`Review ${!currentStatus ? 'marked as featured' : 'removed from featured'}!`);
       loadData(); // Reload data
     } catch (error) {
-      console.error('Error updating review:', error);
       alert(`Error updating review: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };

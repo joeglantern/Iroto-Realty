@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { NavigationItem } from '@/types';
 import { getPropertyCategories } from '@/lib/data';
+import { CaretDown, List, X } from '@phosphor-icons/react';
 
 const baseNavigation: NavigationItem[] = [
   { label: 'HOME', href: '/' },
@@ -88,7 +89,6 @@ export default function Header() {
 
         setNavigation(updatedNavigation);
       } catch (error) {
-        console.error('Error loading categories:', error);
         // Keep base navigation as fallback
       }
     }
@@ -154,19 +154,7 @@ export default function Header() {
                   >
                     {item.label}
                     {item.children && (
-                      <svg
-                        className="ml-1 inline-block w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
+                      <CaretDown className="ml-1 inline-block" size={16} />
                     )}
                   </Link>
 
@@ -208,22 +196,7 @@ export default function Header() {
             className="lg:hidden inline-flex items-center justify-center p-2 rounded-md text-[#713900] hover:text-brown hover:bg-gray-50 transition-colors duration-200"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
-            <svg
-              className="block h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth="1.5"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d={mobileMenuOpen 
-                  ? "M6 18L18 6M6 6l12 12" 
-                  : "M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
-                }
-              />
-            </svg>
+            {mobileMenuOpen ? <X size={24} /> : <List size={24} />}
           </button>
         </div>
 

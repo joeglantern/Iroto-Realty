@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
@@ -44,7 +44,6 @@ function Analytics() {
       const data = await getAnalytics(dateRange);
       setAnalytics(data);
     } catch (error) {
-      console.error('Error loading analytics:', error);
       alert('Error loading analytics data. Please try again.');
     } finally {
       setLoading(false);

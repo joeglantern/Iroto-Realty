@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
@@ -76,7 +76,6 @@ export default function Properties() {
   // Image compression and validation utility
   const processImage = async (file: File): Promise<File> => {
     return new Promise((resolve, reject) => {
-      console.log(`Processing image: ${file.name}, type: ${file.type}, size: ${(file.size / 1024 / 1024).toFixed(1)}MB`);
       
       // Check file type (including file extension fallback for AVIF)
       const isAVIF = file.type === 'image/avif' || file.name.toLowerCase().endsWith('.avif');
@@ -95,16 +94,13 @@ export default function Properties() {
 
       // Always convert AVIF to JPEG for Supabase compatibility
       if (isAVIF) {
-        console.log('AVIF detected - will convert to JPEG for Supabase compatibility');
         // Continue to conversion process below
       }
       // If file is already reasonable size and JPEG/WebP, return as-is  
       else if (file.size <= 2 * 1024 * 1024 && (file.type === 'image/jpeg' || file.type === 'image/webp')) {
-        console.log('Small JPEG/WebP - using as-is');
         resolve(file);
         return;
       } else {
-        console.log('Large file or PNG - will compress to JPEG');
       }
       
       // AVIF and large files need conversion to JPEG for Supabase compatibility
@@ -144,7 +140,6 @@ export default function Properties() {
                 type: 'image/jpeg',
                 lastModified: Date.now(),
               });
-              console.log(`Converted ${file.type} (${(file.size / 1024 / 1024).toFixed(1)}MB) to JPEG (${(blob.size / 1024 / 1024).toFixed(1)}MB)`);
               resolve(compressedFile);
             } else {
               reject(new Error('Failed to convert image to JPEG'));
@@ -192,7 +187,6 @@ export default function Properties() {
       setPropertyTypes(typesData);
       filterAndPaginateProperties(propertiesData);
     } catch (error) {
-      console.error('Error loading data:', error);
       alert('Error loading data. Please try again.');
     } finally {
       setLoading(false);
@@ -273,7 +267,6 @@ export default function Properties() {
 
     try {
       setUploading(true);
-      console.log('Starting property creation...');
 
       // Prepare property data
       const propertyData = {
@@ -288,23 +281,18 @@ export default function Properties() {
         is_active: true
       };
 
-      console.log('Creating property with data:', propertyData);
       
       // Create property with more reasonable timeout
-      console.log('Creating property...');
       const property = await createProperty(propertyData);
       
-      console.log('Property created successfully:', property);
 
       // Upload hero image if provided
       if (heroImage && property) {
-        console.log('Starting hero image upload...');
         
         try {
           // Process and validate hero image
           const processedHeroImage = await processImage(heroImage);
           const heroPath = `properties/hero/${property.id}/${Date.now()}-${processedHeroImage.name}`;
-          console.log('Upload path:', heroPath);
           
           const uploadPromise = uploadFile('property-images', heroPath, processedHeroImage);
           const { data: uploadData, error: uploadError } = await Promise.race([
@@ -315,10 +303,8 @@ export default function Properties() {
           ]);
           
           if (uploadError) {
-            console.error('Hero image upload failed:', uploadError);
             alert(`Property created but hero image upload failed: ${uploadError.message}`);
           } else {
-            console.log('Hero image uploaded successfully:', uploadData);
             
             // Update property with hero image path
             const updatePromise = supabase
@@ -334,21 +320,17 @@ export default function Properties() {
             ]);
               
             if (updateError) {
-              console.error('Error updating hero image path:', updateError);
               alert(`Property created but failed to link hero image: ${updateError.message}`);
             } else {
-              console.log('Hero image path updated successfully');
             }
           }
         } catch (heroError) {
-          console.error('Hero image process error:', heroError);
           alert(`Property created but hero image failed: ${heroError instanceof Error ? heroError.message : 'Unknown error'}`);
         }
       }
 
       // Upload gallery images if provided
       if (galleryImages.length > 0 && property) {
-        console.log(`Starting gallery images upload (${galleryImages.length} images)...`);
         
         // Validate gallery image count
         if (galleryImages.length > MAX_GALLERY_IMAGES) {
@@ -366,13 +348,11 @@ export default function Properties() {
           const batch = imagesToProcess.slice(i, i + maxConcurrent);
           const batchPromises = batch.map(async (image, batchIndex) => {
             const actualIndex = i + batchIndex;
-            console.log(`Processing gallery image ${actualIndex + 1}/${imagesToProcess.length}...`);
             
             try {
               // Process and validate image first
               const processedImage = await processImage(image);
               const imagePath = `properties/gallery/${property.id}/${Date.now()}-${actualIndex}-${processedImage.name}`;
-              console.log(`Uploading gallery image ${actualIndex + 1}/${imagesToProcess.length}:`, imagePath);
               
               const uploadPromise = uploadFile('property-images', imagePath, processedImage);
               const { data: uploadData, error: uploadError } = await Promise.race([
@@ -383,7 +363,6 @@ export default function Properties() {
               ]);
               
               if (uploadError) {
-                console.error(`Gallery image ${actualIndex + 1} upload failed:`, uploadError);
                 failed++;
                 failedImages.push(`Image ${actualIndex + 1}: ${uploadError.message}`);
                 return;
@@ -408,15 +387,12 @@ export default function Properties() {
               ]);
               
               if (insertError) {
-                console.error(`Error inserting gallery image ${actualIndex + 1} record:`, insertError);
                 failed++;
                 failedImages.push(`Image ${actualIndex + 1}: Database error`);
               } else {
-                console.log(`Gallery image ${actualIndex + 1} uploaded and recorded successfully`);
                 completed++;
               }
             } catch (error) {
-              console.error(`Error processing gallery image ${actualIndex + 1}:`, error);
               failed++;
               const errorMsg = error instanceof Error ? error.message : 'Unknown error';
               failedImages.push(`Image ${actualIndex + 1}: ${errorMsg}`);
@@ -431,9 +407,7 @@ export default function Properties() {
           }
         }
         
-        console.log(`Gallery upload completed: ${completed} successful, ${failed} failed`);
         if (failed > 0) {
-          console.log('Failed images:', failedImages);
           alert(`Property created! ${completed} gallery images uploaded successfully, ${failed} failed.\n\nFailed images:\n${failedImages.slice(0, 3).join('\n')}${failedImages.length > 3 ? '\n...' : ''}`);
         }
       }
@@ -451,19 +425,16 @@ export default function Properties() {
           )
         ]);
       } catch (reloadError) {
-        console.error('Failed to reload data:', reloadError);
         // Don't show error to user, just log it
       }
       
     } catch (error) {
-      console.error('Error creating property:', error);
       
       if (error instanceof Error && error.message.includes('timed out')) {
         alert(`Operation timed out: ${error.message}. Please check your internet connection and try again.`);
       } else if (error instanceof Error && error.name === 'AbortError') {
         alert('Operation was cancelled due to timeout. Please try again with a better internet connection.');
       } else {
-        console.error('Full error details:', JSON.stringify(error, null, 2));
         alert(`Error creating property: ${error instanceof Error ? error.message : 'Unknown error'}. Check console for details.`);
       }
     } finally {
@@ -494,7 +465,6 @@ export default function Properties() {
     try {
       if (isEditMode && editingCategory) {
         // UPDATE MODE
-        console.log('Updating category...');
 
         const categoryData = {
           name: newCategory.name,
@@ -502,23 +472,17 @@ export default function Properties() {
           description: newCategory.description
         };
 
-        console.log('Category update data:', categoryData);
         const updatedCategory = await updatePropertyCategory(editingCategory.id, categoryData);
-        console.log('Category updated:', updatedCategory);
 
         // Upload new category image if provided
         if (categoryImage && updatedCategory) {
-          console.log('Starting category image upload...');
           const imagePath = `categories/${updatedCategory.id}/${Date.now()}-${categoryImage.name}`;
-          console.log('Upload path:', imagePath);
 
           const { data: uploadData, error: uploadError } = await uploadFile('property-images', imagePath, categoryImage);
 
           if (uploadError) {
-            console.error('Category image upload failed:', uploadError);
             alert(`Category updated but image upload failed: ${uploadError.message}`);
           } else {
-            console.log('Category image uploaded successfully:', uploadData);
             // Update category with hero image path
             const { error: updateError } = await supabase
               .from('property_categories')
@@ -526,10 +490,8 @@ export default function Properties() {
               .eq('id', updatedCategory.id);
 
             if (updateError) {
-              console.error('Error updating category image path:', updateError);
               alert(`Category updated but failed to link image: ${updateError.message}`);
             } else {
-              console.log('Category image path updated successfully');
             }
           }
         }
@@ -539,7 +501,6 @@ export default function Properties() {
         loadData(); // Reload categories
       } else {
         // CREATE MODE
-        console.log('Creating category...');
 
         // Create category first
         const categoryData = {
@@ -550,23 +511,17 @@ export default function Properties() {
           sort_order: categories.length
         };
 
-        console.log('Category data:', categoryData);
         const category = await createPropertyCategory(categoryData);
-        console.log('Category created:', category);
 
         // Upload category image if provided
         if (categoryImage && category) {
-          console.log('Starting category image upload...');
           const imagePath = `categories/${category.id}/${Date.now()}-${categoryImage.name}`;
-          console.log('Upload path:', imagePath);
 
           const { data: uploadData, error: uploadError } = await uploadFile('property-images', imagePath, categoryImage);
 
           if (uploadError) {
-            console.error('Category image upload failed:', uploadError);
             alert(`Category created but image upload failed: ${uploadError.message}`);
           } else {
-            console.log('Category image uploaded successfully:', uploadData);
             // Update category with hero image path using Supabase directly
             const { error: updateError } = await supabase
               .from('property_categories')
@@ -574,10 +529,8 @@ export default function Properties() {
               .eq('id', category.id);
 
             if (updateError) {
-              console.error('Error updating category image path:', updateError);
               alert(`Category created but failed to link image: ${updateError.message}`);
             } else {
-              console.log('Category image path updated successfully');
             }
           }
         }
@@ -588,8 +541,6 @@ export default function Properties() {
         loadData(); // Reload categories
       }
     } catch (error) {
-      console.error('Error with category:', error);
-      console.error('Error details:', JSON.stringify(error, null, 2));
       alert(`Error ${isEditMode ? 'updating' : 'creating'} category: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`);
     }
   };
@@ -650,7 +601,6 @@ export default function Properties() {
       setItemToDelete(null);
       loadData(); // Reload data
     } catch (error) {
-      console.error('Error deleting item:', error);
       alert(`Error deleting ${itemToDelete.type}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setDeleting(false);

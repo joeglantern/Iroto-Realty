@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
@@ -78,12 +78,10 @@ function Blog() {
     const isAVIF = file.type === 'image/avif' || file.name.toLowerCase().endsWith('.avif');
     
     if (isAVIF) {
-      console.log('Converting AVIF to JPEG for Supabase compatibility');
       return convertToJPEG(file);
     }
 
     if (file.size > MAX_FILE_SIZE) {
-      console.log('Compressing large image');
       return compressImage(file);
     }
 
@@ -194,7 +192,6 @@ function Blog() {
       setCategories(categoriesData || []);
       filterAndPaginateBlogPosts(postsData || []);
     } catch (error) {
-      console.error('Error loading blog data:', error);
       alert('Error loading blog data. Please try again.');
     } finally {
       setLoading(false);
@@ -268,7 +265,6 @@ function Blog() {
     
     try {
       setUploading(true);
-      console.log(isEditing ? 'Starting blog post update...' : 'Starting blog post creation...');
 
       // Prepare post data
       const postData = {
@@ -278,18 +274,13 @@ function Blog() {
 
       let post;
       if (isEditing) {
-        console.log('Updating blog post with data:', postData);
         post = await updateBlogPost(editingPost.id, postData);
-        console.log('Blog post updated successfully:', post);
       } else {
-        console.log('Creating blog post with data:', postData);
         post = await createBlogPost(postData);
-        console.log('Blog post created successfully:', post);
       }
 
       // Upload featured image if provided
       if (featuredImage && post) {
-        console.log('Starting featured image upload...');
         
         // Validate and process featured image
         const validationError = validateImageFile(featuredImage);
@@ -300,15 +291,12 @@ function Blog() {
         
         const processedImage = await processImage(featuredImage);
         const imagePath = `blog/featured/${post.id}/${Date.now()}-${processedImage.name}`;
-        console.log('Upload path:', imagePath);
         
         const { data: uploadData, error: uploadError } = await uploadFile('blog-images', imagePath, processedImage);
         
         if (uploadError) {
-          console.error('Featured image upload failed:', uploadError);
           alert(`Blog post created but featured image upload failed: ${uploadError.message}`);
         } else {
-          console.log('Featured image uploaded successfully:', uploadData);
           // Update post with featured image path
           const { error: updateError } = await supabase
             .from('blog_posts')
@@ -316,10 +304,8 @@ function Blog() {
             .eq('id', post.id);
             
           if (updateError) {
-            console.error('Error updating featured image path:', updateError);
             alert(`Blog post created but failed to link featured image: ${updateError.message}`);
           } else {
-            console.log('Featured image path updated successfully');
           }
         }
       }
@@ -331,8 +317,6 @@ function Blog() {
       resetForm();
       loadData(); // Reload data
     } catch (error) {
-      console.error(`Error ${isEditing ? 'updating' : 'creating'} blog post:`, error);
-      console.error('Full error details:', JSON.stringify(error, null, 2));
       alert(`Error ${isEditing ? 'updating' : 'creating'} blog post: ${error instanceof Error ? error.message : 'Unknown error'}. Check console for details.`);
     } finally {
       setUploading(false);
@@ -378,7 +362,6 @@ function Blog() {
       
       setShowEditModal(true);
     } catch (error) {
-      console.error('Error loading blog post for edit:', error);
       alert('Error loading blog post details. Please try again.');
     } finally {
       setLoading(false);
@@ -403,7 +386,6 @@ function Blog() {
       setPostToDelete(null);
       loadData(); // Reload data
     } catch (error) {
-      console.error('Error deleting blog post:', error);
       alert(`Error deleting blog post: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setDeleting(false);
@@ -442,7 +424,6 @@ function Blog() {
         alert('Category created successfully!');
       }
     } catch (error) {
-      console.error('Error creating category:', error);
       alert('Error creating category. Please try again.');
     } finally {
       setUploading(false);
@@ -461,7 +442,6 @@ function Blog() {
       setCategoryToDelete(null);
       alert('Category deleted successfully!');
     } catch (error) {
-      console.error('Error deleting category:', error);
       alert('Error deleting category. Please try again.');
     } finally {
       setDeletingCategory(false);

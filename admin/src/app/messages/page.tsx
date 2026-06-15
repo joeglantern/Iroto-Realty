@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
@@ -62,13 +62,11 @@ export default function Messages() {
       const { data, error } = await query;
 
       if (error) {
-        console.error('Error fetching messages:', error);
         return;
       }
 
       setMessages(data || []);
     } catch (error) {
-      console.error('Error fetching messages:', error);
     } finally {
       setLoading(false);
     }
@@ -82,7 +80,6 @@ export default function Messages() {
         .eq('id', messageId);
 
       if (error) {
-        console.error('Error updating message:', error);
         return;
       }
 
@@ -91,7 +88,6 @@ export default function Messages() {
         setSelectedMessage({ ...selectedMessage, status });
       }
     } catch (error) {
-      console.error('Error updating message:', error);
     }
   };
 
@@ -103,7 +99,6 @@ export default function Messages() {
         .eq('id', messageId);
 
       if (error) {
-        console.error('Error deleting message:', error);
         return;
       }
 
@@ -115,7 +110,6 @@ export default function Messages() {
       setShowDeleteConfirm(false);
       setMessageToDelete(null);
     } catch (error) {
-      console.error('Error deleting message:', error);
     }
   };
 
@@ -129,7 +123,6 @@ export default function Messages() {
         setShowToast(false);
       }, 2000);
     } catch (err) {
-      console.error('Failed to copy text: ', err);
     }
   };
 

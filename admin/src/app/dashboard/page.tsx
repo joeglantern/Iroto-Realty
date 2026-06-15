@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
@@ -101,7 +101,6 @@ function Dashboard() {
 
       setRecentActivity(activities.slice(0, 4));
     } catch (error) {
-      console.error('Error loading dashboard data:', error);
     } finally {
       setLoading(false);
     }
@@ -216,7 +215,7 @@ function Dashboard() {
                     <div className="w-16 h-16 bg-gray-200 rounded-lg flex-shrink-0 overflow-hidden">
                       {property.hero_image_path && (
                         <Image
-                          src={`https://ervkyybhqsihlkbbllhv.supabase.co/storage/v1/object/public/property-images/${property.hero_image_path}`}
+                          src={`https://cskyixawxnxxjhenggzo.supabase.co/storage/v1/object/public/property-images/${property.hero_image_path}`}
                           alt={property.title}
                           width={64}
                           height={64}

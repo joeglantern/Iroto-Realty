@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+﻿import { supabase } from './supabase'
 import type { Review } from './supabase'
 
 // Reviews CRUD operations
@@ -30,10 +30,8 @@ export async function getReview(id: string) {
 }
 
 export async function createReview(review: Omit<Review, 'id' | 'created_at' | 'updated_at'>) {
-  console.log('createReview called with:', review);
   
   try {
-    console.log('About to execute Supabase insert...');
     
     // Test basic connection first
     const { data: testData, error: testError } = await supabase
@@ -41,25 +39,19 @@ export async function createReview(review: Omit<Review, 'id' | 'created_at' | 'u
       .select('count')
       .limit(1);
     
-    console.log('Connection test - data:', testData, 'error:', testError);
     
-    console.log('Now attempting insert...');
     const { data, error } = await supabase
       .from('reviews')
       .insert(review)
       .select()
       .single()
 
-    console.log('createReview response - data:', data, 'error:', error);
     
     if (error) {
-      console.error('Review creation failed:', error);
-      console.error('Error details:', JSON.stringify(error, null, 2));
       throw error;
     }
     return data;
   } catch (err) {
-    console.error('Unexpected error in createReview:', err);
     throw err;
   }
 }

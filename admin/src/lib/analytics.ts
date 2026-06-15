@@ -1,9 +1,8 @@
-import { supabase } from './supabase'
+﻿import { supabase } from './supabase'
 
 // Analytics CRUD operations
 export async function getAnalytics(dateRange: string = '30') {
   try {
-    console.log('Fetching analytics data for', dateRange, 'days');
     
     // Calculate date filters
     const daysAgo = parseInt(dateRange);
@@ -87,7 +86,6 @@ export async function getAnalytics(dateRange: string = '30') {
     ].filter(Boolean);
 
     if (errors.length > 0) {
-      console.error('Analytics fetch errors:', errors);
     }
 
     const result = {
@@ -100,7 +98,6 @@ export async function getAnalytics(dateRange: string = '30') {
       recentPageViews: recentPageViewsResult.data || []
     };
 
-    console.log('Analytics data fetched:', {
       dailyMetrics: result.dailyMetrics.length,
       popularProperties: result.popularProperties.length,
       popularBlogPosts: result.popularBlogPosts.length,
@@ -112,7 +109,6 @@ export async function getAnalytics(dateRange: string = '30') {
 
     return result;
   } catch (error) {
-    console.error('Error fetching analytics:', error);
     throw error;
   }
 }
@@ -144,7 +140,6 @@ export async function trackPageView(data: {
     if (error) throw error;
     return result;
   } catch (error) {
-    console.error('Error tracking page view:', error);
     throw error;
   }
 }
@@ -173,7 +168,6 @@ export async function trackPropertyInquiry(data: {
     if (error) throw error;
     return result;
   } catch (error) {
-    console.error('Error tracking property inquiry:', error);
     throw error;
   }
 }
@@ -200,7 +194,6 @@ export async function trackSearchQuery(data: {
     if (error) throw error;
     return result;
   } catch (error) {
-    console.error('Error tracking search query:', error);
     throw error;
   }
 }
@@ -226,7 +219,6 @@ export async function updateInquiryStatus(id: string, updates: {
     if (error) throw error;
     return data;
   } catch (error) {
-    console.error('Error updating inquiry status:', error);
     throw error;
   }
 }
@@ -246,7 +238,6 @@ export async function getInquiry(id: string) {
     if (error) throw error;
     return data;
   } catch (error) {
-    console.error('Error fetching inquiry:', error);
     throw error;
   }
 }
@@ -277,7 +268,6 @@ export async function getInquiries(page: number = 1, limit: number = 20, status?
       totalPages: Math.ceil((count || 0) / limit)
     };
   } catch (error) {
-    console.error('Error fetching inquiries:', error);
     throw error;
   }
 }
@@ -376,7 +366,6 @@ export async function createDailyMetrics(date: string) {
     if (error) throw error;
     return data;
   } catch (error) {
-    console.error('Error creating daily metrics:', error);
     throw error;
   }
 }

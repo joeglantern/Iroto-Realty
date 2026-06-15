@@ -447,7 +447,6 @@ export default function SalesCollection() {
           setShowSuggestions(true);
           setSelectedSuggestionIndex(-1);
         } catch (error) {
-          console.error('Error fetching suggestions:', error);
         } finally {
           setIsLoading(false);
         }
@@ -520,7 +519,6 @@ export default function SalesCollection() {
         setCategories(categoryData);
         setFeaturedProperties(featuredData.filter(p => p.listing_type === 'sale' || p.listing_type === 'both'));
       } catch (error) {
-        console.error('Error loading data:', error);
       } finally {
         setLoading(false);
       }
@@ -800,7 +798,7 @@ export default function SalesCollection() {
                 Featured Properties for Sale
               </h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                Handpicked properties that reflect style, quality, and the essence of coastal charm — perfect for investment in Kenya's coast
+                Handpicked properties that reflect style, quality, and the essence of coastal charm, perfect for investment in Kenya's coast
               </p>
             </div>
             

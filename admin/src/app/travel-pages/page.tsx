@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -43,7 +43,6 @@ function TravelPages() {
       if (error) throw error;
       setSections(data || []);
     } catch (error) {
-      console.error('Error loading sections:', error);
     } finally {
       setLoading(false);
     }
@@ -86,7 +85,6 @@ function TravelPages() {
       setShowForm(false);
       loadSections();
     } catch (error) {
-      console.error('Error saving section:', error);
       alert('Error saving section. Please try again.');
     }
   };
@@ -113,7 +111,6 @@ function TravelPages() {
       if (error) throw error;
       loadSections();
     } catch (error) {
-      console.error('Error deleting section:', error);
       alert('Error deleting section. Please try again.');
     }
   };
@@ -152,7 +149,6 @@ function TravelPages() {
 
       loadSections();
     } catch (error) {
-      console.error('Error moving section:', error);
       alert('Error reordering section. Please try again.');
     }
   };
@@ -167,7 +163,6 @@ function TravelPages() {
       if (error) throw error;
       loadSections();
     } catch (error) {
-      console.error('Error toggling section status:', error);
     }
   };
 

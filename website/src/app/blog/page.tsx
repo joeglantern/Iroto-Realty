@@ -29,7 +29,6 @@ export default function Blog() {
         setBlogCategories(categoriesData);
         setFilteredPosts(postsData);
       } catch (error) {
-        console.error('Error loading blog data:', error);
       } finally {
         setLoading(false);
       }

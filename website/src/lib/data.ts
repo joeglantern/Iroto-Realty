@@ -17,13 +17,11 @@ export async function getFeaturedProperties(limit: number = 6): Promise<Property
       .limit(limit)
 
     if (error) {
-      console.error('Error fetching featured properties:', error)
       return []
     }
 
     return data || []
   } catch (error) {
-    console.error('Error fetching featured properties:', error)
     return []
   }
 }
@@ -88,13 +86,11 @@ export async function getProperties(options?: {
     const { data, error } = await query
 
     if (error) {
-      console.error('Error fetching properties:', error)
       return []
     }
 
     return data || []
   } catch (error) {
-    console.error('Error fetching properties:', error)
     return []
   }
 }
@@ -114,13 +110,11 @@ export async function getPropertyBySlug(slug: string): Promise<Property | null> 
       .single()
 
     if (error) {
-      console.error('Error fetching property:', error)
       return null
     }
 
     return data
   } catch (error) {
-    console.error('Error fetching property:', error)
     return null
   }
 }
@@ -135,13 +129,11 @@ export async function getPropertyImages(propertyId: string): Promise<PropertyIma
       .order('sort_order', { ascending: true })
 
     if (error) {
-      console.error('Error fetching property images:', error)
       return []
     }
 
     return data || []
   } catch (error) {
-    console.error('Error fetching property images:', error)
     return []
   }
 }
@@ -162,13 +154,11 @@ export async function getFeaturedReviews(limit: number = 4): Promise<Review[]> {
       .limit(limit)
 
     if (error) {
-      console.error('Error fetching featured reviews:', error)
       return []
     }
 
     return data || []
   } catch (error) {
-    console.error('Error fetching featured reviews:', error)
     return []
   }
 }
@@ -185,13 +175,11 @@ export async function getPropertyReviews(propertyId: string, limit: number = 10)
       .limit(limit)
 
     if (error) {
-      console.error('Error fetching property reviews:', error)
       return []
     }
 
     return data || []
   } catch (error) {
-    console.error('Error fetching property reviews:', error)
     return []
   }
 }
@@ -232,13 +220,11 @@ export async function getBlogPosts(options?: {
     const { data, error } = await query
 
     if (error) {
-      console.error('Error fetching blog posts:', error)
       return []
     }
 
     return data || []
   } catch (error) {
-    console.error('Error fetching blog posts:', error)
     return []
   }
 }
@@ -256,13 +242,11 @@ export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> 
       .single()
 
     if (error) {
-      console.error('Error fetching blog post:', error)
       return null
     }
 
     return data
   } catch (error) {
-    console.error('Error fetching blog post:', error)
     return null
   }
 }
@@ -276,13 +260,11 @@ export async function getBlogCategories(): Promise<BlogCategory[]> {
       .order('name', { ascending: true })
 
     if (error) {
-      console.error('Error fetching blog categories:', error)
       return []
     }
 
     return data || []
   } catch (error) {
-    console.error('Error fetching blog categories:', error)
     return []
   }
 }
@@ -296,13 +278,11 @@ export async function getPropertyCategories(): Promise<PropertyCategory[]> {
       .order('sort_order', { ascending: true })
 
     if (error) {
-      console.error('Error fetching property categories:', error)
       return []
     }
 
     return data || []
   } catch (error) {
-    console.error('Error fetching property categories:', error)
     return []
   }
 }
@@ -317,13 +297,11 @@ export async function getCategoryBySlug(slug: string): Promise<PropertyCategory 
       .single()
 
     if (error) {
-      console.error('Error fetching category:', error)
       return null
     }
 
     return data
   } catch (error) {
-    console.error('Error fetching category:', error)
     return null
   }
 }
@@ -494,7 +472,6 @@ export async function searchProperties(query: string, filters?: {
     const { data, error } = await supabaseQuery
 
     if (error) {
-      console.error('Error searching properties:', error)
       return []
     }
 
@@ -531,7 +508,6 @@ export async function searchProperties(query: string, filters?: {
 
     return data || []
   } catch (error) {
-    console.error('Error searching properties:', error)
     return []
   }
 }
@@ -567,7 +543,6 @@ export async function getSearchSuggestions(query: string, limit: number = 5): Pr
       .limit(limit)
 
     if (error) {
-      console.error('Error fetching search suggestions:', error)
       return []
     }
 
@@ -601,7 +576,6 @@ export async function getSearchSuggestions(query: string, limit: number = 5): Pr
       .limit(Math.min(limit, 3))
 
     if (categoryError) {
-      console.error('Error fetching category suggestions:', error)
     }
 
     // Combine and deduplicate results
@@ -624,7 +598,6 @@ export async function getSearchSuggestions(query: string, limit: number = 5): Pr
 
     return allResults.slice(0, limit) as unknown as Property[];
   } catch (error) {
-    console.error('Error fetching search suggestions:', error)
     return []
   }
 }
@@ -643,13 +616,11 @@ export async function getCategorySuggestions(query: string, limit: number = 3): 
       .limit(limit)
 
     if (error) {
-      console.error('Error fetching category suggestions:', error)
       return []
     }
 
     return data || []
   } catch (error) {
-    console.error('Error fetching category suggestions:', error)
     return []
   }
 }
@@ -664,7 +635,6 @@ export async function getAvailableAmenities(): Promise<string[]> {
       .eq('is_active', true)
 
     if (error) {
-      console.error('Error fetching amenities:', error)
       return []
     }
 
@@ -682,7 +652,6 @@ export async function getAvailableAmenities(): Promise<string[]> {
 
     return Array.from(allAmenities).sort()
   } catch (error) {
-    console.error('Error fetching amenities:', error)
     return []
   }
 }
@@ -702,7 +671,6 @@ export async function getPropertyStats(): Promise<{
       .eq('is_active', true)
 
     if (error) {
-      console.error('Error fetching property stats:', error)
       return {
         priceRange: { min: 0, max: 100000 },
         bedroomRange: { min: 1, max: 10 },
@@ -744,7 +712,6 @@ export async function getPropertyStats(): Promise<{
       }
     }
   } catch (error) {
-    console.error('Error fetching property stats:', error)
     return {
       priceRange: { min: 0, max: 100000 },
       bedroomRange: { min: 1, max: 10 },

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -118,7 +118,6 @@ export default function LoginPage() {
           ]);
 
           if (roleError) {
-            console.error('Error checking user role:', roleError);
             setError('Failed to verify admin access. Please try again.');
             await supabase.auth.signOut();
             return;
@@ -135,7 +134,6 @@ export default function LoginPage() {
         }
       }
     } catch (error: any) {
-      console.error('Authentication error:', error);
       
       if (error.message && error.message.includes('timed out')) {
         setError(`Login timed out: ${error.message}. Please check your internet connection and try again.`);

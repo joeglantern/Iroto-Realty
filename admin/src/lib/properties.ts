@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+﻿import { supabase } from './supabase'
 import type { Property, PropertyCategory, PropertyType, PropertyImage } from './supabase'
 
 // Properties CRUD operations
@@ -32,7 +32,6 @@ export async function getProperty(id: string) {
 }
 
 export async function createProperty(property: Omit<Property, 'id' | 'created_at' | 'updated_at' | 'slug'>) {
-  console.log('createProperty called with:', property);
   
   try {
     const { data, error } = await Promise.race([
@@ -46,15 +45,12 @@ export async function createProperty(property: Omit<Property, 'id' | 'created_at
       )
     ]);
 
-    console.log('createProperty response - data:', data, 'error:', error);
     
     if (error) {
-      console.error('Property creation failed:', error);
       throw error;
     }
     return data;
   } catch (error) {
-    console.error('Property creation error:', error);
     throw error;
   }
 }

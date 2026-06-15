@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import PageLayout from '@/components/layout/PageLayout';
+import { CheckCircle, XCircle, Envelope, Phone, MapPin, Clock, CircleNotch, FacebookLogo, InstagramLogo, XLogo } from '@phosphor-icons/react';
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -107,13 +108,9 @@ export default function Contact() {
                     <div className="flex">
                       <div className="flex-shrink-0">
                         {submitMessage.type === 'success' ? (
-                          <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                          </svg>
+                          <CheckCircle size={20} weight="fill" className="text-green-400" />
                         ) : (
-                          <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                          </svg>
+                          <XCircle size={20} weight="fill" className="text-red-400" />
                         )}
                       </div>
                       <div className="ml-3">
@@ -214,10 +211,7 @@ export default function Contact() {
                   >
                     {isSubmitting ? (
                       <>
-                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
+                        <CircleNotch size={20} className="animate-spin -ml-1 mr-3 text-white" />
                         Sending...
                       </>
                     ) : (
@@ -234,9 +228,7 @@ export default function Contact() {
                 <div className="space-y-6 mb-8">
                   <div className="flex items-start">
                     <div className="w-12 h-12 bg-brown rounded-full flex items-center justify-center mr-4 flex-shrink-0">
-                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      </svg>
+                      <Envelope size={24} weight="fill" className="text-white" />
                     </div>
                     <div>
                       <h3 className="font-semibold text-black mb-1">Email</h3>
@@ -247,22 +239,17 @@ export default function Contact() {
 
                   <div className="flex items-start">
                     <div className="w-12 h-12 bg-brown rounded-full flex items-center justify-center mr-4 flex-shrink-0">
-                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                      </svg>
+                      <Phone size={24} weight="fill" className="text-white" />
                     </div>
                     <div>
                       <h3 className="font-semibold text-black mb-1">Phone</h3>
-                      <p className="text-gray-600">+254 712 345 678</p>
+                      <p className="text-gray-600">07123456789</p>
                     </div>
                   </div>
 
                   <div className="flex items-start">
                     <div className="w-12 h-12 bg-brown rounded-full flex items-center justify-center mr-4 flex-shrink-0">
-                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
+                      <MapPin size={24} weight="fill" className="text-white" />
                     </div>
                     <div>
                       <h3 className="font-semibold text-black mb-1">Office</h3>
@@ -275,9 +262,7 @@ export default function Contact() {
 
                   <div className="flex items-start">
                     <div className="w-12 h-12 bg-brown rounded-full flex items-center justify-center mr-4 flex-shrink-0">
-                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
+                      <Clock size={24} weight="fill" className="text-white" />
                     </div>
                     <div>
                       <h3 className="font-semibold text-black mb-1">Business Hours</h3>
@@ -300,9 +285,7 @@ export default function Contact() {
                       rel="noopener noreferrer"
                       className="w-10 h-10 bg-brown hover:bg-brown/90 rounded-full flex items-center justify-center transition-colors duration-200"
                     >
-                      <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                      </svg>
+                      <FacebookLogo size={20} weight="fill" className="text-white" />
                     </a>
                     <a
                       href="https://instagram.com/irotorealty"
@@ -310,11 +293,7 @@ export default function Contact() {
                       rel="noopener noreferrer"
                       className="w-10 h-10 bg-brown hover:bg-brown/90 rounded-full flex items-center justify-center transition-colors duration-200"
                     >
-                      <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 6.618 5.367 11.986 11.988 11.986s11.987-5.368 11.987-11.986C24.014 5.367 18.635.001 12.017.001zm5.568 16.235c-.728.728-1.595 1.297-2.58 1.691-.986.394-2.034.592-3.121.592-1.087 0-2.135-.198-3.121-.592-.985-.394-1.852-.963-2.58-1.691-.728-.728-1.297-1.595-1.691-2.58-.394-.986-.592-2.034-.592-3.121s.198-2.135.592-3.121c.394-.985.963-1.852 1.691-2.58.728-.728 1.595-1.297 2.58-1.691.986-.394 2.034-.592 3.121-.592 1.087 0 2.135.198 3.121.592.985.394 1.852.963 2.58 1.691.728.728 1.297 1.595 1.691 2.58.394.986.592 2.034.592 3.121s-.198 2.135-.592 3.121c-.394.985-.963 1.852-1.691 2.58z"/>
-                        <path d="M12.017 7.075c-2.717 0-4.912 2.196-4.912 4.912s2.195 4.912 4.912 4.912 4.912-2.195 4.912-4.912-2.196-4.912-4.912-4.912zm0 8.09c-1.75 0-3.178-1.427-3.178-3.178s1.428-3.178 3.178-3.178 3.178 1.427 3.178 3.178-1.427 3.178-3.178 3.178z"/>
-                        <circle cx="17.174" cy="6.83" r="1.179"/>
-                      </svg>
+                      <InstagramLogo size={20} weight="fill" className="text-white" />
                     </a>
                     <a
                       href="https://twitter.com/irotorealty"
@@ -322,9 +301,7 @@ export default function Contact() {
                       rel="noopener noreferrer"
                       className="w-10 h-10 bg-brown hover:bg-brown/90 rounded-full flex items-center justify-center transition-colors duration-200"
                     >
-                      <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                      </svg>
+                      <XLogo size={20} weight="fill" className="text-white" />
                     </a>
                   </div>
                 </div>
@@ -333,30 +310,6 @@ export default function Contact() {
           </div>
         </section>
 
-        {/* Map Section Placeholder */}
-        <section className="py-20 bg-gray-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl lg:text-4xl font-bold text-black mb-4">
-                Our Locations
-              </h2>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                Properties across Kenya's most beautiful coastal destinations
-              </p>
-            </div>
-            
-            <div className="bg-gray-200 rounded-lg h-96 flex items-center justify-center">
-              <div className="text-center">
-                <svg className="w-20 h-20 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <p className="text-gray-600">Interactive Map Placeholder</p>
-                <p className="text-sm text-gray-500 mt-2">Google Maps integration coming soon</p>
-              </div>
-            </div>
-          </div>
-        </section>
       </div>
     </PageLayout>
   );

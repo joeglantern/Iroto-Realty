@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
@@ -36,7 +36,6 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
         
         if (mounted) {
           if (error) {
-            console.error('Auth error:', error);
           }
           
           setSession(session);
@@ -44,7 +43,6 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
           setLoading(false);
         }
       } catch (error) {
-        console.error('Failed to get session:', error);
         if (mounted) {
           setSession(null);
           setUser(null);
@@ -60,7 +58,6 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
       async (event, session) => {
         if (!mounted) return;
 
-        console.log('Auth state changed:', event);
         
         setSession(session);
         setUser(session?.user ?? null);
@@ -83,7 +80,6 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
       await supabase.auth.signOut();
       // Auth state change will handle the cleanup
     } catch (error) {
-      console.error('Sign out error:', error);
       setLoading(false);
     }
   };

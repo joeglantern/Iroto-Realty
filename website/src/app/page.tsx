@@ -206,7 +206,6 @@ function HeroCarousel() {
           setShowSuggestions(true);
           setSelectedSuggestionIndex(-1);
         } catch (error) {
-          console.error('Error fetching suggestions:', error);
         } finally {
           setIsLoading(false);
         }
@@ -530,7 +529,6 @@ function TestimonialsCarousel() {
         const featuredReviews = await getFeaturedReviews(6);
         setReviews(featuredReviews);
       } catch (error) {
-        console.error('Error loading featured reviews:', error);
       } finally {
         setLoading(false);
       }
@@ -694,7 +692,6 @@ function PropertiesCarousel() {
         const featuredProperties = await getFeaturedProperties(12);
         setProperties(featuredProperties);
       } catch (error) {
-        console.error('Error loading featured properties:', error);
       } finally {
         setLoading(false);
       }
@@ -773,7 +770,7 @@ function PropertiesCarousel() {
             Featured Properties
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Discover our handpicked properties that reflect style, quality, and the essence of coastal charm — curated through over seven years of coastal living experience.
+            Discover our handpicked properties that reflect style, quality, and the essence of coastal charm, curated through over seven years of coastal living experience.
           </p>
         </div>
         

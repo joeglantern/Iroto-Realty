@@ -484,7 +484,6 @@ export default function RentalPortfolio() {
           setShowSuggestions(true);
           setSelectedSuggestionIndex(-1);
         } catch (error) {
-          console.error('Error fetching suggestions:', error);
         } finally {
           setIsLoading(false);
         }
@@ -555,7 +554,6 @@ export default function RentalPortfolio() {
         setCategories(categoryData);
         setFeaturedProperties(propertiesData);
       } catch (error) {
-        console.error('Error loading data:', error);
       } finally {
         setLoading(false);
       }
