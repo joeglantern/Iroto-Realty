@@ -98,15 +98,6 @@ export async function getAnalytics(dateRange: string = '30') {
       recentPageViews: recentPageViewsResult.data || []
     };
 
-      dailyMetrics: result.dailyMetrics.length,
-      popularProperties: result.popularProperties.length,
-      popularBlogPosts: result.popularBlogPosts.length,
-      trafficSummary: result.trafficSummary.length,
-      searchAnalytics: result.searchAnalytics.length,
-      propertyInquiries: result.propertyInquiries.length,
-      recentPageViews: result.recentPageViews.length
-    });
-
     return result;
   } catch (error) {
     throw error;
