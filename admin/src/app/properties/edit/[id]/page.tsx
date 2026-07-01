@@ -7,7 +7,7 @@ import Link from 'next/link';
 import SimpleProtectedRoute from '@/components/SimpleProtectedRoute';
 import { useSimpleAuth } from '@/contexts/SimpleAuthContext';
 import { getProperty, updateProperty, getPropertyCategories, getPropertyTypes } from '@/lib/properties';
-import { uploadFile, getStorageUrl, supabase } from '@/lib/supabase';
+import { uploadFile, deleteFile, getStorageUrl, supabase } from '@/lib/supabase';
 import type { Property, PropertyCategory, PropertyType } from '@/lib/supabase';
 import RichTextEditor from '@/components/RichTextEditor';
 
@@ -58,6 +58,7 @@ export default function EditProperty() {
   const [heroImage, setHeroImage] = useState<File | null>(null);
   const [galleryImages, setGalleryImages] = useState<File[]>([]);
   const [existingImages, setExistingImages] = useState<any[]>([]);
+  const [deletingImageId, setDeletingImageId] = useState<string | null>(null);
   
   // Image format constants
   const SUPPORTED_FORMATS = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/avif'];
@@ -235,6 +236,35 @@ export default function EditProperty() {
       setError('Error loading property data. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteImage = async (image: any) => {
+    if (!confirm('Delete this image? This cannot be undone.')) return;
+
+    setDeletingImageId(image.id);
+    try {
+      const { error: storageError } = await deleteFile('property-images', image.image_path);
+      if (storageError) {
+        alert(`Failed to delete image from storage: ${storageError.message}`);
+        return;
+      }
+
+      const { error: dbError } = await supabase
+        .from('property_images')
+        .delete()
+        .eq('id', image.id);
+
+      if (dbError) {
+        alert(`Image removed from storage but failed to remove from database: ${dbError.message}`);
+        return;
+      }
+
+      setExistingImages(prev => prev.filter(img => img.id !== image.id));
+    } catch {
+      alert('Failed to delete image. Please try again.');
+    } finally {
+      setDeletingImageId(null);
     }
   };
 
@@ -770,12 +800,11 @@ export default function EditProperty() {
                             </div>
                             <button
                               type="button"
-                              onClick={() => {
-                                // TODO: Implement image deletion
-                              }}
-                              className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs flex items-center justify-center hover:bg-red-600"
+                              onClick={() => handleDeleteImage(image)}
+                              disabled={deletingImageId === image.id}
+                              className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs flex items-center justify-center hover:bg-red-600 disabled:opacity-50"
                             >
-                              ×
+                              {deletingImageId === image.id ? '…' : '×'}
                             </button>
                           </div>
                         ))}
