@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getFeaturedProperties, getFeaturedReviews, getSearchSuggestions, getSiteImages } from '@/lib/data';
 import { getStorageUrl } from '@/lib/supabase';
+import { formatPropertyPrice } from '@/lib/price';
 import type { Property, Review } from '@/lib/supabase';
 import PageLayout from '@/components/layout/PageLayout';
 import LoadingScreen from '@/components/LoadingScreen';
@@ -422,9 +423,7 @@ function HeroCarousel() {
                       }
                     }
 
-                    const price = property.listing_type === 'sale'
-                      ? `${property.currency || 'KES'} ${property.sale_price?.toLocaleString()}`
-                      : `From ${property.currency || 'KES'} ${property.rental_price?.toLocaleString()}/night`;
+                    const price = formatPropertyPrice(property);
 
                     return (
                       <div
@@ -733,13 +732,7 @@ function PropertiesCarousel() {
       images.push('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');
     }
     
-    const price = property.listing_type === 'sale' 
-      ? property.sale_price 
-        ? `${property.currency} ${property.sale_price?.toLocaleString()}`
-        : 'Contact for price'
-      : property.rental_price 
-        ? `From ${property.currency} ${property.rental_price?.toLocaleString()}/night`
-        : 'Contact for price';
+    const price = formatPropertyPrice(property);
 
     return {
       id: property.id,

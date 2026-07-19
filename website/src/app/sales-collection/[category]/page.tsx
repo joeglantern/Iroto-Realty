@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { getProperties, getCategoryBySlug, getSearchSuggestions } from '@/lib/data';
 import { getStorageUrl } from '@/lib/supabase';
+import { formatPropertyPrice } from '@/lib/price';
 import type { Property, PropertyCategory } from '@/lib/supabase';
 import PageLayout from '@/components/layout/PageLayout';
 
@@ -452,9 +453,7 @@ export default function CategoryPage() {
                             <div className="flex-1 min-w-0">
                               <p className="font-medium text-gray-900 text-sm truncate">{property.title}</p>
                               <p className="text-xs text-gray-500 truncate">{category.name}</p>
-                              {property.sale_price && (
-                                <p className="text-xs text-brown font-medium">KES {property.sale_price.toLocaleString()}</p>
-                              )}
+                              <p className="text-xs text-brown font-medium">{formatPropertyPrice(property, 'sale')}</p>
                             </div>
                             <div className="flex-shrink-0">
                               <span className="bg-brown text-white px-2 py-1 rounded-full text-xs font-medium">
@@ -520,10 +519,7 @@ export default function CategoryPage() {
                       images={propertyImages}
                       title={property.title}
                       location={property.specific_location || category.name}
-                      price={property.listing_type === 'sale'
-                        ? `${property.currency || 'KES'} ${property.sale_price?.toLocaleString()}`
-                        : `From ${property.currency || 'KES'} ${property.rental_price?.toLocaleString()}/night`
-                      }
+                      price={formatPropertyPrice(property, 'sale')}
                       slug={property.slug}
                       bedrooms={property.bedrooms || 0}
                       beds={property.beds || 0}

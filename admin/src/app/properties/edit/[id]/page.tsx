@@ -41,6 +41,7 @@ export default function EditProperty() {
     property_type_text: '',
     specific_location: '',
     listing_type: 'rental' as 'rental' | 'sale',
+    price_on_request: true,
     rental_price: '',
     sale_price: '',
     bedrooms: '',
@@ -261,6 +262,7 @@ export default function EditProperty() {
         property_type_text: propertyData.property_type_text || '',
         specific_location: propertyData.specific_location || '',
         listing_type: propertyData.listing_type || 'rental',
+        price_on_request: propertyData.price_on_request ?? false,
         rental_price: propertyData.rental_price?.toString() || '',
         sale_price: propertyData.sale_price?.toString() || '',
         bedrooms: propertyData.bedrooms?.toString() || '',
@@ -740,28 +742,59 @@ export default function EditProperty() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Rental Price (KES per night)</label>
-                      <input
-                        type="number"
-                        value={formData.rental_price}
-                        onChange={(e) => setFormData({ ...formData, rental_price: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                        placeholder="5000"
-                      />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Pricing</label>
+                    <div className="flex items-center space-x-6 py-1">
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="pricing_mode"
+                          checked={formData.price_on_request}
+                          onChange={() => setFormData({ ...formData, price_on_request: true })}
+                          className="h-4 w-4 text-primary border-gray-300 focus:ring-primary"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">Contact for price</span>
+                      </label>
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="pricing_mode"
+                          checked={!formData.price_on_request}
+                          onChange={() => setFormData({ ...formData, price_on_request: false })}
+                          className="h-4 w-4 text-primary border-gray-300 focus:ring-primary"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">Show price on website</span>
+                      </label>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Sale Price (KES)</label>
-                      <input
-                        type="number"
-                        value={formData.sale_price}
-                        onChange={(e) => setFormData({ ...formData, sale_price: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                        placeholder="15000000"
-                      />
-                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      With &quot;Contact for price&quot; the website shows an enquiry button instead of a price
+                    </p>
                   </div>
+
+                  {!formData.price_on_request && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Rental Price (KES per night)</label>
+                        <input
+                          type="number"
+                          value={formData.rental_price}
+                          onChange={(e) => setFormData({ ...formData, rental_price: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                          placeholder="5000"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Sale Price (KES)</label>
+                        <input
+                          type="number"
+                          value={formData.sale_price}
+                          onChange={(e) => setFormData({ ...formData, sale_price: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                          placeholder="15000000"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Property Details */}

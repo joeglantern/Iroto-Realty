@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { getPropertyCategories, getFeaturedProperties, getSearchSuggestions } from '@/lib/data';
 import { getStorageUrl } from '@/lib/supabase';
+import { formatPropertyPrice } from '@/lib/price';
 import type { PropertyCategory, Property } from '@/lib/supabase';
 import PageLayout from '@/components/layout/PageLayout';
 import Link from 'next/link';
@@ -720,7 +721,7 @@ export default function RentalPortfolio() {
                                   {property.specific_location || 'Kenya Coast'}
                                 </p>
                                 <p className="font-semibold text-brown ml-2 text-sm sm:text-base">
-                                  {property.rental_price ? `From KES ${property.rental_price.toLocaleString()}/night` : 'Contact for price'}
+                                  {formatPropertyPrice(property, 'rental')}
                                 </p>
                               </div>
                             </div>
@@ -827,10 +828,7 @@ export default function RentalPortfolio() {
                       images={propertyImages}
                       title={property.title}
                       location={property.specific_location || 'Kenya'}
-                      price={property.listing_type === 'sale' 
-                        ? `KES ${property.sale_price?.toLocaleString()}`
-                        : `From KES ${property.rental_price?.toLocaleString()}/night`
-                      }
+                      price={formatPropertyPrice(property, 'rental')}
                       slug={property.slug}
                       bedrooms={property.bedrooms || 0}
                       beds={property.beds || 0}

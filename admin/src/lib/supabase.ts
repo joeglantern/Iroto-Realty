@@ -19,6 +19,7 @@ export interface Property {
   listing_type: 'rental' | 'sale' | 'both'
   rental_price?: number
   sale_price?: number
+  price_on_request?: boolean
   currency: string
   bedrooms?: number
   beds?: number

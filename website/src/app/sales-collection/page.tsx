@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { getProperties, getPropertyCategories, getFeaturedProperties, getSearchSuggestions } from '@/lib/data';
 import { getStorageUrl } from '@/lib/supabase';
+import { formatPropertyPrice } from '@/lib/price';
 import type { Property, PropertyCategory } from '@/lib/supabase';
 import PageLayout from '@/components/layout/PageLayout';
 import Link from 'next/link';
@@ -552,9 +553,7 @@ export default function SalesCollection() {
       images.push('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');
     }
     
-    const price = property.sale_price 
-      ? `${property.currency} ${property.sale_price?.toLocaleString()}`
-      : 'Contact for price';
+    const price = formatPropertyPrice(property, 'sale');
 
     return {
       id: property.id,
@@ -725,7 +724,7 @@ export default function SalesCollection() {
                                   {property.specific_location || 'Kenya Coast'}
                                 </p>
                                 <p className="font-semibold text-brown ml-2 text-sm sm:text-base">
-                                  {property.sale_price ? `KES ${property.sale_price.toLocaleString()}` : 'Contact for price'}
+                                  {formatPropertyPrice(property, 'sale')}
                                 </p>
                               </div>
                             </div>
@@ -834,10 +833,7 @@ export default function SalesCollection() {
                       images={propertyImages}
                       title={property.title}
                       location={property.specific_location || 'Kenya'}
-                      price={property.listing_type === 'sale' 
-                        ? `${property.currency || 'KES'} ${property.sale_price?.toLocaleString()}`
-                        : `From ${property.currency || 'KES'} ${property.rental_price?.toLocaleString()}/night`
-                      }
+                      price={formatPropertyPrice(property, 'sale')}
                       slug={property.slug}
                       forSale={true}
                     />

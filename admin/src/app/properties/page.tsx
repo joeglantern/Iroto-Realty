@@ -48,6 +48,7 @@ export default function Properties() {
     property_type_text: '', // Free text input for property type
     specific_location: '',
     listing_type: 'rental' as 'rental' | 'sale' | 'both',
+    price_on_request: true,
     rental_price: '',
     sale_price: '',
     bedrooms: '',
@@ -615,6 +616,7 @@ export default function Properties() {
       property_type_text: '',
       specific_location: '',
       listing_type: 'rental',
+      price_on_request: true,
       rental_price: '',
       sale_price: '',
       bedrooms: '',
@@ -1092,7 +1094,7 @@ export default function Properties() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Listing Type</label>
-                    <select 
+                    <select
                       value={formData.listing_type}
                       onChange={(e) => setFormData({ ...formData, listing_type: e.target.value as any })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
@@ -1102,26 +1104,55 @@ export default function Properties() {
                       <option value="both">Both</option>
                     </select>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Rental Price (KES/night)</label>
-                    <input
-                      type="number"
-                      value={formData.rental_price}
-                      onChange={(e) => setFormData({ ...formData, rental_price: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                      placeholder="25000"
-                    />
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Pricing</label>
+                    <div className="flex items-center space-x-6 py-2">
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="pricing_mode"
+                          checked={formData.price_on_request}
+                          onChange={() => setFormData({ ...formData, price_on_request: true })}
+                          className="h-4 w-4 text-primary border-gray-300 focus:ring-primary"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">Contact for price</span>
+                      </label>
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="pricing_mode"
+                          checked={!formData.price_on_request}
+                          onChange={() => setFormData({ ...formData, price_on_request: false })}
+                          className="h-4 w-4 text-primary border-gray-300 focus:ring-primary"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">Show price on website</span>
+                      </label>
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Sale Price (KES)</label>
-                    <input
-                      type="number"
-                      value={formData.sale_price}
-                      onChange={(e) => setFormData({ ...formData, sale_price: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                      placeholder="15000000"
-                    />
-                  </div>
+                  {!formData.price_on_request && (
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Rental Price (KES/night)</label>
+                        <input
+                          type="number"
+                          value={formData.rental_price}
+                          onChange={(e) => setFormData({ ...formData, rental_price: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                          placeholder="25000"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Sale Price (KES)</label>
+                        <input
+                          type="number"
+                          value={formData.sale_price}
+                          onChange={(e) => setFormData({ ...formData, sale_price: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                          placeholder="15000000"
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 {/* Property Details */}

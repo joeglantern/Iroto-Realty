@@ -4,6 +4,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { searchProperties, getAvailableAmenities, getPropertyStats, getPropertyCategories } from '@/lib/data';
 import { getStorageUrl } from '@/lib/supabase';
+import { formatPropertyPrice } from '@/lib/price';
 import type { Property, PropertyCategory } from '@/lib/supabase';
 import PageLayout from '@/components/layout/PageLayout';
 import Link from 'next/link';
@@ -877,9 +878,7 @@ function SearchPageContent() {
                   images.push('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');
                 }
 
-                const price = property.listing_type === 'sale'
-                  ? `${property.currency || 'KES'} ${property.sale_price?.toLocaleString()}`
-                  : `From ${property.currency || 'KES'} ${property.rental_price?.toLocaleString()}/night`;
+                const price = formatPropertyPrice(property);
 
                 return (
                   <PropertyCard

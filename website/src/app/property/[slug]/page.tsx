@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { getPropertyBySlug, getPropertyReviews } from '@/lib/data';
 import { getStorageUrl } from '@/lib/supabase';
+import { formatPropertyPrice, CONTACT_FOR_PRICE } from '@/lib/price';
 import type { Property, Review } from '@/lib/supabase';
 import { renderRichText } from '@/utils/sanitizeHtml';
 import PageLayout from '@/components/layout/PageLayout';
@@ -180,13 +181,8 @@ export default function PropertyDetail({ params }: PropertyDetailProps) {
 
   const heroImage = images[0];
   
-  const price = property.listing_type === 'sale' 
-    ? property.sale_price 
-      ? `${property.currency} ${property.sale_price?.toLocaleString()}`
-      : 'Contact for price'
-    : property.rental_price 
-      ? `From ${property.currency} ${property.rental_price?.toLocaleString()}/night`
-      : 'Contact for price';
+  const price = formatPropertyPrice(property);
+  const contactForPrice = price === CONTACT_FOR_PRICE;
 
 
   return (
@@ -234,6 +230,17 @@ export default function PropertyDetail({ params }: PropertyDetailProps) {
                 {/* Price and Property Details */}
                 <div className="mb-6 p-4 bg-gray-50 rounded-lg">
                   <div className="text-2xl font-bold text-[#713900] mb-2">{price}</div>
+                  {contactForPrice && (
+                    <Link
+                      href="/contact"
+                      className="inline-flex items-center bg-brown hover:bg-brown/90 text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-colors duration-200 mb-3"
+                    >
+                      Enquire About This Property
+                      <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                      </svg>
+                    </Link>
+                  )}
                   <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                     {property.bedrooms && (
                       <span className="flex items-center">
