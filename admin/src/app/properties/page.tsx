@@ -9,6 +9,7 @@ import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
 import { useSimpleAuth } from '@/contexts/SimpleAuthContext';
 import { getProperties, getPropertyCategories, getPropertyTypes, createProperty, createPropertyCategory, generateSlug, deleteProperty, deletePropertyCategory, updateProperty, updatePropertyCategory, getProperty } from '@/lib/properties';
 import { uploadFile, getStorageUrl, supabase } from '@/lib/supabase';
+import { toast } from '@/lib/notify';
 import type { Property, PropertyCategory, PropertyType } from '@/lib/supabase';
 import RichTextEditor from '@/components/RichTextEditor';
 
@@ -165,11 +166,11 @@ export default function Properties() {
     const isSupportedType = SUPPORTED_FORMATS.includes(file.type) || isAVIF;
 
     if (!isSupportedType) {
-      alert(`Unsupported format: ${file.type}. Please use JPEG, PNG, WebP, or AVIF.`);
+      toast.error(`Unsupported format: ${file.type}. Please use JPEG, PNG, WebP, or AVIF.`);
       return;
     }
     if (file.size > MAX_FILE_SIZE) {
-      alert(`File too large: ${(file.size / 1024 / 1024).toFixed(1)}MB. Maximum size is 10MB.`);
+      toast.error(`File too large: ${(file.size / 1024 / 1024).toFixed(1)}MB. Maximum size is 10MB.`);
       return;
     }
     setHeroImage(file);
@@ -195,7 +196,7 @@ export default function Properties() {
     });
 
     if (errors.length > 0) {
-      alert(`Some files were rejected:\n\n${errors.slice(0, 5).join('\n')}${errors.length > 5 ? '\n...' : ''}\n\nPlease use JPEG, PNG, WebP, or AVIF files under 10MB.`);
+      toast.warning(`Some files were rejected:\n\n${errors.slice(0, 5).join('\n')}${errors.length > 5 ? '\n...' : ''}\n\nPlease use JPEG, PNG, WebP, or AVIF files under 10MB.`);
     }
     if (validFiles.length === 0) return;
 
@@ -207,7 +208,7 @@ export default function Properties() {
     });
 
     if (merged.length > MAX_GALLERY_IMAGES) {
-      alert(`Too many images selected (${merged.length}). Maximum allowed is ${MAX_GALLERY_IMAGES}. Using first ${MAX_GALLERY_IMAGES} images.`);
+      toast.warning(`Too many images selected (${merged.length}). Maximum allowed is ${MAX_GALLERY_IMAGES}. Using first ${MAX_GALLERY_IMAGES} images.`);
       setGalleryImages(merged.slice(0, MAX_GALLERY_IMAGES));
     } else {
       setGalleryImages(merged);
@@ -246,7 +247,7 @@ export default function Properties() {
       setPropertyTypes(typesData);
       filterAndPaginateProperties(propertiesData);
     } catch (error) {
-      alert('Error loading data. Please try again.');
+      toast.error('Error loading data. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -362,7 +363,7 @@ export default function Properties() {
           ]);
           
           if (uploadError) {
-            alert(`Property created but hero image upload failed: ${uploadError.message}`);
+            toast.warning(`Property created but hero image upload failed: ${uploadError.message}`);
           } else {
             
             // Update property with hero image path
@@ -379,12 +380,12 @@ export default function Properties() {
             ]);
               
             if (updateError) {
-              alert(`Property created but failed to link hero image: ${updateError.message}`);
+              toast.warning(`Property created but failed to link hero image: ${updateError.message}`);
             } else {
             }
           }
         } catch (heroError) {
-          alert(`Property created but hero image failed: ${heroError instanceof Error ? heroError.message : 'Unknown error'}`);
+          toast.warning(`Property created but hero image failed: ${heroError instanceof Error ? heroError.message : 'Unknown error'}`);
         }
       }
 
@@ -393,7 +394,7 @@ export default function Properties() {
         
         // Validate gallery image count
         if (galleryImages.length > MAX_GALLERY_IMAGES) {
-          alert(`Too many gallery images (${galleryImages.length}). Maximum allowed is ${MAX_GALLERY_IMAGES}. Processing first ${MAX_GALLERY_IMAGES} images.`);
+          toast.warning(`Too many gallery images (${galleryImages.length}). Maximum allowed is ${MAX_GALLERY_IMAGES}. Processing first ${MAX_GALLERY_IMAGES} images.`);
         }
         
         const imagesToProcess = galleryImages.slice(0, MAX_GALLERY_IMAGES);
@@ -467,11 +468,11 @@ export default function Properties() {
         }
         
         if (failed > 0) {
-          alert(`Property created! ${completed} gallery images uploaded successfully, ${failed} failed.\n\nFailed images:\n${failedImages.slice(0, 3).join('\n')}${failedImages.length > 3 ? '\n...' : ''}`);
+          toast.warning(`Property created! ${completed} gallery images uploaded successfully, ${failed} failed.\n\nFailed images:\n${failedImages.slice(0, 3).join('\n')}${failedImages.length > 3 ? '\n...' : ''}`);
         }
       }
 
-      alert('Property created successfully!');
+      toast.success('Property created successfully!');
       setShowUploadModal(false);
       resetForm();
       
@@ -490,11 +491,11 @@ export default function Properties() {
     } catch (error) {
       
       if (error instanceof Error && error.message.includes('timed out')) {
-        alert(`Operation timed out: ${error.message}. Please check your internet connection and try again.`);
+        toast.error(`Operation timed out: ${error.message}. Please check your internet connection and try again.`);
       } else if (error instanceof Error && error.name === 'AbortError') {
-        alert('Operation was cancelled due to timeout. Please try again with a better internet connection.');
+        toast.error('Operation was cancelled due to timeout. Please try again with a better internet connection.');
       } else {
-        alert(`Error creating property: ${error instanceof Error ? error.message : 'Unknown error'}. Check console for details.`);
+        toast.error(`Error creating property: ${error instanceof Error ? error.message : 'Unknown error'}. Check console for details.`);
       }
     } finally {
       clearTimeout(timeoutId);
@@ -540,7 +541,7 @@ export default function Properties() {
           const { data: uploadData, error: uploadError } = await uploadFile('property-images', imagePath, categoryImage);
 
           if (uploadError) {
-            alert(`Category updated but image upload failed: ${uploadError.message}`);
+            toast.warning(`Category updated but image upload failed: ${uploadError.message}`);
           } else {
             // Update category with hero image path
             const { error: updateError } = await supabase
@@ -549,13 +550,13 @@ export default function Properties() {
               .eq('id', updatedCategory.id);
 
             if (updateError) {
-              alert(`Category updated but failed to link image: ${updateError.message}`);
+              toast.warning(`Category updated but failed to link image: ${updateError.message}`);
             } else {
             }
           }
         }
 
-        alert('Category updated successfully!');
+        toast.success('Category updated successfully!');
         handleCancelEdit();
         loadData(); // Reload categories
       } else {
@@ -579,7 +580,7 @@ export default function Properties() {
           const { data: uploadData, error: uploadError } = await uploadFile('property-images', imagePath, categoryImage);
 
           if (uploadError) {
-            alert(`Category created but image upload failed: ${uploadError.message}`);
+            toast.warning(`Category created but image upload failed: ${uploadError.message}`);
           } else {
             // Update category with hero image path using Supabase directly
             const { error: updateError } = await supabase
@@ -588,19 +589,19 @@ export default function Properties() {
               .eq('id', category.id);
 
             if (updateError) {
-              alert(`Category created but failed to link image: ${updateError.message}`);
+              toast.warning(`Category created but failed to link image: ${updateError.message}`);
             } else {
             }
           }
         }
 
-        alert('Category created successfully!');
+        toast.success('Category created successfully!');
         setNewCategory({ name: '', description: '' });
         setCategoryImage(null);
         loadData(); // Reload categories
       }
     } catch (error) {
-      alert(`Error ${isEditMode ? 'updating' : 'creating'} category: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`);
+      toast.error(`Error ${isEditMode ? 'updating' : 'creating'} category: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`);
     }
   };
 
@@ -650,17 +651,17 @@ export default function Properties() {
       setDeleting(true);
       if (itemToDelete.type === 'property') {
         await deleteProperty(itemToDelete.id);
-        alert('Property deleted successfully!');
+        toast.success('Property deleted successfully!');
       } else {
         await deletePropertyCategory(itemToDelete.id);
-        alert('Category deleted successfully!');
+        toast.success('Category deleted successfully!');
       }
       
       setShowDeleteModal(false);
       setItemToDelete(null);
       loadData(); // Reload data
     } catch (error) {
-      alert(`Error deleting ${itemToDelete.type}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(`Error deleting ${itemToDelete.type}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setDeleting(false);
     }

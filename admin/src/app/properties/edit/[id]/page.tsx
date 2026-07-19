@@ -8,6 +8,7 @@ import SimpleProtectedRoute from '@/components/SimpleProtectedRoute';
 import { useSimpleAuth } from '@/contexts/SimpleAuthContext';
 import { getProperty, updateProperty, getPropertyCategories, getPropertyTypes } from '@/lib/properties';
 import { uploadFile, deleteFile, getStorageUrl, supabase } from '@/lib/supabase';
+import { toast, confirmDialog } from '@/lib/notify';
 import type { Property, PropertyCategory, PropertyType } from '@/lib/supabase';
 import RichTextEditor from '@/components/RichTextEditor';
 
@@ -101,7 +102,7 @@ export default function EditProperty() {
     }
     const validationError = validateImageFile(file);
     if (validationError) {
-      alert(`Invalid hero image: ${validationError}`);
+      toast.error(`Invalid hero image: ${validationError}`);
       return;
     }
     setHeroImage(file);
@@ -123,7 +124,7 @@ export default function EditProperty() {
     });
 
     if (invalidFiles.length > 0) {
-      alert(`Invalid gallery images:\n${invalidFiles.join('\n')}`);
+      toast.error(`Invalid gallery images:\n${invalidFiles.join('\n')}`);
     }
     if (validFiles.length === 0) return;
 
@@ -285,13 +286,18 @@ export default function EditProperty() {
   };
 
   const handleDeleteImage = async (image: any) => {
-    if (!confirm('Delete this image? This cannot be undone.')) return;
+    const confirmed = await confirmDialog('This cannot be undone.', {
+      title: 'Delete this image?',
+      confirmText: 'Delete',
+      danger: true
+    });
+    if (!confirmed) return;
 
     setDeletingImageId(image.id);
     try {
       const { error: storageError } = await deleteFile('property-images', image.image_path);
       if (storageError) {
-        alert(`Failed to delete image from storage: ${storageError.message}`);
+        toast.error(`Failed to delete image from storage: ${storageError.message}`);
         return;
       }
 
@@ -301,13 +307,13 @@ export default function EditProperty() {
         .eq('id', image.id);
 
       if (dbError) {
-        alert(`Image removed from storage but failed to remove from database: ${dbError.message}`);
+        toast.error(`Image removed from storage but failed to remove from database: ${dbError.message}`);
         return;
       }
 
       setExistingImages(prev => prev.filter(img => img.id !== image.id));
     } catch {
-      alert('Failed to delete image. Please try again.');
+      toast.error('Failed to delete image. Please try again.');
     } finally {
       setDeletingImageId(null);
     }
@@ -341,7 +347,7 @@ export default function EditProperty() {
         // Validate and process hero image
         const validationError = validateImageFile(heroImage);
         if (validationError) {
-          alert(`Hero image error: ${validationError}`);
+          toast.error(`Hero image error: ${validationError}`);
           return;
         }
         
@@ -351,7 +357,7 @@ export default function EditProperty() {
         const { data: uploadData, error: uploadError } = await uploadFile('property-images', heroPath, processedHeroImage);
         
         if (uploadError) {
-          alert(`Property updated but hero image upload failed: ${uploadError.message}`);
+          toast.warning(`Property updated but hero image upload failed: ${uploadError.message}`);
         } else {
           // Update property with hero image path
           const { error: updateError } = await supabase
@@ -360,7 +366,7 @@ export default function EditProperty() {
             .eq('id', updatedProperty.id);
             
           if (updateError) {
-            alert(`Property updated but failed to link hero image: ${updateError.message}`);
+            toast.warning(`Property updated but failed to link hero image: ${updateError.message}`);
           } else {
           }
         }
@@ -373,7 +379,7 @@ export default function EditProperty() {
         for (const image of galleryImages) {
           const validationError = validateImageFile(image);
           if (validationError) {
-            alert(`Gallery image error (${image.name}): ${validationError}`);
+            toast.error(`Gallery image error (${image.name}): ${validationError}`);
             return;
           }
         }
@@ -387,7 +393,7 @@ export default function EditProperty() {
           const { data: uploadData, error: uploadError } = await uploadFile('property-images', galleryPath, processedImage);
           
           if (uploadError) {
-            alert(`Gallery image ${index + 1} upload failed: ${uploadError.message}`);
+            toast.warning(`Gallery image ${index + 1} upload failed: ${uploadError.message}`);
           } else {
             // Add to property_images table
             const { error: insertError } = await supabase
@@ -400,18 +406,18 @@ export default function EditProperty() {
               });
               
             if (insertError) {
-              alert(`Gallery image uploaded but failed to link: ${insertError.message}`);
+              toast.warning(`Gallery image uploaded but failed to link: ${insertError.message}`);
             } else {
             }
           }
         }
       }
 
-      alert('Property updated successfully!');
+      toast.success('Property updated successfully!');
       router.push('/properties'); // Navigate back to properties list
       
     } catch (error) {
-      alert(`Error updating property: ${error instanceof Error ? error.message : 'Unknown error'}. Check console for details.`);
+      toast.error(`Error updating property: ${error instanceof Error ? error.message : 'Unknown error'}. Check console for details.`);
     } finally {
       setSaving(false);
     }

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import SimpleProtectedRoute from '@/components/SimpleProtectedRoute';
 import AdminHeader from '@/components/layout/AdminHeader';
 import { uploadFile, deleteFile, getStorageUrl, supabase } from '@/lib/supabase';
+import { toast, confirmDialog } from '@/lib/notify';
 
 interface ImageSlot {
   key: string;
@@ -63,7 +64,7 @@ export default function SiteContent() {
       });
       setValues(map);
     } catch {
-      alert('Error loading site images. Please refresh and try again.');
+      toast.error('Error loading site images. Please refresh and try again.');
     } finally {
       setLoading(false);
     }
@@ -73,11 +74,11 @@ export default function SiteContent() {
     if (!file) return;
 
     if (!SUPPORTED_FORMATS.includes(file.type)) {
-      alert('Unsupported format. Please use JPEG, PNG, or WebP.');
+      toast.error('Unsupported format. Please use JPEG, PNG, or WebP.');
       return;
     }
     if (file.size > MAX_FILE_SIZE) {
-      alert(`File too large: ${(file.size / 1024 / 1024).toFixed(1)}MB. Maximum size is 10MB.`);
+      toast.error(`File too large: ${(file.size / 1024 / 1024).toFixed(1)}MB. Maximum size is 10MB.`);
       return;
     }
 
@@ -120,9 +121,9 @@ export default function SiteContent() {
         delete next[key];
         return next;
       });
-      alert('Image updated! The website will show the new image immediately.');
+      toast.success('Image updated! The website will show the new image immediately.');
     } catch (error) {
-      alert(`Failed to save image: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(`Failed to save image: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setSavingKey(null);
     }
@@ -131,7 +132,12 @@ export default function SiteContent() {
   const handleRemove = async (key: string) => {
     const currentPath = values[key];
     if (!currentPath || savingKey) return;
-    if (!confirm('Remove this photo? The website will go back to the default image.')) return;
+    const confirmed = await confirmDialog('The website will go back to the default image.', {
+      title: 'Remove this photo?',
+      confirmText: 'Remove',
+      danger: true
+    });
+    if (!confirmed) return;
 
     try {
       setSavingKey(key);
@@ -155,9 +161,9 @@ export default function SiteContent() {
         delete next[key];
         return next;
       });
-      alert('Photo removed. The website is back to the default image.');
+      toast.success('Photo removed. The website is back to the default image.');
     } catch (error) {
-      alert(`Failed to remove photo: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(`Failed to remove photo: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setSavingKey(null);
     }

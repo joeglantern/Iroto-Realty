@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { supabase, TravelSection } from '@/lib/supabase';
+import { toast, confirmDialog } from '@/lib/notify';
 import SimpleProtectedRoute from '@/components/SimpleProtectedRoute';
 import AdminHeader from '@/components/layout/AdminHeader';
 import RichTextEditor from '@/components/RichTextEditor';
@@ -85,7 +86,7 @@ function TravelPages() {
       setShowForm(false);
       loadSections();
     } catch (error) {
-      alert('Error saving section. Please try again.');
+      toast.error('Error saving section. Please try again.');
     }
   };
 
@@ -100,7 +101,12 @@ function TravelPages() {
   };
 
   const handleDelete = async (section: TravelSection) => {
-    if (!confirm('Are you sure you want to delete this section?')) return;
+    const confirmed = await confirmDialog('This section will be removed from the travel page.', {
+      title: 'Delete this section?',
+      confirmText: 'Delete',
+      danger: true
+    });
+    if (!confirmed) return;
 
     try {
       const { error } = await supabase
@@ -111,7 +117,7 @@ function TravelPages() {
       if (error) throw error;
       loadSections();
     } catch (error) {
-      alert('Error deleting section. Please try again.');
+      toast.error('Error deleting section. Please try again.');
     }
   };
 
@@ -149,7 +155,7 @@ function TravelPages() {
 
       loadSections();
     } catch (error) {
-      alert('Error reordering section. Please try again.');
+      toast.error('Error reordering section. Please try again.');
     }
   };
 

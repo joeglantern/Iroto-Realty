@@ -10,6 +10,7 @@ import { useSimpleAuth } from '@/contexts/SimpleAuthContext';
 import { getBlogPosts, getBlogCategories, createBlogPost, createBlogCategory, deleteBlogCategory, generateSlug, deleteBlogPost, updateBlogPost, getBlogPost } from '@/lib/blog';
 import { uploadFile, supabase } from '@/lib/supabase';
 import type { BlogPost, BlogCategory } from '@/lib/supabase';
+import { toast } from '@/lib/notify';
 import RichTextEditor from '@/components/RichTextEditor';
 
 function Blog() {
@@ -192,7 +193,7 @@ function Blog() {
       setCategories(categoriesData || []);
       filterAndPaginateBlogPosts(postsData || []);
     } catch (error) {
-      alert('Error loading blog data. Please try again.');
+      toast.error('Error loading blog data. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -285,7 +286,7 @@ function Blog() {
         // Validate and process featured image
         const validationError = validateImageFile(featuredImage);
         if (validationError) {
-          alert(`Featured image error: ${validationError}`);
+          toast.error(`Featured image error: ${validationError}`);
           return;
         }
         
@@ -295,7 +296,7 @@ function Blog() {
         const { data: uploadData, error: uploadError } = await uploadFile('blog-images', imagePath, processedImage);
         
         if (uploadError) {
-          alert(`Blog post created but featured image upload failed: ${uploadError.message}`);
+          toast.warning(`Blog post created but featured image upload failed: ${uploadError.message}`);
         } else {
           // Update post with featured image path
           const { error: updateError } = await supabase
@@ -304,20 +305,20 @@ function Blog() {
             .eq('id', post.id);
             
           if (updateError) {
-            alert(`Blog post created but failed to link featured image: ${updateError.message}`);
+            toast.warning(`Blog post created but failed to link featured image: ${updateError.message}`);
           } else {
           }
         }
       }
 
-      alert(isEditing ? 'Blog post updated successfully!' : 'Blog post created successfully!');
+      toast.success(isEditing ? 'Blog post updated successfully!' : 'Blog post created successfully!');
       setShowUploadModal(false);
       setShowEditModal(false);
       setEditingPost(null);
       resetForm();
       loadData(); // Reload data
     } catch (error) {
-      alert(`Error ${isEditing ? 'updating' : 'creating'} blog post: ${error instanceof Error ? error.message : 'Unknown error'}. Check console for details.`);
+      toast.error(`Error ${isEditing ? 'updating' : 'creating'} blog post: ${error instanceof Error ? error.message : 'Unknown error'}. Check console for details.`);
     } finally {
       setUploading(false);
     }
@@ -362,7 +363,7 @@ function Blog() {
       
       setShowEditModal(true);
     } catch (error) {
-      alert('Error loading blog post details. Please try again.');
+      toast.error('Error loading blog post details. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -380,13 +381,13 @@ function Blog() {
     try {
       setDeleting(true);
       await deleteBlogPost(postToDelete.id);
-      alert('Blog post deleted successfully!');
+      toast.success('Blog post deleted successfully!');
       
       setShowDeleteModal(false);
       setPostToDelete(null);
       loadData(); // Reload data
     } catch (error) {
-      alert(`Error deleting blog post: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(`Error deleting blog post: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setDeleting(false);
     }
@@ -403,7 +404,7 @@ function Blog() {
   const handleCategorySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCategory.name.trim()) {
-      alert('Please enter a category name');
+      toast.warning('Please enter a category name');
       return;
     }
 
@@ -421,10 +422,10 @@ function Blog() {
       if (category) {
         setCategories([...categories, category]);
         setNewCategory({ name: '' });
-        alert('Category created successfully!');
+        toast.success('Category created successfully!');
       }
     } catch (error) {
-      alert('Error creating category. Please try again.');
+      toast.error('Error creating category. Please try again.');
     } finally {
       setUploading(false);
     }
@@ -440,9 +441,9 @@ function Blog() {
       setCategories(categories.filter(c => c.id !== categoryToDelete.id));
       setShowCategoryDeleteModal(false);
       setCategoryToDelete(null);
-      alert('Category deleted successfully!');
+      toast.success('Category deleted successfully!');
     } catch (error) {
-      alert('Error deleting category. Please try again.');
+      toast.error('Error deleting category. Please try again.');
     } finally {
       setDeletingCategory(false);
     }
@@ -854,7 +855,7 @@ function Blog() {
                         if (file) {
                           const validationError = validateImageFile(file);
                           if (validationError) {
-                            alert(`Invalid featured image: ${validationError}`);
+                            toast.error(`Invalid featured image: ${validationError}`);
                             e.target.value = '';
                             return;
                           }

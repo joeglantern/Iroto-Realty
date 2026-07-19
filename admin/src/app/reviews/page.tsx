@@ -10,6 +10,7 @@ import { useSimpleAuth } from '@/contexts/SimpleAuthContext';
 import { getReviews, createReview, deleteReview, updateReview, getReview } from '@/lib/reviews';
 import { getProperties } from '@/lib/properties';
 import { uploadFile, supabase } from '@/lib/supabase';
+import { toast } from '@/lib/notify';
 import type { Review, Property } from '@/lib/supabase';
 import {
   StarIcon,
@@ -65,7 +66,7 @@ function Reviews() {
       setReviews(reviewsData || []);
       setProperties(propertiesData || []);
     } catch (error) {
-      alert('Error loading reviews data. Please try again.');
+      toast.error('Error loading reviews data. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -102,7 +103,7 @@ function Reviews() {
         const { data: uploadData, error: uploadError } = await uploadFile('review-images', photoPath, reviewerPhoto);
         
         if (uploadError) {
-          alert(`Review created but photo upload failed: ${uploadError.message}`);
+          toast.warning(`Review created but photo upload failed: ${uploadError.message}`);
         } else {
           // Update review with photo path
           const { error: updateError } = await supabase
@@ -111,13 +112,13 @@ function Reviews() {
             .eq('id', review.id);
             
           if (updateError) {
-            alert(`Review created but failed to link photo: ${updateError.message}`);
+            toast.warning(`Review created but failed to link photo: ${updateError.message}`);
           } else {
           }
         }
       }
 
-      alert(isEditing ? 'Review updated successfully!' : 'Review added successfully!');
+      toast.success(isEditing ? 'Review updated successfully!' : 'Review added successfully!');
       setShowUploadModal(false);
       setShowEditModal(false);
       setEditingReview(null);
@@ -125,7 +126,7 @@ function Reviews() {
       loadData(); // Reload data
     } catch (error) {
       const action = editingReview ? 'updating' : 'creating';
-      alert(`Error ${action} review: ${error instanceof Error ? error.message : 'Unknown error'}. Check console for details.`);
+      toast.error(`Error ${action} review: ${error instanceof Error ? error.message : 'Unknown error'}. Check console for details.`);
     } finally {
       setUploading(false);
     }
@@ -162,7 +163,7 @@ function Reviews() {
       
       setShowEditModal(true);
     } catch (error) {
-      alert('Error loading review details. Please try again.');
+      toast.error('Error loading review details. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -180,13 +181,13 @@ function Reviews() {
     try {
       setDeleting(true);
       await deleteReview(reviewToDelete.id);
-      alert('Review deleted successfully!');
+      toast.success('Review deleted successfully!');
       
       setShowDeleteModal(false);
       setReviewToDelete(null);
       loadData(); // Reload data
     } catch (error) {
-      alert(`Error deleting review: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(`Error deleting review: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setDeleting(false);
     }
@@ -203,10 +204,10 @@ function Reviews() {
   const handleToggleFeatured = async (reviewId: string, currentStatus: boolean) => {
     try {
       await updateReview(reviewId, { is_featured: !currentStatus });
-      alert(`Review ${!currentStatus ? 'marked as featured' : 'removed from featured'}!`);
+      toast.success(`Review ${!currentStatus ? 'marked as featured' : 'removed from featured'}!`);
       loadData(); // Reload data
     } catch (error) {
-      alert(`Error updating review: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(`Error updating review: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 

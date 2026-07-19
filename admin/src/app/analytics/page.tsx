@@ -7,6 +7,7 @@ import SimpleProtectedRoute from '@/components/SimpleProtectedRoute';
 import AdminHeader from '@/components/layout/AdminHeader';
 import { useSimpleAuth } from '@/contexts/SimpleAuthContext';
 import { getAnalytics } from '@/lib/analytics';
+import { toast } from '@/lib/notify';
 
 interface AnalyticsData {
   dailyMetrics: any[];
@@ -44,7 +45,7 @@ function Analytics() {
       const data = await getAnalytics(dateRange);
       setAnalytics(data);
     } catch (error) {
-      alert('Error loading analytics data. Please try again.');
+      toast.error('Error loading analytics data. Please try again.');
     } finally {
       setLoading(false);
     }
