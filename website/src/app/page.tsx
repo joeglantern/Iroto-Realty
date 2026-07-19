@@ -303,13 +303,14 @@ function HeroCarousel() {
               className="w-full h-full bg-cover bg-no-repeat animate-kenburns"
               style={{
                 backgroundImage: `url("${image}")`,
-                backgroundPosition: 'center 30%' // Better positioning for mobile
+                backgroundPosition: 'center 30%', // Better positioning for mobile
+                filter: 'saturate(1.15) brightness(1.05)' // Vibrant, bright photos
               }}
             />
             {/* Mobile-optimized image overlay for better cropping */}
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/20 md:hidden" />
             {/* Faint dark overlay keeps the hero text and search bar readable over any uploaded photo */}
-            <div className="absolute inset-0 bg-black/50" />
+            <div className="absolute inset-0 bg-black/25" />
           </div>
         ))}
       </div>

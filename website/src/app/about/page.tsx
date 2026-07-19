@@ -31,11 +31,12 @@ export default function About() {
           <div
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
             style={{
-              backgroundImage: `url("${heroImage}")`
+              backgroundImage: `url("${heroImage}")`,
+              filter: 'saturate(1.15) brightness(1.05)' // Vibrant, bright photos
             }}
           />
           {/* Faint dark overlay keeps the hero text readable over any uploaded photo */}
-          <div className="absolute inset-0 bg-black/50" />
+          <div className="absolute inset-0 bg-black/30" />
 
           <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-4">
             <h1 className="text-4xl lg:text-6xl font-bold mb-6 text-[#713900] drop-shadow-lg">
