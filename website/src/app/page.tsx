@@ -309,7 +309,8 @@ function HeroCarousel() {
             />
             {/* Mobile-optimized image overlay for better cropping */}
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/20 md:hidden" />
-            <div className="absolute inset-0 bg-black/40" />
+            {/* Faint dark overlay keeps the hero text and search bar readable over any uploaded photo */}
+            <div className="absolute inset-0 bg-black/50" />
           </div>
         ))}
         

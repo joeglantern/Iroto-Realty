@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import SimpleProtectedRoute from '@/components/SimpleProtectedRoute';
 import AdminHeader from '@/components/layout/AdminHeader';
-import { uploadFile, getStorageUrl, supabase } from '@/lib/supabase';
+import { uploadFile, deleteFile, getStorageUrl, supabase } from '@/lib/supabase';
 
 interface ImageSlot {
   key: string;
@@ -92,6 +92,7 @@ export default function SiteContent() {
     try {
       setSavingKey(key);
 
+      const oldPath = values[key];
       const path = `site/${key}/${Date.now()}-${file.name}`;
       const { error: uploadError } = await uploadFile('property-images', path, file);
       if (uploadError) throw new Error(uploadError.message || 'Upload failed');
@@ -107,6 +108,11 @@ export default function SiteContent() {
         }, { onConflict: 'setting_key' });
       if (upsertError) throw new Error(upsertError.message || 'Failed to save setting');
 
+      // Clean up the replaced file (best effort - the setting already points to the new one)
+      if (oldPath && oldPath !== path) {
+        await deleteFile('property-images', oldPath).catch(() => {});
+      }
+
       setValues(prev => ({ ...prev, [key]: path }));
       setPendingFiles(prev => ({ ...prev, [key]: null }));
       setPreviews(prev => {
@@ -117,6 +123,41 @@ export default function SiteContent() {
       alert('Image updated! The website will show the new image immediately.');
     } catch (error) {
       alert(`Failed to save image: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setSavingKey(null);
+    }
+  };
+
+  const handleRemove = async (key: string) => {
+    const currentPath = values[key];
+    if (!currentPath || savingKey) return;
+    if (!confirm('Remove this photo? The website will go back to the default image.')) return;
+
+    try {
+      setSavingKey(key);
+
+      const { error: upsertError } = await supabase
+        .from('system_settings')
+        .upsert({
+          setting_key: key,
+          setting_value: '',
+          setting_type: 'text',
+          is_public: true,
+          category: 'site_images'
+        }, { onConflict: 'setting_key' });
+      if (upsertError) throw new Error(upsertError.message || 'Failed to remove setting');
+
+      // Clean up the stored file (best effort - the setting is already cleared)
+      await deleteFile('property-images', currentPath).catch(() => {});
+
+      setValues(prev => {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      });
+      alert('Photo removed. The website is back to the default image.');
+    } catch (error) {
+      alert(`Failed to remove photo: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setSavingKey(null);
     }
@@ -231,6 +272,23 @@ export default function SiteContent() {
                               Cancel
                             </button>
                           </>
+                        )}
+
+                        {currentPath && !pending && (
+                          <button
+                            onClick={() => handleRemove(slot.key)}
+                            disabled={isSaving}
+                            className="px-4 py-2 border border-red-300 text-red-600 rounded-md hover:bg-red-50 transition-colors disabled:opacity-50 text-sm flex items-center"
+                          >
+                            {isSaving ? (
+                              <>
+                                <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin mr-2"></div>
+                                Removing...
+                              </>
+                            ) : (
+                              'Remove Photo'
+                            )}
+                          </button>
                         )}
                       </div>
                     </div>

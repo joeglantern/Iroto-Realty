@@ -34,13 +34,14 @@ export default function About() {
               backgroundImage: `url("${heroImage}")`
             }}
           />
-          <div className="absolute inset-0 bg-black/40" />
-          
+          {/* Faint dark overlay keeps the hero text readable over any uploaded photo */}
+          <div className="absolute inset-0 bg-black/50" />
+
           <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-4">
-            <h1 className="text-4xl lg:text-6xl font-bold mb-6 text-[#713900]">
+            <h1 className="text-4xl lg:text-6xl font-bold mb-6 text-[#713900] drop-shadow-lg">
               About <span className="text-[#713900]">Iroto Realty</span>
             </h1>
-            <p className="text-xl lg:text-2xl text-white/90">
+            <p className="text-xl lg:text-2xl text-white/90 drop-shadow">
               Your trusted partner in premium Kenyan real estate
             </p>
           </div>
