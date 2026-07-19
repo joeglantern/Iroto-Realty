@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { getFeaturedProperties, getFeaturedReviews, getSearchSuggestions } from '@/lib/data';
+import { getFeaturedProperties, getFeaturedReviews, getSearchSuggestions, getSiteImages } from '@/lib/data';
 import { getStorageUrl } from '@/lib/supabase';
 import type { Property, Review } from '@/lib/supabase';
 import PageLayout from '@/components/layout/PageLayout';
@@ -151,17 +151,26 @@ function HeroCarousel() {
   const [isLoading, setIsLoading] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
+  const [heroImage, setHeroImage] = useState('/Home Page.jpg');
+
+  useEffect(() => {
+    getSiteImages().then((images) => {
+      if (images.home_hero_image) {
+        setHeroImage(getStorageUrl('property-images', images.home_hero_image));
+      }
+    });
+  }, []);
 
   const slides = [
     {
       id: 1,
-      image: '/Home Page.jpg',
+      image: heroImage,
       title: 'IROTO',
       highlight: 'REALTY'
     },
     {
       id: 4,
-      image: '/Home Page.jpg',
+      image: heroImage,
       title: 'IROTO',
       highlight: 'REALTY'
     }

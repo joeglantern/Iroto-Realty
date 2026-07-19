@@ -19,6 +19,7 @@ export default function AdminHeader() {
     { label: 'Reviews', href: '/reviews', path: '/reviews' },
     { label: 'Messages', href: '/messages', path: '/messages' },
     { label: 'Travel Pages', href: '/travel-pages', path: '/travel-pages' },
+    { label: 'Site Content', href: '/site-content', path: '/site-content' },
     { label: 'Analytics', href: '/analytics', path: '/analytics' },
   ];
 

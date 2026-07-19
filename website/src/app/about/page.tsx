@@ -1,18 +1,37 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import PageLayout from '@/components/layout/PageLayout';
+import { getSiteImages } from '@/lib/data';
+import { getStorageUrl } from '@/lib/supabase';
 import { House, Suitcase, CurrencyDollar, UsersThree, MapPin, CheckSquare, ShieldCheck } from '@phosphor-icons/react';
 
+const DEFAULT_HERO_IMAGE = '/About Us_.jpg';
+const DEFAULT_STORY_IMAGE = 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+
 export default function About() {
+  const [siteImages, setSiteImages] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    getSiteImages().then(setSiteImages);
+  }, []);
+
+  const heroImage = siteImages.about_hero_image
+    ? getStorageUrl('property-images', siteImages.about_hero_image)
+    : DEFAULT_HERO_IMAGE;
+  const storyImage = siteImages.about_story_image
+    ? getStorageUrl('property-images', siteImages.about_story_image)
+    : DEFAULT_STORY_IMAGE;
+
   return (
     <PageLayout>
       <div>
         {/* Hero Section */}
         <section className="relative h-[60vh] flex items-center justify-center">
-          <div 
+          <div
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
             style={{
-              backgroundImage: 'url("/About Us_.jpg")'
+              backgroundImage: `url("${heroImage}")`
             }}
           />
           <div className="absolute inset-0 bg-black/40" />
@@ -53,10 +72,10 @@ export default function About() {
                 </p>
               </div>
               <div className="relative h-96 rounded-lg overflow-hidden">
-                <div 
+                <div
                   className="w-full h-full bg-cover bg-center bg-no-repeat"
                   style={{
-                    backgroundImage: 'url("https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80")'
+                    backgroundImage: `url("${storyImage}")`
                   }}
                 />
               </div>

@@ -93,6 +93,51 @@ export default function EditProperty() {
     return null;
   };
 
+  // Validate and set the hero image (from file input or drag & drop)
+  const handleHeroFile = (file: File | null) => {
+    if (!file) {
+      setHeroImage(null);
+      return;
+    }
+    const validationError = validateImageFile(file);
+    if (validationError) {
+      alert(`Invalid hero image: ${validationError}`);
+      return;
+    }
+    setHeroImage(file);
+  };
+
+  // Validate and ADD gallery files to the current selection (from file input or drag & drop).
+  // New picks are appended so images can be added in several batches before saving.
+  const addGalleryFiles = (files: File[]) => {
+    const invalidFiles: string[] = [];
+    const validFiles: File[] = [];
+
+    files.forEach(file => {
+      const validationError = validateImageFile(file);
+      if (validationError) {
+        invalidFiles.push(`${file.name}: ${validationError}`);
+      } else {
+        validFiles.push(file);
+      }
+    });
+
+    if (invalidFiles.length > 0) {
+      alert(`Invalid gallery images:\n${invalidFiles.join('\n')}`);
+    }
+    if (validFiles.length === 0) return;
+
+    setGalleryImages(prev => {
+      const merged = [...prev];
+      validFiles.forEach(file => {
+        if (!merged.some(f => f.name === file.name && f.size === file.size)) {
+          merged.push(file);
+        }
+      });
+      return merged;
+    });
+  };
+
   const processImage = async (file: File): Promise<File> => {
     const isAVIF = file.type === 'image/avif' || file.name.toLowerCase().endsWith('.avif');
     
@@ -815,7 +860,14 @@ export default function EditProperty() {
                   {/* Hero Image Upload */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">New Hero Image</label>
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition-colors">
+                    <div
+                      className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition-colors"
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        handleHeroFile(e.dataTransfer.files?.[0] || null);
+                      }}
+                    >
                       <svg className="w-10 h-10 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
@@ -826,18 +878,8 @@ export default function EditProperty() {
                         className="hidden" 
                         id="property-hero-image"
                         onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const validationError = validateImageFile(file);
-                            if (validationError) {
-                              alert(`Invalid hero image: ${validationError}`);
-                              e.target.value = '';
-                              return;
-                            }
-                            setHeroImage(file);
-                          } else {
-                            setHeroImage(null);
-                          }
+                          handleHeroFile(e.target.files?.[0] || null);
+                          e.target.value = '';
                         }}
                       />
                       <label 
@@ -853,7 +895,14 @@ export default function EditProperty() {
                   {/* Gallery Images Upload */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">New Gallery Images</label>
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition-colors">
+                    <div
+                      className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition-colors"
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        addGalleryFiles(Array.from(e.dataTransfer.files || []));
+                      }}
+                    >
                       <svg className="w-10 h-10 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
@@ -867,28 +916,9 @@ export default function EditProperty() {
                         className="hidden" 
                         id="property-gallery-images"
                         onChange={(e) => {
-                          const files = Array.from(e.target.files || []);
-                          
-                          // Validate all files
-                          const invalidFiles: string[] = [];
-                          const validFiles: File[] = [];
-                          
-                          files.forEach(file => {
-                            const validationError = validateImageFile(file);
-                            if (validationError) {
-                              invalidFiles.push(`${file.name}: ${validationError}`);
-                            } else {
-                              validFiles.push(file);
-                            }
-                          });
-                          
-                          if (invalidFiles.length > 0) {
-                            alert(`Invalid gallery images:\n${invalidFiles.join('\n')}`);
-                            e.target.value = '';
-                            return;
-                          }
-                          
-                          setGalleryImages(validFiles);
+                          addGalleryFiles(Array.from(e.target.files || []));
+                          // Clear the input so the same files can be selected again if needed
+                          e.target.value = '';
                         }}
                       />
                       <label 
@@ -897,7 +927,7 @@ export default function EditProperty() {
                       >
                         Choose Images
                       </label>
-                      <p className="text-xs text-gray-500 mt-2">JPG, PNG, WebP, AVIF up to 10MB each. Multiple images allowed.</p>
+                      <p className="text-xs text-gray-500 mt-2">JPG, PNG, WebP, AVIF up to 10MB each. You can select several at once, or add more in batches — new picks are added to the list.</p>
                       {galleryImages.length > 0 && (
                         <div className="mt-4">
                           <div className="flex flex-wrap gap-2 justify-center">

@@ -1,6 +1,29 @@
 import { supabase } from './supabase'
 import type { Property, PropertyImage, PropertyCategory, BlogPost, BlogCategory, Review } from './supabase'
 
+// Site image settings (admin-editable photos for homepage/about page)
+export async function getSiteImages(): Promise<Record<string, string>> {
+  try {
+    const { data, error } = await supabase
+      .from('system_settings')
+      .select('setting_key, setting_value')
+      .eq('category', 'site_images')
+      .eq('is_public', true)
+
+    if (error || !data) {
+      return {}
+    }
+
+    const map: Record<string, string> = {}
+    data.forEach((row: { setting_key: string; setting_value: string | null }) => {
+      if (row.setting_value) map[row.setting_key] = row.setting_value
+    })
+    return map
+  } catch (error) {
+    return {}
+  }
+}
+
 // Properties data fetching functions
 export async function getFeaturedProperties(limit: number = 6): Promise<Property[]> {
   try {

@@ -71,7 +71,7 @@ export default function Properties() {
   // Supported image formats and max sizes
   const SUPPORTED_FORMATS = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/avif'];
   const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-  const MAX_GALLERY_IMAGES = 15; // Reasonable limit for performance
+  const MAX_GALLERY_IMAGES = 30; // Reasonable limit for performance
 
   // Image compression and validation utility
   const processImage = async (file: File): Promise<File> => {
@@ -153,6 +153,65 @@ export default function Properties() {
       img.onerror = () => reject(new Error('Failed to load image for processing'));
       img.src = URL.createObjectURL(file);
     });
+  };
+
+  // Validate and set the hero image (from file input or drag & drop)
+  const handleHeroFile = (file: File | null) => {
+    if (!file) {
+      setHeroImage(null);
+      return;
+    }
+    const isAVIF = file.type === 'image/avif' || file.name.toLowerCase().endsWith('.avif');
+    const isSupportedType = SUPPORTED_FORMATS.includes(file.type) || isAVIF;
+
+    if (!isSupportedType) {
+      alert(`Unsupported format: ${file.type}. Please use JPEG, PNG, WebP, or AVIF.`);
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      alert(`File too large: ${(file.size / 1024 / 1024).toFixed(1)}MB. Maximum size is 10MB.`);
+      return;
+    }
+    setHeroImage(file);
+  };
+
+  // Validate and ADD gallery files to the current selection (from file input or drag & drop).
+  // New picks are appended so images can be added in several batches before saving.
+  const addGalleryFiles = (files: File[]) => {
+    const validFiles: File[] = [];
+    const errors: string[] = [];
+
+    files.forEach((file, index) => {
+      const isAVIF = file.type === 'image/avif' || file.name.toLowerCase().endsWith('.avif');
+      const isSupportedType = SUPPORTED_FORMATS.includes(file.type) || isAVIF;
+
+      if (!isSupportedType) {
+        errors.push(`File ${index + 1} (${file.name}): Unsupported format ${file.type}`);
+      } else if (file.size > MAX_FILE_SIZE) {
+        errors.push(`File ${index + 1} (${file.name}): Too large (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
+      } else {
+        validFiles.push(file);
+      }
+    });
+
+    if (errors.length > 0) {
+      alert(`Some files were rejected:\n\n${errors.slice(0, 5).join('\n')}${errors.length > 5 ? '\n...' : ''}\n\nPlease use JPEG, PNG, WebP, or AVIF files under 10MB.`);
+    }
+    if (validFiles.length === 0) return;
+
+    const merged = [...galleryImages];
+    validFiles.forEach(file => {
+      if (!merged.some(f => f.name === file.name && f.size === file.size)) {
+        merged.push(file);
+      }
+    });
+
+    if (merged.length > MAX_GALLERY_IMAGES) {
+      alert(`Too many images selected (${merged.length}). Maximum allowed is ${MAX_GALLERY_IMAGES}. Using first ${MAX_GALLERY_IMAGES} images.`);
+      setGalleryImages(merged.slice(0, MAX_GALLERY_IMAGES));
+    } else {
+      setGalleryImages(merged);
+    }
   };
 
   // Load data on component mount
@@ -1101,7 +1160,14 @@ export default function Properties() {
                 {/* Hero Image Upload */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Hero Image</label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition-colors">
+                  <div
+                    className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition-colors"
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      handleHeroFile(e.dataTransfer.files?.[0] || null);
+                    }}
+                  >
                     <svg className="w-10 h-10 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
@@ -1112,25 +1178,8 @@ export default function Properties() {
                       className="hidden" 
                       id="property-hero-image"
                       onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          const isAVIF = file.type === 'image/avif' || file.name.toLowerCase().endsWith('.avif');
-                          const isSupportedType = SUPPORTED_FORMATS.includes(file.type) || isAVIF;
-                          
-                          if (!isSupportedType) {
-                            alert(`Unsupported format: ${file.type}. Please use JPEG, PNG, WebP, or AVIF.`);
-                            e.target.value = '';
-                            return;
-                          }
-                          if (file.size > MAX_FILE_SIZE) {
-                            alert(`File too large: ${(file.size / 1024 / 1024).toFixed(1)}MB. Maximum size is 10MB.`);
-                            e.target.value = '';
-                            return;
-                          }
-                          setHeroImage(file);
-                        } else {
-                          setHeroImage(null);
-                        }
+                        handleHeroFile(e.target.files?.[0] || null);
+                        e.target.value = '';
                       }}
                     />
                     <label 
@@ -1146,7 +1195,14 @@ export default function Properties() {
                 {/* Gallery Images Upload */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Gallery Images</label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition-colors">
+                  <div
+                    className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition-colors"
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      addGalleryFiles(Array.from(e.dataTransfer.files || []));
+                    }}
+                  >
                     <svg className="w-10 h-10 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
@@ -1160,34 +1216,7 @@ export default function Properties() {
                       className="hidden" 
                       id="property-gallery-images"
                       onChange={(e) => {
-                        const files = Array.from(e.target.files || []);
-                        const validFiles: File[] = [];
-                        const errors: string[] = [];
-                        
-                        files.forEach((file, index) => {
-                          const isAVIF = file.type === 'image/avif' || file.name.toLowerCase().endsWith('.avif');
-                          const isSupportedType = SUPPORTED_FORMATS.includes(file.type) || isAVIF;
-                          
-                          if (!isSupportedType) {
-                            errors.push(`File ${index + 1} (${file.name}): Unsupported format ${file.type}`);
-                          } else if (file.size > MAX_FILE_SIZE) {
-                            errors.push(`File ${index + 1} (${file.name}): Too large (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
-                          } else {
-                            validFiles.push(file);
-                          }
-                        });
-                        
-                        if (errors.length > 0) {
-                          alert(`Some files were rejected:\n\n${errors.slice(0, 5).join('\n')}${errors.length > 5 ? '\n...' : ''}\n\nPlease use JPEG, PNG, WebP, or AVIF files under 10MB.`);
-                        }
-                        
-                        if (validFiles.length > MAX_GALLERY_IMAGES) {
-                          alert(`Too many images selected (${validFiles.length}). Maximum allowed is ${MAX_GALLERY_IMAGES}. Using first ${MAX_GALLERY_IMAGES} images.`);
-                          setGalleryImages(validFiles.slice(0, MAX_GALLERY_IMAGES));
-                        } else {
-                          setGalleryImages(validFiles);
-                        }
-                        
+                        addGalleryFiles(Array.from(e.target.files || []));
                         // Clear the input so the same files can be selected again if needed
                         e.target.value = '';
                       }}
@@ -1198,7 +1227,7 @@ export default function Properties() {
                     >
                       Choose Images
                     </label>
-                    <p className="text-xs text-gray-500 mt-2">JPEG, PNG, WebP up to 10MB each. Max 15 images. AVIF supported (auto-converted).</p>
+                    <p className="text-xs text-gray-500 mt-2">JPEG, PNG, WebP up to 10MB each. Max {MAX_GALLERY_IMAGES} images. You can select several at once, or add more in batches — new picks are added to the list. AVIF supported (auto-converted).</p>
                     {galleryImages.length > 0 && (
                       <div className="mt-4">
                         <div className="flex flex-wrap gap-2 justify-center">
