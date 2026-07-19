@@ -236,6 +236,8 @@ function SearchPageContent() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalResults, setTotalResults] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 12;
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [availableAmenities, setAvailableAmenities] = useState<string[]>([]);
   const [propertyCategories, setPropertyCategories] = useState<PropertyCategory[]>([]);
@@ -388,11 +390,28 @@ function SearchPageContent() {
 
       setProperties(sortedResults);
       setTotalResults(sortedResults.length);
+      setCurrentPage(1);
     } catch (error) {
       setProperties([]);
       setTotalResults(0);
+      setCurrentPage(1);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Pagination
+  const totalPages = Math.ceil(properties.length / ITEMS_PER_PAGE);
+  const paginatedProperties = properties.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  const goToPage = (page: number) => {
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+    // Bring the results back into view when switching pages
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -780,6 +799,11 @@ function SearchPageContent() {
                 <p className="text-gray-600 font-medium">
                   {totalResults} {totalResults === 1 ? 'property' : 'properties'} found
                   {searchQuery && ` for "${searchQuery}"`}
+                  {totalPages > 1 && (
+                    <span className="text-gray-400 font-normal">
+                      {' '}· showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}-{Math.min(currentPage * ITEMS_PER_PAGE, totalResults)}
+                    </span>
+                  )}
                 </p>
               )}
             </div>
@@ -837,7 +861,7 @@ function SearchPageContent() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {properties.map((property) => {
+              {paginatedProperties.map((property) => {
                 // Prepare images
                 const images = [];
                 if (property.hero_image_path) {
@@ -872,6 +896,53 @@ function SearchPageContent() {
                   />
                 );
               })}
+            </div>
+          )}
+
+          {/* Pagination */}
+          {!loading && totalPages > 1 && (
+            <div className="flex items-center justify-center mt-10 gap-2">
+              <button
+                onClick={() => goToPage(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="px-4 py-2 text-sm font-medium border-2 border-gray-200 rounded-full hover:border-brown hover:text-brown transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-gray-200 disabled:hover:text-inherit"
+              >
+                Previous
+              </button>
+
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(page =>
+                    page === 1 ||
+                    page === totalPages ||
+                    Math.abs(page - currentPage) <= 1
+                  )
+                  .map((page, index, pages) => (
+                    <React.Fragment key={page}>
+                      {index > 0 && pages[index - 1] !== page - 1 && (
+                        <span className="px-1 text-gray-400">…</span>
+                      )}
+                      <button
+                        onClick={() => goToPage(page)}
+                        className={`w-10 h-10 text-sm font-medium rounded-full transition-colors ${
+                          currentPage === page
+                            ? 'bg-brown text-white'
+                            : 'border-2 border-gray-200 text-gray-700 hover:border-brown hover:text-brown'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    </React.Fragment>
+                  ))}
+              </div>
+
+              <button
+                onClick={() => goToPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 text-sm font-medium border-2 border-gray-200 rounded-full hover:border-brown hover:text-brown transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-gray-200 disabled:hover:text-inherit"
+              >
+                Next
+              </button>
             </div>
           )}
         </section>
