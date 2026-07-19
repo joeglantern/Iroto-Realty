@@ -151,37 +151,35 @@ function HeroCarousel() {
   const [isLoading, setIsLoading] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
-  const [heroImage, setHeroImage] = useState('/Home Page.jpg');
+  const [heroImages, setHeroImages] = useState<string[]>(['/Home Page.jpg']);
 
   useEffect(() => {
     getSiteImages().then((images) => {
-      if (images.home_hero_image) {
-        setHeroImage(getStorageUrl('property-images', images.home_hero_image));
+      // Prefer the slideshow list; fall back to the legacy single image setting
+      let paths: string[] = [];
+      if (images.home_hero_images) {
+        try {
+          const parsed = JSON.parse(images.home_hero_images);
+          if (Array.isArray(parsed)) paths = parsed.filter(Boolean);
+        } catch {
+        }
+      }
+      if (paths.length === 0 && images.home_hero_image) {
+        paths = [images.home_hero_image];
+      }
+      if (paths.length > 0) {
+        setHeroImages(paths.map(p => getStorageUrl('property-images', p)));
+        setCurrentSlide(0);
       }
     });
   }, []);
 
-  const slides = [
-    {
-      id: 1,
-      image: heroImage,
-      title: 'IROTO',
-      highlight: 'REALTY'
-    },
-    {
-      id: 4,
-      image: heroImage,
-      title: 'IROTO',
-      highlight: 'REALTY'
-    }
-  ];
-
   const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % slides.length);
+    setCurrentSlide((prev) => (prev + 1) % heroImages.length);
   };
 
   const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+    setCurrentSlide((prev) => (prev - 1 + heroImages.length) % heroImages.length);
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
@@ -282,28 +280,29 @@ function HeroCarousel() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Auto-advance slides every 5 seconds
+  // Auto-advance the slideshow when there is more than one photo
   React.useEffect(() => {
-    const interval = setInterval(nextSlide, 5000);
+    if (heroImages.length < 2) return;
+    const interval = setInterval(nextSlide, 7000);
     return () => clearInterval(interval);
-  }, []);
+  }, [heroImages.length]);
 
   return (
     <section className="relative h-screen flex items-center justify-center">
       {/* Background Images Container - Clipped */}
       <div className="absolute inset-0 overflow-hidden">
-        {/* Carousel Images */}
-        {slides.map((slide, index) => (
+        {/* Slideshow images - slow Ken Burns zoom, crossfading when there are several */}
+        {heroImages.map((image, index) => (
           <div
-            key={slide.id}
-            className={`absolute inset-0 transition-opacity duration-1000 ${
-              index === currentSlide ? 'opacity-100' : 'opacity-0'
+            key={image}
+            className={`absolute inset-0 transition-opacity duration-[1500ms] ease-in-out ${
+              index === currentSlide % heroImages.length ? 'opacity-100' : 'opacity-0'
             }`}
           >
-            <div 
-              className="w-full h-full bg-cover bg-center bg-no-repeat"
-              style={{ 
-                backgroundImage: `url("${slide.image}")`,
+            <div
+              className="w-full h-full bg-cover bg-no-repeat animate-kenburns"
+              style={{
+                backgroundImage: `url("${image}")`,
                 backgroundPosition: 'center 30%' // Better positioning for mobile
               }}
             />
@@ -313,8 +312,6 @@ function HeroCarousel() {
             <div className="absolute inset-0 bg-black/50" />
           </div>
         ))}
-        
-
       </div>
       
       {/* Hero Content */}

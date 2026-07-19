@@ -190,3 +190,24 @@ body {
 .rich-text-content .ql-indent-8 {
   @apply ml-32;
 }
+
+/* Slow cinematic Ken Burns zoom for the homepage hero slideshow */
+@keyframes kenburns {
+  0% {
+    transform: scale(1) translate(0, 0);
+  }
+  100% {
+    transform: scale(1.1) translate(-1%, 1%);
+  }
+}
+
+.animate-kenburns {
+  animation: kenburns 18s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-kenburns {
+    animation: none;
+  }
+}
