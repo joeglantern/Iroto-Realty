@@ -865,6 +865,22 @@ function PropertiesCarousel() {
             </div>
           )}
         </div>
+
+        {/* Browse All Properties CTA */}
+        <div className="text-center mt-12">
+          <a
+            href="/search"
+            className="inline-flex items-center bg-brown hover:bg-brown/90 text-white px-8 py-3 rounded-full font-semibold transition-colors duration-200 shadow-md hover:shadow-lg"
+          >
+            View All Properties
+            <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </a>
+          <p className="text-sm text-gray-500 mt-3">
+            Browse every property with filters for location, price, bedrooms, and more
+          </p>
+        </div>
       </div>
     </section>
   );

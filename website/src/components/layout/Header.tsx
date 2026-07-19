@@ -11,6 +11,7 @@ import { CaretDown, List, X } from '@phosphor-icons/react';
 const baseNavigation: NavigationItem[] = [
   { label: 'HOME', href: '/' },
   { label: 'About Us', href: '/about' },
+  { label: 'All Properties', href: '/search' },
   {
     label: 'Rental Portfolio',
     href: '/rental-portfolio',
