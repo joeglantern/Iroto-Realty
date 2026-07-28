@@ -305,13 +305,13 @@ function HeroCarousel() {
               style={{
                 backgroundImage: `url("${image}")`,
                 backgroundPosition: 'center 30%', // Better positioning for mobile
-                filter: 'saturate(1.15) brightness(1.05)' // Vibrant, bright photos
+                filter: 'saturate(1.2) brightness(1.12)' // Vibrant, bright photos
               }}
             />
             {/* Mobile-optimized image overlay for better cropping */}
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/20 md:hidden" />
             {/* Faint dark overlay keeps the hero text and search bar readable over any uploaded photo */}
-            <div className="absolute inset-0 bg-black/25" />
+            <div className="absolute inset-0 bg-black/10" />
           </div>
         ))}
       </div>
@@ -755,10 +755,10 @@ function PropertiesCarousel() {
     setCurrentSlide((prev) => (prev - 1 + slidesCount) % slidesCount);
   };
 
-  // Auto-advance every 6 seconds
+  // Auto-advance every 12 seconds
   useEffect(() => {
     if (allProperties.length > 6) {
-      const interval = setInterval(nextSlide, 6000);
+      const interval = setInterval(nextSlide, 12000);
       return () => clearInterval(interval);
     }
   }, [allProperties.length, slidesCount]);

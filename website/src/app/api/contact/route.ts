@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
       if (!subject) return 'general';
       const subjectLower = subject.toLowerCase();
       if (subjectLower.includes('rental')) return 'property';
+      if (subjectLower.includes('sale')) return 'property';
       if (subjectLower.includes('purchase')) return 'property';
       if (subjectLower.includes('investment')) return 'investment';
       return 'general';

@@ -43,7 +43,7 @@ export default function About() {
               About <span className="text-[#713900]">Iroto Realty</span>
             </h1>
             <p className="text-xl lg:text-2xl text-white/90 drop-shadow">
-              Your trusted partner in premium Kenyan real estate
+              Your trusted partner in Kenya's premium coastal real estate
             </p>
           </div>
         </section>
@@ -102,9 +102,9 @@ export default function About() {
                 <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-6">
                   <House size={32} className="text-brown" />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-4">Luxury & Stylish Homes</h3>
+                <h3 className="text-xl font-semibold text-white mb-4">Elegant Holiday Homes</h3>
                 <p className="text-white/80">
-                  From private villas to elegant holiday houses that embody coastal sophistication.
+                  From private villas to holiday homes that embody coastal sophistication.
                 </p>
               </div>
               
@@ -114,7 +114,7 @@ export default function About() {
                 </div>
                 <h3 className="text-xl font-semibold text-white mb-4">Short-Term Stays</h3>
                 <p className="text-white/80">
-                  Curated rentals perfect for holidays, retreats, or special events along the coast.
+                  Curated rentals perfect for a vacation, retreats, or special events.
                 </p>
               </div>
               
@@ -124,7 +124,7 @@ export default function About() {
                 </div>
                 <h3 className="text-xl font-semibold text-white mb-4">Sales & Investments</h3>
                 <p className="text-white/80">
-                  Unique properties, including houses and land, for buyers looking to invest in the coast.
+                  Unique properties, including houses and land, for buyers looking to invest and/or live at the coast.
                 </p>
               </div>
               
@@ -134,7 +134,7 @@ export default function About() {
                 </div>
                 <h3 className="text-xl font-semibold text-white mb-4">Retreats & Events</h3>
                 <p className="text-white/80">
-                  Connecting clients with spaces ideal for hosting intimate gatherings and wellness experiences.
+                  Connecting you with spaces ideal for hosting intimate gatherings and wellness experiences.
                 </p>
               </div>
             </div>
@@ -199,26 +199,16 @@ export default function About() {
               </p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {/* Team member cards would go here - placeholder for now */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
               <div className="text-center">
                 <div className="w-32 h-32 bg-gray-200 rounded-full mx-auto mb-4"></div>
                 <h3 className="text-xl font-semibold text-black mb-2">Eunice</h3>
-                <p className="text-brown font-medium mb-2">Founder & CEO</p>
+                <p className="text-brown font-medium mb-2">Founder</p>
                 <p className="text-gray-600 text-sm">
                   Leading Iroto Realty with over seven years of firsthand coastal living experience and deep understanding of the region.
                 </p>
               </div>
-              
-              <div className="text-center">
-                <div className="w-32 h-32 bg-gray-200 rounded-full mx-auto mb-4"></div>
-                <h3 className="text-xl font-semibold text-black mb-2">Team Member</h3>
-                <p className="text-brown font-medium mb-2">Property Specialist</p>
-                <p className="text-gray-600 text-sm">
-                  Expert in coastal property curation, ensuring each property reflects quality and coastal charm.
-                </p>
-              </div>
-              
+
               <div className="text-center">
                 <div className="w-32 h-32 bg-gray-200 rounded-full mx-auto mb-4"></div>
                 <h3 className="text-xl font-semibold text-black mb-2">Team Member</h3>

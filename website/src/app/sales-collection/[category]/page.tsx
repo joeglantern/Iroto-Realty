@@ -334,11 +334,9 @@ export default function CategoryPage() {
             <h1 className="text-4xl lg:text-6xl font-bold mb-6">
               {category.name}
             </h1>
-            {category.description && (
-              <p className="text-xl lg:text-2xl text-white/90 mb-8">
-                {category.description}
-              </p>
-            )}
+            <p className="text-xl lg:text-2xl text-white/90 mb-8">
+              Premium properties for sale in {category.name}
+            </p>
 
             {/* Search Bar for Category Properties */}
             <div className="max-w-2xl mx-auto px-2 sm:px-0 relative">
@@ -528,6 +526,25 @@ export default function CategoryPage() {
                 })
               )}
             </div>
+
+            {/* Info Card Section - Only show if category has description */}
+            {category.description && (
+              <div className="mt-16">
+                <div className="bg-gray-50 rounded-2xl p-8">
+                  <div className="flex items-center mb-4">
+                    <div className="w-12 h-12 bg-brown rounded-full flex items-center justify-center mr-4">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-2xl font-bold text-black">About {category.name}</h3>
+                  </div>
+                  <p className="text-gray-600 leading-relaxed">
+                    {category.description}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </section>
 
@@ -542,7 +559,7 @@ export default function CategoryPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a 
-                href="tel:+254123456789" 
+                href="tel:+254741707033" 
                 className="inline-flex items-center justify-center px-8 py-3 bg-brown text-white font-semibold rounded-md hover:bg-brown/90 transition-colors duration-200"
               >
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

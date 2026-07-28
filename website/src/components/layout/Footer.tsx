@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { FacebookLogo, InstagramLogo, XLogo } from '@phosphor-icons/react';
+import { FacebookLogo, InstagramLogo, YoutubeLogo } from '@phosphor-icons/react';
 
 export default function Footer() {
   return (
@@ -40,10 +40,10 @@ export default function Footer() {
               <span className="text-white">irotorealty.com</span>
             </div>
 
-            {/* Twitter/X */}
+            {/* YouTube */}
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-black border border-white rounded flex items-center justify-center flex-shrink-0">
-                <XLogo size={16} weight="fill" className="text-white" />
+              <div className="w-8 h-8 bg-red-600 rounded flex items-center justify-center flex-shrink-0">
+                <YoutubeLogo size={16} weight="fill" className="text-white" />
               </div>
               <span className="text-white">irotorealty.com</span>
             </div>
@@ -71,13 +71,13 @@ export default function Footer() {
               <span className="text-white">info@irotorealty.com</span>
             </a>
 
-            <a href="tel:+254712345679" className="flex items-center space-x-3 hover:text-gray-300 transition-colors duration-200">
+            <a href="tel:+254741707033" className="flex items-center space-x-3 hover:text-gray-300 transition-colors duration-200">
               <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
                 <svg className="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                 </svg>
               </div>
-              <span className="text-white">07123456789</span>
+              <span className="text-white">+254 741 707033</span>
             </a>
           </div>
         </div>

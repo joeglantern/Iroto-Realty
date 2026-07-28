@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import PageLayout from '@/components/layout/PageLayout';
-import { CheckCircle, XCircle, Envelope, Phone, MapPin, Clock, CircleNotch, FacebookLogo, InstagramLogo, XLogo } from '@phosphor-icons/react';
+import { CheckCircle, XCircle, Envelope, Phone, MapPin, Clock, CircleNotch, FacebookLogo, InstagramLogo, YoutubeLogo } from '@phosphor-icons/react';
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -181,10 +181,9 @@ export default function Contact() {
                       className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-brown focus:border-brown transition-colors"
                     >
                       <option value="">Select a subject</option>
-                      <option value="rental-inquiry">Rental Inquiry</option>
-                      <option value="purchase-inquiry">Purchase Inquiry</option>
-                      <option value="investment-consultation">Investment Consultation</option>
-                      <option value="general-inquiry">General Inquiry</option>
+                      <option value="Rental Inquiry">Rental Inquiry</option>
+                      <option value="Sales Inquiry">Sales Inquiry</option>
+                      <option value="General Inquiry">General Inquiry</option>
                     </select>
                   </div>
 
@@ -243,7 +242,7 @@ export default function Contact() {
                     </div>
                     <div>
                       <h3 className="font-semibold text-black mb-1">Phone</h3>
-                      <p className="text-gray-600">07123456789</p>
+                      <p className="text-gray-600">+254 741 707033</p>
                     </div>
                   </div>
 
@@ -254,8 +253,7 @@ export default function Contact() {
                     <div>
                       <h3 className="font-semibold text-black mb-1">Office</h3>
                       <p className="text-gray-600">
-                        Nairobi, Kenya<br />
-                        (By appointment only)
+                        Lamu, Kenya
                       </p>
                     </div>
                   </div>
@@ -267,9 +265,8 @@ export default function Contact() {
                     <div>
                       <h3 className="font-semibold text-black mb-1">Business Hours</h3>
                       <p className="text-gray-600">
-                        Monday - Friday: 9:00 AM - 6:00 PM<br />
-                        Saturday: 10:00 AM - 4:00 PM<br />
-                        Sunday: By appointment
+                        Monday - Friday: 9am - 5pm<br />
+                        Saturday & Sunday: By appointment
                       </p>
                     </div>
                   </div>
@@ -296,12 +293,12 @@ export default function Contact() {
                       <InstagramLogo size={20} weight="fill" className="text-white" />
                     </a>
                     <a
-                      href="https://twitter.com/irotorealty"
+                      href="https://youtube.com/@irotorealty"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="w-10 h-10 bg-brown hover:bg-brown/90 rounded-full flex items-center justify-center transition-colors duration-200"
                     >
-                      <XLogo size={20} weight="fill" className="text-white" />
+                      <YoutubeLogo size={20} weight="fill" className="text-white" />
                     </a>
                   </div>
                 </div>

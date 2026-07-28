@@ -364,6 +364,13 @@ interface CategoryCardProps {
   category: PropertyCategory;
 }
 
+// Long "About" write-ups live on the category page; keep the card tagline short
+function shortDescription(text: string | null | undefined, fallback: string): string {
+  if (!text) return fallback;
+  if (text.length <= 110) return text;
+  return text.slice(0, 110).replace(/\s+\S*$/, '') + '…';
+}
+
 function CategoryCard({ category }: CategoryCardProps) {
   return (
     <Link href={`/sales-collection/${category.slug}`} className="group block">
@@ -379,7 +386,7 @@ function CategoryCard({ category }: CategoryCardProps) {
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center text-white px-4">
             <h3 className="text-3xl lg:text-4xl font-bold mb-4">{category.name}</h3>
-            <p className="text-lg mb-6">{category.description || 'Premium properties await'}</p>
+            <p className="text-lg mb-6">{shortDescription(category.description, 'Premium properties await')}</p>
             <div className="inline-flex items-center text-brown bg-white px-6 py-2 rounded-md font-semibold group-hover:bg-brown group-hover:text-white transition-colors duration-300">
               View Properties
               <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
