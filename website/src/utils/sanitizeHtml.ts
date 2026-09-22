@@ -27,3 +27,13 @@ export function renderRichText(content: string, fallback?: string): { __html: st
   const sanitized = sanitizeHtml(content);
   return { __html: sanitized || fallback || '' };
 }
+
+const escapeHtml = (text: string) =>
+  text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+// Content that may be rich text or older plain text; plain text keeps its line breaks.
+export function renderFormattedText(content: string | null | undefined): { __html: string } {
+  if (!content) return { __html: '' };
+  const isHtml = /<\/?[a-z][^>]*>/i.test(content);
+  return renderRichText(isHtml ? content : escapeHtml(content).replace(/\r?\n/g, '<br>'));
+}

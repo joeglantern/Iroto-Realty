@@ -10,6 +10,7 @@ import { useSimpleAuth } from '@/contexts/SimpleAuthContext';
 import { getProperties, getPropertyCategories, getPropertyTypes, createProperty, createPropertyCategory, deleteProperty, deletePropertyCategory, updateProperty, updatePropertyCategory, getProperty, addPropertyImage } from '@/lib/properties';
 import { uploadFile, getStorageUrl } from '@/lib/storage';
 import { generateSlug } from '@/lib/slug';
+import { plainText, richTextOrEmpty } from '@/lib/text';
 import { toast } from '@/lib/notify';
 import { HARD_MAX_BYTES, HARD_MAX_MB, RECOMMENDED_MAX_MB, formatFileSize, screenImageSizes } from '@/lib/upload-limits';
 import type { Property, PropertyCategory, PropertyType } from '@/lib/types';
@@ -224,6 +225,10 @@ export default function Properties() {
   // Memoized onChange handlers for rich text editors
   const handleDescriptionChange = useCallback((value: string) => {
     setFormData(prev => ({ ...prev, description: value }));
+  }, []);
+
+  const handleCategoryDescriptionChange = useCallback((value: string) => {
+    setNewCategory(prev => ({ ...prev, description: value }));
   }, []);
 
   const handlePropertyInfo1Change = useCallback((value: string) => {
@@ -527,7 +532,7 @@ export default function Properties() {
         const categoryData = {
           name: newCategory.name,
           slug: generateSlug(newCategory.name),
-          description: newCategory.description
+          description: richTextOrEmpty(newCategory.description)
         };
 
         const updatedCategory = await updatePropertyCategory(editingCategory.id, categoryData);
@@ -562,7 +567,7 @@ export default function Properties() {
         const categoryData = {
           name: newCategory.name,
           slug: generateSlug(newCategory.name),
-          description: newCategory.description,
+          description: richTextOrEmpty(newCategory.description),
           is_active: true,
           sort_order: categories.length
         };
@@ -1423,12 +1428,11 @@ export default function Properties() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Description (Optional)</label>
-                    <textarea
-                      rows={2}
+                    <p className="text-xs text-gray-500 mb-2">Shown in the &ldquo;About&rdquo; section of this location&rsquo;s Rental Portfolio and Sales Collection pages.</p>
+                    <RichTextEditor
                       value={newCategory.description}
-                      onChange={(e) => setNewCategory({ ...newCategory, description: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                      placeholder="Brief description of the location..."
+                      onChange={handleCategoryDescriptionChange}
+                      placeholder="Describe the location: what makes it special, what's nearby..."
                     />
                   </div>
                   
@@ -1490,8 +1494,8 @@ export default function Properties() {
                     <div key={category.id} className="flex items-center justify-between p-3 border rounded-lg">
                       <div>
                         <span className="font-medium text-gray-900">{category.name}</span>
-                        {category.description && (
-                          <p className="text-sm text-gray-500">{category.description}</p>
+                        {plainText(category.description) && (
+                          <p className="text-sm text-gray-500 line-clamp-2">{plainText(category.description)}</p>
                         )}
                       </div>
                       <div className="flex space-x-2">

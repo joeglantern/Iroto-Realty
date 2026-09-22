@@ -7,6 +7,7 @@ import { getStorageUrl } from '@/lib/media';
 import { formatPropertyPrice } from '@/lib/price';
 import type { Property, PropertyCategory } from '@/lib/types';
 import PageLayout from '@/components/layout/PageLayout';
+import { renderFormattedText } from '@/utils/sanitizeHtml';
 
 interface PropertyCardProps {
   id: number;
@@ -546,9 +547,10 @@ export default function CategoryPage({ initialCategory, initialProperties }: Cat
                     </div>
                     <h3 className="text-2xl font-bold text-black">About {category.name}</h3>
                   </div>
-                  <p className="text-gray-600 leading-relaxed">
-                    {category.description}
-                  </p>
+                  <div
+                    className="text-gray-600 leading-relaxed prose prose-gray max-w-none rich-text-content"
+                    dangerouslySetInnerHTML={renderFormattedText(category.description)}
+                  />
                 </div>
               </div>
             )}

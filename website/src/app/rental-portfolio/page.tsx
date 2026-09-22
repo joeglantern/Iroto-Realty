@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { getPropertyCategories, getFeaturedProperties, getSearchSuggestions } from '@/lib/data';
 import { getStorageUrl } from '@/lib/media';
+import { plainText } from '@/lib/site';
 import { formatPropertyPrice } from '@/lib/price';
 import type { PropertyCategory, Property } from '@/lib/types';
 import PageLayout from '@/components/layout/PageLayout';
@@ -404,9 +405,7 @@ interface CategoryCardProps {
 
 // Long "About" write-ups live on the category page; keep the card tagline short
 function shortDescription(text: string | null | undefined, fallback: string): string {
-  if (!text) return fallback;
-  if (text.length <= 110) return text;
-  return text.slice(0, 110).replace(/\s+\S*$/, '') + '…';
+  return plainText(text, 110) || fallback;
 }
 
 function CategoryCard({ category }: CategoryCardProps) {

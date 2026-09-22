@@ -136,7 +136,7 @@ export function categoryJsonLd(category: PropertyCategory, properties: Property[
     '@type': 'CollectionPage',
     name: heading,
     url: absoluteUrl(path),
-    description: category.description || undefined,
+    description: plainText(category.description, 300) || undefined,
     about: { '@type': 'Place', name: category.name, address: { '@type': 'PostalAddress', addressRegion: category.name, addressCountry: 'KE' } },
     mainEntity: {
       '@type': 'ItemList',
