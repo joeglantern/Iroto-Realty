@@ -9,9 +9,10 @@ import AdminHeader from '@/components/layout/AdminHeader';
 import { useSimpleAuth } from '@/contexts/SimpleAuthContext';
 import { getReviews, createReview, deleteReview, updateReview, getReview } from '@/lib/reviews';
 import { getProperties } from '@/lib/properties';
-import { uploadFile, supabase } from '@/lib/supabase';
+import { uploadFile } from '@/lib/storage';
 import { toast } from '@/lib/notify';
-import type { Review, Property } from '@/lib/supabase';
+import { RECOMMENDED_MAX_MB, screenImageSizes } from '@/lib/upload-limits';
+import type { Review, Property } from '@/lib/types';
 import {
   StarIcon,
   UserIcon,
@@ -106,10 +107,8 @@ function Reviews() {
           toast.warning(`Review created but photo upload failed: ${uploadError.message}`);
         } else {
           // Update review with photo path
-          const { error: updateError } = await supabase
-            .from('reviews')
-            .update({ reviewer_avatar_path: photoPath })
-            .eq('id', review.id);
+          const updateError = await updateReview(review.id, { reviewer_avatar_path: photoPath })
+            .then(() => null, (error: Error) => error);
             
           if (updateError) {
             toast.warning(`Review created but failed to link photo: ${updateError.message}`);
@@ -480,10 +479,18 @@ function Reviews() {
                     <p className="text-gray-600 mb-2">Drop reviewer photo here or click to browse</p>
                     <input 
                       type="file" 
-                      accept="image/*" 
+                      accept="image/jpeg,image/png,image/webp" 
                       className="hidden" 
                       id="reviewer-photo"
-                      onChange={(e) => setReviewerPhoto(e.target.files?.[0] || null)}
+                      onChange={async (e) => {
+                        const input = e.target;
+                        const file = input.files?.[0] || null;
+                        if (!file) return setReviewerPhoto(null);
+                        const { accepted, refused } = await screenImageSizes([file]);
+                        if (refused.length) toast.error(refused[0]);
+                        setReviewerPhoto(accepted[0] || null);
+                        if (!accepted.length) input.value = '';
+                      }}
                     />
                     <label 
                       htmlFor="reviewer-photo" 
@@ -494,7 +501,7 @@ function Reviews() {
                     {reviewerPhoto && (
                       <p className="text-sm text-green-600 mt-2">Selected: {reviewerPhoto.name}</p>
                     )}
-                    <p className="text-xs text-gray-500 mt-2">PNG, JPG up to 10MB. Recommended: 200x200px</p>
+                    <p className="text-xs text-gray-500 mt-2">PNG, JPG, WebP, ideally under {RECOMMENDED_MAX_MB} MB. Recommended: 200x200px</p>
                   </div>
                 </div>
 

@@ -1,3 +1,11 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Pre-Arrival Guide for the Kenyan Coast',
+  description: 'Everything to prepare before visiting Lamu, Watamu, Kilifi or Malindi: visas, health, money, packing and local tips from Iroto Realty.',
+  alternates: { canonical: '/travel-insights/pre-arrival' },
+  openGraph: { url: '/travel-insights/pre-arrival', title: 'Pre-Arrival Guide for the Kenyan Coast | Iroto Realty', description: 'Everything to prepare before visiting Lamu, Watamu, Kilifi or Malindi: visas, health, money, packing and local tips from Iroto Realty.' },
+};
 import PageLayout from '@/components/layout/PageLayout';
 import { getTravelSections } from '@/lib/travel-sections';
 import RichTextRenderer from '@/components/RichTextRenderer';

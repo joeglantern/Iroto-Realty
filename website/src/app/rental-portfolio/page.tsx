@@ -3,9 +3,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { getPropertyCategories, getFeaturedProperties, getSearchSuggestions } from '@/lib/data';
-import { getStorageUrl } from '@/lib/supabase';
+import { getStorageUrl } from '@/lib/media';
 import { formatPropertyPrice } from '@/lib/price';
-import type { PropertyCategory, Property } from '@/lib/supabase';
+import type { PropertyCategory, Property } from '@/lib/types';
 import PageLayout from '@/components/layout/PageLayout';
 import Link from 'next/link';
 

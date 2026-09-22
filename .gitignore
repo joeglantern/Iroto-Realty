@@ -1,6 +1,14 @@
 # Secrets - never commit
 .env.local
 .env*.local
+deploy/.env
+
+# Uploaded images (server and local development)
+deploy/data/
+admin/uploads/
+
+# Production data exports (contain customer data and password hashes)
+migration-export/
 
 # OS files
 .DS_Store

@@ -10,11 +10,12 @@
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
-    "@supabase/supabase-js": "^2.57.4",
     "next": "14.2.32",
+    "postgres": "^3.4.9",
     "react": "^18",
     "react-dom": "^18",
-    "resend": "^6.12.4"
+    "resend": "^6.12.4",
+    "sharp": "^0.35.4"
   },
   "devDependencies": {
     "@types/node": "^20",

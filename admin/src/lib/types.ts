@@ -1,10 +1,3 @@
-import { createClient } from '@supabase/supabase-js'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
 // Database types - Updated to match our new schema
 export interface Property {
   id: string
@@ -66,6 +59,7 @@ export interface PropertyImage {
   image_path: string
   alt_text?: string
   sort_order: number
+  is_active?: boolean
   created_at: string
 }
 
@@ -134,40 +128,4 @@ export interface TravelSection {
   is_active: boolean
   created_at: string
   updated_at: string
-}
-
-// Helper function to get storage URL
-export function getStorageUrl(bucket: string, path: string): string {
-  if (!path) return ''
-  return `${supabaseUrl}/storage/v1/object/public/${bucket}/${path}`
-}
-
-// Helper function to upload file to storage with timeout handling
-export async function uploadFile(
-  bucket: string,
-  path: string,
-  file: File
-): Promise<{ data: any; error: any }> {
-  const uploadPromise = supabase.storage.from(bucket).upload(path, file);
-
-  // Add timeout to file upload
-  try {
-    const result = await Promise.race([
-      uploadPromise,
-      new Promise<any>((_, reject) => 
-        setTimeout(() => reject(new Error(`File upload timed out after 60 seconds for ${file.name}`)), 60000)
-      )
-    ]);
-    return result;
-  } catch (error) {
-    return { data: null, error };
-  }
-}
-
-// Helper function to delete file from storage
-export async function deleteFile(
-  bucket: string,
-  path: string
-): Promise<{ data: any; error: any }> {
-  return await supabase.storage.from(bucket).remove([path])
 }

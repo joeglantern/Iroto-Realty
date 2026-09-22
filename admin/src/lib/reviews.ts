@@ -1,91 +1,53 @@
-﻿import { supabase } from './supabase'
-import type { Review } from './supabase'
+'use server'
+
+import { columns } from './db'
+import { asAdmin } from './session'
+import type { Review } from './types'
 
 // Reviews CRUD operations
 export async function getReviews() {
-  const { data, error } = await supabase
-    .from('reviews')
-    .select(`
-      *,
-      properties(title, slug)
-    `)
-    .order('created_at', { ascending: false })
-
-  if (error) throw error
-  return data
+  return asAdmin(tx => tx<any[]>`
+    select r.*,
+      (select json_build_object('title', p.title, 'slug', p.slug) from properties p where p.id = r.property_id) as properties
+    from reviews r
+    order by r.created_at desc`)
 }
 
 export async function getReview(id: string) {
-  const { data, error } = await supabase
-    .from('reviews')
-    .select(`
-      *,
-      properties(id, title, slug)
-    `)
-    .eq('id', id)
-    .single()
-
-  if (error) throw error
-  return data
+  return asAdmin(async tx => {
+    const [review] = await tx<any[]>`
+      select r.*,
+        (select json_build_object('id', p.id, 'title', p.title, 'slug', p.slug) from properties p where p.id = r.property_id) as properties
+      from reviews r
+      where r.id = ${id}`
+    if (!review) throw new Error('Review not found')
+    return review
+  })
 }
 
 export async function createReview(review: Omit<Review, 'id' | 'created_at' | 'updated_at'>) {
-  
-  try {
-    
-    // Test basic connection first
-    const { data: testData, error: testError } = await supabase
-      .from('reviews')
-      .select('count')
-      .limit(1);
-    
-    
-    const { data, error } = await supabase
-      .from('reviews')
-      .insert(review)
-      .select()
-      .single()
-
-    
-    if (error) {
-      throw error;
-    }
-    return data;
-  } catch (err) {
-    throw err;
-  }
+  return asAdmin(async tx => {
+    const [created] = await tx<any[]>`insert into reviews ${tx(columns(review))} returning *`
+    return created
+  })
 }
 
 export async function updateReview(id: string, updates: Partial<Review>) {
-  const { data, error } = await supabase
-    .from('reviews')
-    .update(updates)
-    .eq('id', id)
-    .select()
-    .single()
-
-  if (error) throw error
-  return data
+  return asAdmin(async tx => {
+    const [updated] = await tx<any[]>`update reviews set ${tx(columns(updates))} where id = ${id} returning *`
+    if (!updated) throw new Error('Review not found')
+    return updated
+  })
 }
 
 export async function deleteReview(id: string) {
-  const { error } = await supabase
-    .from('reviews')
-    .delete()
-    .eq('id', id)
-
-  if (error) throw error
+  await asAdmin(tx => tx<any[]>`delete from reviews where id = ${id}`)
 }
 
 // Get properties for review form dropdown
 export async function getPropertiesForReview() {
-  const { data, error } = await supabase
-    .from('properties')
-    .select('id, title, slug')
-    .eq('status', 'published')
-    .eq('is_active', true)
-    .order('title')
-
-  if (error) throw error
-  return data
+  return asAdmin(tx => tx<any[]>`
+    select id, title, slug from properties
+    where status = 'published' and is_active = true
+    order by title`)
 }

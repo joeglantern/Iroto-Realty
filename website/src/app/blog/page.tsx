@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getBlogPosts, getBlogCategories } from '@/lib/data';
-import { getStorageUrl } from '@/lib/supabase';
-import type { BlogPost, BlogCategory } from '@/lib/supabase';
+import { getStorageUrl } from '@/lib/media';
+import type { BlogPost, BlogCategory } from '@/lib/types';
 import { renderRichText } from '@/utils/sanitizeHtml';
 import PageLayout from '@/components/layout/PageLayout';
 

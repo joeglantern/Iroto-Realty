@@ -1,0 +1,33 @@
+# Caddy gets and renews HTTPS certificates automatically once DNS points at this server.
+
+www.{$SITE_DOMAIN} {
+	redir https://{$SITE_DOMAIN}{uri} permanent
+}
+
+{$SITE_DOMAIN} {
+	encode zstd gzip
+
+	# Uploaded images, straight from disk
+	handle_path /media/* {
+		root * /srv/media
+		header Cache-Control "public, max-age=31536000, immutable"
+		header X-Content-Type-Options nosniff
+		@jpegAliases path *.jfif *.jpe *.JFIF *.JPE
+		header @jpegAliases Content-Type image/jpeg
+		file_server
+	}
+
+	handle {
+		reverse_proxy website:3000
+	}
+}
+
+{$ADMIN_DOMAIN} {
+	encode zstd gzip
+
+	request_body {
+		max_size 110MB
+	}
+
+	reverse_proxy admin:3000
+}

@@ -1,0 +1,80 @@
+name: iroto
+
+x-database-url: &database-url postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+
+services:
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    shm_size: 256mb
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  website:
+    build:
+      context: ../website
+      args:
+        NEXT_PUBLIC_MEDIA_URL: https://${SITE_DOMAIN}/media
+        NEXT_PUBLIC_SITE_URL: https://${SITE_DOMAIN}
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: *database-url
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+    # Image optimisation fetches https://SITE_DOMAIN/media/...; route that straight to Caddy on this host.
+    extra_hosts:
+      - "${SITE_DOMAIN}:host-gateway"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  admin:
+    build:
+      context: ../admin
+      args:
+        NEXT_PUBLIC_MEDIA_URL: https://${SITE_DOMAIN}/media
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: *database-url
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
+      BETTER_AUTH_URL: https://${ADMIN_DOMAIN}
+    volumes:
+      - ./data/uploads:/app/uploads
+    # Image optimisation fetches https://SITE_DOMAIN/media/...; route that straight to Caddy on this host.
+    extra_hosts:
+      - "${SITE_DOMAIN}:host-gateway"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN}
+      ADMIN_DOMAIN: ${ADMIN_DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./data/uploads:/srv/media:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - website
+      - admin
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:

@@ -7,10 +7,12 @@ import SimpleProtectedRoute from '@/components/SimpleProtectedRoute';
 import AdminHeader from '@/components/layout/AdminHeader';
 import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
 import { useSimpleAuth } from '@/contexts/SimpleAuthContext';
-import { getProperties, getPropertyCategories, getPropertyTypes, createProperty, createPropertyCategory, generateSlug, deleteProperty, deletePropertyCategory, updateProperty, updatePropertyCategory, getProperty } from '@/lib/properties';
-import { uploadFile, getStorageUrl, supabase } from '@/lib/supabase';
+import { getProperties, getPropertyCategories, getPropertyTypes, createProperty, createPropertyCategory, deleteProperty, deletePropertyCategory, updateProperty, updatePropertyCategory, getProperty, addPropertyImage } from '@/lib/properties';
+import { uploadFile, getStorageUrl } from '@/lib/storage';
+import { generateSlug } from '@/lib/slug';
 import { toast } from '@/lib/notify';
-import type { Property, PropertyCategory, PropertyType } from '@/lib/supabase';
+import { HARD_MAX_BYTES, HARD_MAX_MB, RECOMMENDED_MAX_MB, formatFileSize, screenImageSizes } from '@/lib/upload-limits';
+import type { Property, PropertyCategory, PropertyType } from '@/lib/types';
 import RichTextEditor from '@/components/RichTextEditor';
 
 export default function Properties() {
@@ -72,7 +74,6 @@ export default function Properties() {
 
   // Supported image formats and max sizes
   const SUPPORTED_FORMATS = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/avif'];
-  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
   const MAX_GALLERY_IMAGES = 30; // Reasonable limit for performance
 
   // Image compression and validation utility
@@ -89,8 +90,8 @@ export default function Properties() {
       }
 
       // Check file size
-      if (file.size > MAX_FILE_SIZE) {
-        reject(new Error(`File too large: ${(file.size / 1024 / 1024).toFixed(1)}MB. Maximum size is 10MB.`));
+      if (file.size > HARD_MAX_BYTES) {
+        reject(new Error(`File too large: ${formatFileSize(file.size)}. Maximum size is ${HARD_MAX_MB} MB.`));
         return;
       }
 
@@ -158,7 +159,7 @@ export default function Properties() {
   };
 
   // Validate and set the hero image (from file input or drag & drop)
-  const handleHeroFile = (file: File | null) => {
+  const handleHeroFile = async (file: File | null) => {
     if (!file) {
       setHeroImage(null);
       return;
@@ -170,16 +171,14 @@ export default function Properties() {
       toast.error(`Unsupported format: ${file.type}. Please use JPEG, PNG, WebP, or AVIF.`);
       return;
     }
-    if (file.size > MAX_FILE_SIZE) {
-      toast.error(`File too large: ${(file.size / 1024 / 1024).toFixed(1)}MB. Maximum size is 10MB.`);
-      return;
-    }
-    setHeroImage(file);
+    const { accepted, refused } = await screenImageSizes([file]);
+    if (refused.length) toast.error(refused[0]);
+    if (accepted.length) setHeroImage(accepted[0]);
   };
 
   // Validate and ADD gallery files to the current selection (from file input or drag & drop).
   // New picks are appended so images can be added in several batches before saving.
-  const addGalleryFiles = (files: File[]) => {
+  const addGalleryFiles = async (files: File[]) => {
     const validFiles: File[] = [];
     const errors: string[] = [];
 
@@ -189,20 +188,21 @@ export default function Properties() {
 
       if (!isSupportedType) {
         errors.push(`File ${index + 1} (${file.name}): Unsupported format ${file.type}`);
-      } else if (file.size > MAX_FILE_SIZE) {
-        errors.push(`File ${index + 1} (${file.name}): Too large (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
       } else {
         validFiles.push(file);
       }
     });
 
+    const { accepted, refused } = await screenImageSizes(validFiles);
+    errors.push(...refused);
+
     if (errors.length > 0) {
-      toast.warning(`Some files were rejected:\n\n${errors.slice(0, 5).join('\n')}${errors.length > 5 ? '\n...' : ''}\n\nPlease use JPEG, PNG, WebP, or AVIF files under 10MB.`);
+      toast.warning(`Some files were rejected:\n\n${errors.slice(0, 5).join('\n')}${errors.length > 5 ? '\n...' : ''}\n\nPlease use JPEG, PNG, WebP, or AVIF files up to ${HARD_MAX_MB} MB.`);
     }
-    if (validFiles.length === 0) return;
+    if (accepted.length === 0) return;
 
     const merged = [...galleryImages];
-    validFiles.forEach(file => {
+    accepted.forEach(file => {
       if (!merged.some(f => f.name === file.name && f.size === file.size)) {
         merged.push(file);
       }
@@ -368,10 +368,8 @@ export default function Properties() {
           } else {
             
             // Update property with hero image path
-            const updatePromise = supabase
-              .from('properties')
-              .update({ hero_image_path: heroPath })
-              .eq('id', property.id);
+            const updatePromise = updateProperty(property.id, { hero_image_path: heroPath })
+              .then(() => ({ error: null }), (error: Error) => ({ error }));
               
             const { error: updateError } = await Promise.race([
               updatePromise,
@@ -430,15 +428,14 @@ export default function Properties() {
               }
 
               // Insert into property_images table
-              const insertPromise = supabase
-                .from('property_images')
-                .insert({
+              const insertPromise = addPropertyImage({
                   property_id: property.id,
                   image_path: imagePath,
                   alt_text: `${property.title} - Image ${actualIndex + 1}`,
                   sort_order: actualIndex + 1,
                   is_active: true
-                });
+                })
+                .then(() => ({ error: null }), (error: Error) => ({ error }));
                 
               const { error: insertError } = await Promise.race([
                 insertPromise,
@@ -545,10 +542,8 @@ export default function Properties() {
             toast.warning(`Category updated but image upload failed: ${uploadError.message}`);
           } else {
             // Update category with hero image path
-            const { error: updateError } = await supabase
-              .from('property_categories')
-              .update({ hero_image_path: imagePath })
-              .eq('id', updatedCategory.id);
+            const updateError = await updatePropertyCategory(updatedCategory.id, { hero_image_path: imagePath })
+              .then(() => null, (error: Error) => error);
 
             if (updateError) {
               toast.warning(`Category updated but failed to link image: ${updateError.message}`);
@@ -583,11 +578,9 @@ export default function Properties() {
           if (uploadError) {
             toast.warning(`Category created but image upload failed: ${uploadError.message}`);
           } else {
-            // Update category with hero image path using Supabase directly
-            const { error: updateError } = await supabase
-              .from('property_categories')
-              .update({ hero_image_path: imagePath })
-              .eq('id', category.id);
+            // Update category with hero image path
+            const updateError = await updatePropertyCategory(category.id, { hero_image_path: imagePath })
+              .then(() => null, (error: Error) => error);
 
             if (updateError) {
               toast.warning(`Category created but failed to link image: ${updateError.message}`);
@@ -1220,7 +1213,7 @@ export default function Properties() {
                     >
                       Choose Image
                     </label>
-                    <p className="text-xs text-gray-500 mt-2">JPEG, PNG, WebP up to 10MB. Recommended: 1920x1080px. AVIF supported (auto-converted).</p>
+                    <p className="text-xs text-gray-500 mt-2">JPEG, PNG, WebP, ideally under {RECOMMENDED_MAX_MB} MB. Recommended: 1920x1080px. AVIF supported (auto-converted).</p>
                   </div>
                 </div>
 
@@ -1259,7 +1252,7 @@ export default function Properties() {
                     >
                       Choose Images
                     </label>
-                    <p className="text-xs text-gray-500 mt-2">JPEG, PNG, WebP up to 10MB each. Max {MAX_GALLERY_IMAGES} images. You can select several at once, or add more in batches — new picks are added to the list. AVIF supported (auto-converted).</p>
+                    <p className="text-xs text-gray-500 mt-2">JPEG, PNG, WebP, ideally under {RECOMMENDED_MAX_MB} MB each. Max {MAX_GALLERY_IMAGES} images. You can select several at once, or add more in batches — new picks are added to the list. AVIF supported (auto-converted).</p>
                     {galleryImages.length > 0 && (
                       <div className="mt-4">
                         <div className="flex flex-wrap gap-2 justify-center">
@@ -1445,7 +1438,15 @@ export default function Properties() {
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
                       <input
                         type="file"
-                        onChange={(e) => setCategoryImage(e.target.files?.[0] || null)}
+                        onChange={async (e) => {
+                          const input = e.target;
+                          const file = input.files?.[0] || null;
+                          if (!file) return setCategoryImage(null);
+                          const { accepted, refused } = await screenImageSizes([file]);
+                          if (refused.length) toast.error(refused[0]);
+                          setCategoryImage(accepted[0] || null);
+                          if (!accepted.length) input.value = '';
+                        }}
                         accept="image/*"
                         className="hidden"
                         id="category-image-upload"
@@ -1457,7 +1458,7 @@ export default function Properties() {
                         <p className="mt-2 text-sm text-gray-600">
                           {categoryImage ? categoryImage.name : 'Click to upload category image'}
                         </p>
-                        <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                        <p className="text-xs text-gray-500">PNG, JPG, WebP, ideally under {RECOMMENDED_MAX_MB} MB</p>
                       </label>
                     </div>
                   </div>

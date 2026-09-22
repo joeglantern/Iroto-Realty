@@ -211,3 +211,8 @@ body {
     animation: none;
   }
 }
+
+/* Returning visitors skip the intro; see the inline script in app/layout.tsx */
+.intro-seen .intro-overlay {
+  display: none;
+}

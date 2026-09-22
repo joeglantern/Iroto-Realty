@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import PageLayout from '@/components/layout/PageLayout';
 import { CheckCircle, XCircle, Envelope, Phone, MapPin, Clock, CircleNotch, FacebookLogo, InstagramLogo, YoutubeLogo } from '@phosphor-icons/react';
+import { SOCIAL_LINKS } from '@/lib/social';
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -277,17 +278,21 @@ export default function Contact() {
                   <h3 className="font-semibold text-black mb-4">Follow Us</h3>
                   <div className="flex space-x-4">
                     <a
-                      href="https://facebook.com/irotorealty"
+                      href={SOCIAL_LINKS.facebook.url}
                       target="_blank"
                       rel="noopener noreferrer"
+                      aria-label="Iroto Realty on Facebook"
+                      title={SOCIAL_LINKS.facebook.label}
                       className="w-10 h-10 bg-brown hover:bg-brown/90 rounded-full flex items-center justify-center transition-colors duration-200"
                     >
                       <FacebookLogo size={20} weight="fill" className="text-white" />
                     </a>
                     <a
-                      href="https://instagram.com/irotorealty"
+                      href={SOCIAL_LINKS.instagram.url}
                       target="_blank"
                       rel="noopener noreferrer"
+                      aria-label="Iroto Realty on Instagram"
+                      title={SOCIAL_LINKS.instagram.label}
                       className="w-10 h-10 bg-brown hover:bg-brown/90 rounded-full flex items-center justify-center transition-colors duration-200"
                     >
                       <InstagramLogo size={20} weight="fill" className="text-white" />

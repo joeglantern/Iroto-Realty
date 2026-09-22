@@ -6,10 +6,11 @@ import Image from 'next/image';
 import Link from 'next/link';
 import SimpleProtectedRoute from '@/components/SimpleProtectedRoute';
 import { useSimpleAuth } from '@/contexts/SimpleAuthContext';
-import { getProperty, updateProperty, getPropertyCategories, getPropertyTypes } from '@/lib/properties';
-import { uploadFile, deleteFile, getStorageUrl, supabase } from '@/lib/supabase';
+import { getProperty, updateProperty, getPropertyCategories, getPropertyTypes, addPropertyImage, deletePropertyImage } from '@/lib/properties';
+import { uploadFile, deleteFile, getStorageUrl } from '@/lib/storage';
 import { toast, confirmDialog } from '@/lib/notify';
-import type { Property, PropertyCategory, PropertyType } from '@/lib/supabase';
+import { HARD_MAX_BYTES, HARD_MAX_MB, RECOMMENDED_MAX_BYTES, RECOMMENDED_MAX_MB, confirmLargeImages, formatFileSize } from '@/lib/upload-limits';
+import type { Property, PropertyCategory, PropertyType } from '@/lib/types';
 import RichTextEditor from '@/components/RichTextEditor';
 
 export default function EditProperty() {
@@ -64,7 +65,7 @@ export default function EditProperty() {
   
   // Image format constants
   const SUPPORTED_FORMATS = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/avif'];
-  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+  const COMPRESS_ABOVE_BYTES = 10 * 1024 * 1024;
 
   // Load data on component mount
   useEffect(() => {
@@ -89,14 +90,14 @@ export default function EditProperty() {
     if (!SUPPORTED_FORMATS.includes(file.type) && !file.name.toLowerCase().match(/\.(jpg|jpeg|png|webp|avif)$/)) {
       return `Unsupported format. Please use: ${SUPPORTED_FORMATS.join(', ')}`;
     }
-    if (file.size > MAX_FILE_SIZE) {
-      return `File too large. Maximum size is ${MAX_FILE_SIZE / (1024 * 1024)}MB`;
+    if (file.size > HARD_MAX_BYTES) {
+      return `File too large (${formatFileSize(file.size)}). Maximum size is ${HARD_MAX_MB} MB`;
     }
     return null;
   };
 
   // Validate and set the hero image (from file input or drag & drop)
-  const handleHeroFile = (file: File | null) => {
+  const handleHeroFile = async (file: File | null) => {
     if (!file) {
       setHeroImage(null);
       return;
@@ -106,12 +107,12 @@ export default function EditProperty() {
       toast.error(`Invalid hero image: ${validationError}`);
       return;
     }
-    setHeroImage(file);
+    if (await confirmLargeImages([file])) setHeroImage(file);
   };
 
   // Validate and ADD gallery files to the current selection (from file input or drag & drop).
   // New picks are appended so images can be added in several batches before saving.
-  const addGalleryFiles = (files: File[]) => {
+  const addGalleryFiles = async (files: File[]) => {
     const invalidFiles: string[] = [];
     const validFiles: File[] = [];
 
@@ -129,9 +130,14 @@ export default function EditProperty() {
     }
     if (validFiles.length === 0) return;
 
+    const keep = (await confirmLargeImages(validFiles))
+      ? validFiles
+      : validFiles.filter(file => file.size <= RECOMMENDED_MAX_BYTES);
+    if (keep.length === 0) return;
+
     setGalleryImages(prev => {
       const merged = [...prev];
-      validFiles.forEach(file => {
+      keep.forEach(file => {
         if (!merged.some(f => f.name === file.name && f.size === file.size)) {
           merged.push(file);
         }
@@ -147,7 +153,7 @@ export default function EditProperty() {
       return convertToJPEG(file);
     }
 
-    if (file.size > MAX_FILE_SIZE) {
+    if (file.size > COMPRESS_ABOVE_BYTES) {
       return compressImage(file);
     }
 
@@ -303,10 +309,8 @@ export default function EditProperty() {
         return;
       }
 
-      const { error: dbError } = await supabase
-        .from('property_images')
-        .delete()
-        .eq('id', image.id);
+      const dbError = await deletePropertyImage(image.id)
+        .then(() => null, (error: Error) => error);
 
       if (dbError) {
         toast.error(`Image removed from storage but failed to remove from database: ${dbError.message}`);
@@ -362,10 +366,8 @@ export default function EditProperty() {
           toast.warning(`Property updated but hero image upload failed: ${uploadError.message}`);
         } else {
           // Update property with hero image path
-          const { error: updateError } = await supabase
-            .from('properties')
-            .update({ hero_image_path: heroPath })
-            .eq('id', updatedProperty.id);
+          const updateError = await updateProperty(updatedProperty.id, { hero_image_path: heroPath })
+            .then(() => null, (error: Error) => error);
             
           if (updateError) {
             toast.warning(`Property updated but failed to link hero image: ${updateError.message}`);
@@ -398,14 +400,13 @@ export default function EditProperty() {
             toast.warning(`Gallery image ${index + 1} upload failed: ${uploadError.message}`);
           } else {
             // Add to property_images table
-            const { error: insertError } = await supabase
-              .from('property_images')
-              .insert({
+            const insertError = await addPropertyImage({
                 property_id: updatedProperty.id,
                 image_path: galleryPath,
                 alt_text: formData.title,
                 sort_order: index + 1
-              });
+              })
+              .then(() => null, (error: Error) => error);
               
             if (insertError) {
               toast.warning(`Gallery image uploaded but failed to link: ${insertError.message}`);
@@ -927,7 +928,7 @@ export default function EditProperty() {
                       >
                         Choose Image
                       </label>
-                      <p className="text-xs text-gray-500 mt-2">JPG, PNG, WebP, AVIF up to 10MB. Recommended: 1920x1080px</p>
+                      <p className="text-xs text-gray-500 mt-2">JPG, PNG, WebP, AVIF, ideally under {RECOMMENDED_MAX_MB} MB. Recommended: 1920x1080px</p>
                     </div>
                   </div>
 
@@ -966,7 +967,7 @@ export default function EditProperty() {
                       >
                         Choose Images
                       </label>
-                      <p className="text-xs text-gray-500 mt-2">JPG, PNG, WebP, AVIF up to 10MB each. You can select several at once, or add more in batches — new picks are added to the list.</p>
+                      <p className="text-xs text-gray-500 mt-2">JPG, PNG, WebP, AVIF, ideally under {RECOMMENDED_MAX_MB} MB each. You can select several at once, or add more in batches — new picks are added to the list.</p>
                       {galleryImages.length > 0 && (
                         <div className="mt-4">
                           <div className="flex flex-wrap gap-2 justify-center">

@@ -30,7 +30,7 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
   return (
     <>
       <div 
-        className={`fixed inset-0 bg-white z-50 flex items-center justify-center transition-opacity duration-400 ${
+        className={`intro-overlay fixed inset-0 bg-white z-[100] flex items-center justify-center transition-opacity duration-400 ${
           fadeOut ? 'opacity-0' : 'opacity-100'
         }`}
       >

@@ -2,7 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { supabase, TravelSection } from '@/lib/supabase';
+import type { TravelSection } from '@/lib/types';
+import {
+  getTravelSections,
+  createTravelSection,
+  updateTravelSection,
+  reorderTravelSections,
+  deleteTravelSection
+} from '@/lib/travel-sections';
 import { toast, confirmDialog } from '@/lib/notify';
 import SimpleProtectedRoute from '@/components/SimpleProtectedRoute';
 import AdminHeader from '@/components/layout/AdminHeader';
@@ -35,14 +42,8 @@ function TravelPages() {
   const loadSections = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('travel_sections')
-        .select('*')
-        .eq('page_type', selectedPage)
-        .order('sort_order', { ascending: true });
-
-      if (error) throw error;
-      setSections(data || []);
+      const data = await getTravelSections(selectedPage);
+      setSections(data);
     } catch (error) {
     } finally {
       setLoading(false);
@@ -54,30 +55,21 @@ function TravelPages() {
     try {
       if (editingSection) {
         // Update existing section
-        const { error } = await supabase
-          .from('travel_sections')
-          .update({
-            title: formData.title,
-            content: formData.content,
-            is_active: formData.is_active
-          })
-          .eq('id', editingSection.id);
-
-        if (error) throw error;
+        await updateTravelSection(editingSection.id, {
+          title: formData.title,
+          content: formData.content,
+          is_active: formData.is_active
+        });
       } else {
         // Create new section
         const maxSortOrder = sections.length > 0 ? Math.max(...sections.map(s => s.sort_order)) : 0;
-        const { error } = await supabase
-          .from('travel_sections')
-          .insert({
-            page_type: selectedPage,
-            title: formData.title,
-            content: formData.content,
-            sort_order: maxSortOrder + 1,
-            is_active: formData.is_active
-          });
-
-        if (error) throw error;
+        await createTravelSection({
+          page_type: selectedPage,
+          title: formData.title,
+          content: formData.content,
+          sort_order: maxSortOrder + 1,
+          is_active: formData.is_active
+        });
       }
 
       // Reset form and reload sections
@@ -109,12 +101,7 @@ function TravelPages() {
     if (!confirmed) return;
 
     try {
-      const { error } = await supabase
-        .from('travel_sections')
-        .delete()
-        .eq('id', section.id);
-
-      if (error) throw error;
+      await deleteTravelSection(section.id);
       loadSections();
     } catch (error) {
       toast.error('Error deleting section. Please try again.');
@@ -144,14 +131,7 @@ function TravelPages() {
         }
       ];
 
-      for (const update of updates) {
-        const { error } = await supabase
-          .from('travel_sections')
-          .update({ sort_order: update.sort_order })
-          .eq('id', update.id);
-
-        if (error) throw error;
-      }
+      await reorderTravelSections(updates);
 
       loadSections();
     } catch (error) {
@@ -161,12 +141,7 @@ function TravelPages() {
 
   const toggleActive = async (section: TravelSection) => {
     try {
-      const { error } = await supabase
-        .from('travel_sections')
-        .update({ is_active: !section.is_active })
-        .eq('id', section.id);
-
-      if (error) throw error;
+      await updateTravelSection(section.id, { is_active: !section.is_active });
       loadSections();
     } catch (error) {
     }

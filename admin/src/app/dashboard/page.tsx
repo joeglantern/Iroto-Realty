@@ -9,7 +9,8 @@ import { getBlogPosts } from '@/lib/blog';
 import { getReviews } from '@/lib/reviews';
 import SimpleProtectedRoute from '@/components/SimpleProtectedRoute';
 import AdminHeader from '@/components/layout/AdminHeader';
-import type { Property } from '@/lib/supabase';
+import type { Property } from '@/lib/types';
+import { getStorageUrl } from '@/lib/media';
 import {
   HomeIcon,
   EyeIcon,
@@ -215,7 +216,7 @@ function Dashboard() {
                     <div className="w-16 h-16 bg-gray-200 rounded-lg flex-shrink-0 overflow-hidden">
                       {property.hero_image_path && (
                         <Image
-                          src={`https://cskyixawxnxxjhenggzo.supabase.co/storage/v1/object/public/property-images/${property.hero_image_path}`}
+                          src={getStorageUrl('property-images', property.hero_image_path)}
                           alt={property.title}
                           width={64}
                           height={64}

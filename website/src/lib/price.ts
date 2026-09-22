@@ -1,4 +1,4 @@
-import type { Property } from './supabase'
+import type { Property } from './types'
 
 export const CONTACT_FOR_PRICE = 'Contact for Price'
 

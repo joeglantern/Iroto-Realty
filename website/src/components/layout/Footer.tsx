@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { FacebookLogo, InstagramLogo, YoutubeLogo } from '@phosphor-icons/react';
+import { SOCIAL_LINKS } from '@/lib/social';
 
 export default function Footer() {
   return (
@@ -25,20 +26,32 @@ export default function Footer() {
           {/* Social Media Links */}
           <div className="flex flex-col space-y-3">
             {/* Facebook */}
-            <div className="flex items-center space-x-3">
+            <a
+              href={SOCIAL_LINKS.facebook.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Iroto Realty on Facebook"
+              className="flex items-center space-x-3 hover:text-gray-300 transition-colors duration-200"
+            >
               <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center flex-shrink-0">
                 <FacebookLogo size={16} weight="fill" className="text-white" />
               </div>
-              <span className="text-white">irotorealty.com</span>
-            </div>
+              <span className="text-white">{SOCIAL_LINKS.facebook.label}</span>
+            </a>
 
             {/* Instagram */}
-            <div className="flex items-center space-x-3">
+            <a
+              href={SOCIAL_LINKS.instagram.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Iroto Realty on Instagram"
+              className="flex items-center space-x-3 hover:text-gray-300 transition-colors duration-200"
+            >
               <div className="w-8 h-8 bg-gradient-to-br from-purple-600 via-pink-600 to-orange-500 rounded flex items-center justify-center flex-shrink-0">
                 <InstagramLogo size={16} weight="fill" className="text-white" />
               </div>
-              <span className="text-white">irotorealty.com</span>
-            </div>
+              <span className="text-white">{SOCIAL_LINKS.instagram.label}</span>
+            </a>
 
             {/* YouTube */}
             <div className="flex items-center space-x-3">

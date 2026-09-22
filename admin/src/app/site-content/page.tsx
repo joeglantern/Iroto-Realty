@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react';
 import SimpleProtectedRoute from '@/components/SimpleProtectedRoute';
 import AdminHeader from '@/components/layout/AdminHeader';
-import { uploadFile, deleteFile, getStorageUrl, supabase } from '@/lib/supabase';
+import { uploadFile, deleteFile, getStorageUrl } from '@/lib/storage';
+import { getSiteImageSettings, upsertSiteSettings } from '@/lib/site-settings';
 import { toast, confirmDialog } from '@/lib/notify';
+import { HARD_MAX_BYTES, HARD_MAX_MB, RECOMMENDED_MAX_BYTES, confirmLargeImages, formatFileSize } from '@/lib/upload-limits';
 
 interface ImageSlot {
   key: string;
@@ -29,7 +31,6 @@ const IMAGE_SLOTS: ImageSlot[] = [
 ];
 
 const SUPPORTED_FORMATS = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_HERO_IMAGES = 8;
 
 interface PendingHeroFile {
@@ -57,12 +58,7 @@ export default function SiteContent() {
   const loadSettings = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('system_settings')
-        .select('setting_key, setting_value')
-        .eq('category', 'site_images');
-
-      if (error) throw error;
+      const data = await getSiteImageSettings();
 
       const map: Record<string, string> = {};
       (data || []).forEach((row: any) => {
@@ -98,8 +94,8 @@ export default function SiteContent() {
     if (!SUPPORTED_FORMATS.includes(file.type)) {
       return `${file.name}: Unsupported format. Please use JPEG, PNG, or WebP.`;
     }
-    if (file.size > MAX_FILE_SIZE) {
-      return `${file.name}: Too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Maximum size is 10MB.`;
+    if (file.size > HARD_MAX_BYTES) {
+      return `${file.name}: Too large (${formatFileSize(file.size)}). Maximum size is ${HARD_MAX_MB} MB.`;
     }
     return null;
   };
@@ -107,9 +103,7 @@ export default function SiteContent() {
   // ---- Homepage hero slideshow handlers ----
 
   const persistHeroImages = async (paths: string[]) => {
-    const { error } = await supabase
-      .from('system_settings')
-      .upsert([
+    await upsertSiteSettings([
         {
           setting_key: 'home_hero_images',
           setting_value: JSON.stringify(paths),
@@ -125,23 +119,27 @@ export default function SiteContent() {
           is_public: true,
           category: 'site_images'
         }
-      ], { onConflict: 'setting_key' });
-    if (error) throw new Error(error.message || 'Failed to save slideshow');
+    ]);
   };
 
-  const addHeroFiles = (files: File[]) => {
+  const addHeroFiles = async (files: File[]) => {
     if (files.length === 0) return;
 
     const errors: string[] = [];
-    const valid: PendingHeroFile[] = [];
+    const candidates: File[] = [];
     files.forEach(file => {
       const err = validateFile(file);
       if (err) {
         errors.push(err);
       } else if (!heroPending.some(p => p.file.name === file.name && p.file.size === file.size)) {
-        valid.push({ file, url: URL.createObjectURL(file) });
+        candidates.push(file);
       }
     });
+
+    const keep = (await confirmLargeImages(candidates))
+      ? candidates
+      : candidates.filter(file => file.size <= RECOMMENDED_MAX_BYTES);
+    const valid: PendingHeroFile[] = keep.map(file => ({ file, url: URL.createObjectURL(file) }));
 
     if (errors.length > 0) {
       toast.error(`Some files were rejected:\n${errors.slice(0, 4).join('\n')}${errors.length > 4 ? '\n...' : ''}`);
@@ -239,7 +237,7 @@ export default function SiteContent() {
 
   // ---- Single-image slot handlers (about page) ----
 
-  const handleFileSelect = (key: string, file: File | null) => {
+  const handleFileSelect = async (key: string, file: File | null) => {
     if (!file) return;
 
     const err = validateFile(file);
@@ -247,6 +245,7 @@ export default function SiteContent() {
       toast.error(err);
       return;
     }
+    if (!(await confirmLargeImages([file]))) return;
 
     setPendingFiles(prev => ({ ...prev, [key]: file }));
     setPreviews(prev => ({ ...prev, [key]: URL.createObjectURL(file) }));
@@ -264,16 +263,13 @@ export default function SiteContent() {
       const { error: uploadError } = await uploadFile('property-images', path, file);
       if (uploadError) throw new Error(uploadError.message || 'Upload failed');
 
-      const { error: upsertError } = await supabase
-        .from('system_settings')
-        .upsert({
-          setting_key: key,
-          setting_value: path,
-          setting_type: 'text',
-          is_public: true,
-          category: 'site_images'
-        }, { onConflict: 'setting_key' });
-      if (upsertError) throw new Error(upsertError.message || 'Failed to save setting');
+      await upsertSiteSettings([{
+        setting_key: key,
+        setting_value: path,
+        setting_type: 'text',
+        is_public: true,
+        category: 'site_images'
+      }]);
 
       // Clean up the replaced file (best effort - the setting already points to the new one)
       if (oldPath && oldPath !== path) {
@@ -308,16 +304,13 @@ export default function SiteContent() {
     try {
       setSavingKey(key);
 
-      const { error: upsertError } = await supabase
-        .from('system_settings')
-        .upsert({
-          setting_key: key,
-          setting_value: '',
-          setting_type: 'text',
-          is_public: true,
-          category: 'site_images'
-        }, { onConflict: 'setting_key' });
-      if (upsertError) throw new Error(upsertError.message || 'Failed to remove setting');
+      await upsertSiteSettings([{
+        setting_key: key,
+        setting_value: '',
+        setting_type: 'text',
+        is_public: true,
+        category: 'site_images'
+      }]);
 
       // Clean up the stored file (best effort - the setting is already cleared)
       await deleteFile('property-images', currentPath).catch(() => {});

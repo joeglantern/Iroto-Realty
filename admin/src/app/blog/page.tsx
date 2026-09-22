@@ -7,10 +7,12 @@ import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
 import SimpleProtectedRoute from '@/components/SimpleProtectedRoute';
 import AdminHeader from '@/components/layout/AdminHeader';
 import { useSimpleAuth } from '@/contexts/SimpleAuthContext';
-import { getBlogPosts, getBlogCategories, createBlogPost, createBlogCategory, deleteBlogCategory, generateSlug, deleteBlogPost, updateBlogPost, getBlogPost } from '@/lib/blog';
-import { uploadFile, supabase } from '@/lib/supabase';
-import type { BlogPost, BlogCategory } from '@/lib/supabase';
+import { getBlogPosts, getBlogCategories, createBlogPost, createBlogCategory, deleteBlogCategory, deleteBlogPost, updateBlogPost, getBlogPost } from '@/lib/blog';
+import { uploadFile } from '@/lib/storage';
+import type { BlogPost, BlogCategory } from '@/lib/types';
+import { generateSlug } from '@/lib/slug';
 import { toast } from '@/lib/notify';
+import { HARD_MAX_BYTES, HARD_MAX_MB, RECOMMENDED_MAX_MB, confirmLargeImages, formatFileSize } from '@/lib/upload-limits';
 import RichTextEditor from '@/components/RichTextEditor';
 
 function Blog() {
@@ -62,15 +64,15 @@ function Blog() {
 
   // Image format constants
   const SUPPORTED_FORMATS = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/avif'];
-  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+  const COMPRESS_ABOVE_BYTES = 10 * 1024 * 1024;
 
   // Image processing functions
   const validateImageFile = (file: File): string | null => {
     if (!SUPPORTED_FORMATS.includes(file.type) && !file.name.toLowerCase().match(/\.(jpg|jpeg|png|webp|avif)$/)) {
       return `Unsupported format. Please use: ${SUPPORTED_FORMATS.join(', ')}`;
     }
-    if (file.size > MAX_FILE_SIZE) {
-      return `File too large. Maximum size is ${MAX_FILE_SIZE / (1024 * 1024)}MB`;
+    if (file.size > HARD_MAX_BYTES) {
+      return `File too large (${formatFileSize(file.size)}). Maximum size is ${HARD_MAX_MB} MB`;
     }
     return null;
   };
@@ -82,7 +84,7 @@ function Blog() {
       return convertToJPEG(file);
     }
 
-    if (file.size > MAX_FILE_SIZE) {
+    if (file.size > COMPRESS_ABOVE_BYTES) {
       return compressImage(file);
     }
 
@@ -299,10 +301,8 @@ function Blog() {
           toast.warning(`Blog post created but featured image upload failed: ${uploadError.message}`);
         } else {
           // Update post with featured image path
-          const { error: updateError } = await supabase
-            .from('blog_posts')
-            .update({ featured_image_path: imagePath })
-            .eq('id', post.id);
+          const updateError = await updateBlogPost(post.id, { featured_image_path: imagePath })
+            .then(() => null, (error: Error) => error);
             
           if (updateError) {
             toast.warning(`Blog post created but failed to link featured image: ${updateError.message}`);
@@ -850,13 +850,18 @@ function Blog() {
                       accept="image/jpeg,image/jpg,image/png,image/webp,image/avif" 
                       className="hidden" 
                       id="blog-featured-image"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
+                      onChange={async (e) => {
+                        const input = e.target;
+                        const file = input.files?.[0];
                         if (file) {
                           const validationError = validateImageFile(file);
                           if (validationError) {
                             toast.error(`Invalid featured image: ${validationError}`);
-                            e.target.value = '';
+                            input.value = '';
+                            return;
+                          }
+                          if (!(await confirmLargeImages([file]))) {
+                            input.value = '';
                             return;
                           }
                           setFeaturedImage(file);
@@ -874,7 +879,7 @@ function Blog() {
                     {featuredImage && (
                       <p className="text-sm text-green-600 mt-2">Selected: {featuredImage.name}</p>
                     )}
-                    <p className="text-xs text-gray-500 mt-2">JPG, PNG, WebP, AVIF up to 10MB. Recommended: 1200x600px</p>
+                    <p className="text-xs text-gray-500 mt-2">JPG, PNG, WebP, AVIF, ideally under {RECOMMENDED_MAX_MB} MB. Recommended: 1200x600px</p>
                   </div>
                 </div>
 

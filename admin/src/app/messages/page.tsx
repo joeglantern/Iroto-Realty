@@ -6,7 +6,7 @@ import Link from 'next/link';
 import SimpleProtectedRoute from '@/components/SimpleProtectedRoute';
 import AdminHeader from '@/components/layout/AdminHeader';
 import { useSimpleAuth } from '@/contexts/SimpleAuthContext';
-import { supabase } from '@/lib/supabase';
+import { getContactMessages, updateContactMessage, deleteContactMessage } from '@/lib/messages';
 
 interface ContactMessage {
   id: string;
@@ -46,26 +46,8 @@ export default function Messages() {
   const fetchMessages = async () => {
     try {
       setLoading(true);
-      let query = supabase
-        .from('contact_inquiries')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      // Apply filters
-      if (filters.status !== 'all') {
-        query = query.eq('status', filters.status);
-      }
-      if (filters.search) {
-        query = query.or(`name.ilike.%${filters.search}%,email.ilike.%${filters.search}%,subject.ilike.%${filters.search}%`);
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        return;
-      }
-
-      setMessages(data || []);
+      const data = await getContactMessages(filters);
+      setMessages(data as unknown as ContactMessage[]);
     } catch (error) {
     } finally {
       setLoading(false);
@@ -74,14 +56,7 @@ export default function Messages() {
 
   const updateMessageStatus = async (messageId: string, status: 'new' | 'in_progress' | 'replied' | 'closed') => {
     try {
-      const { error } = await supabase
-        .from('contact_inquiries')
-        .update({ status, updated_at: new Date().toISOString() })
-        .eq('id', messageId);
-
-      if (error) {
-        return;
-      }
+      await updateContactMessage(messageId, { status });
 
       fetchMessages();
       if (selectedMessage?.id === messageId) {
@@ -93,14 +68,7 @@ export default function Messages() {
 
   const deleteMessage = async (messageId: string) => {
     try {
-      const { error } = await supabase
-        .from('contact_inquiries')
-        .delete()
-        .eq('id', messageId);
-
-      if (error) {
-        return;
-      }
+      await deleteContactMessage(messageId);
 
       fetchMessages();
       if (selectedMessage?.id === messageId) {

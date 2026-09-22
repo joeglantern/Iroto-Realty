@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import PageLayout from '@/components/layout/PageLayout';
 import { getSiteImages } from '@/lib/data';
-import { getStorageUrl } from '@/lib/supabase';
+import { getStorageUrl } from '@/lib/media';
 import { House, Suitcase, CurrencyDollar, UsersThree, MapPin, CheckSquare, ShieldCheck } from '@phosphor-icons/react';
 
 const DEFAULT_HERO_IMAGE = '/About Us_.jpg';

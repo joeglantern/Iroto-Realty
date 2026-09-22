@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { sql } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
@@ -42,25 +37,26 @@ export async function POST(request: NextRequest) {
       return 'general';
     };
 
-    const { data, error } = await supabase
-      .from('contact_inquiries')
-      .insert({
-        name: name.trim(),
-        email: email.trim().toLowerCase(),
-        phone: phone?.trim() || null,
-        subject: subject?.trim() || null,
-        message: message.trim(),
-        inquiry_type: getInquiryType(subject),
-        status: 'new',
-        priority: 'normal',
-        source: 'contact_form',
-        user_ip: userIP,
-        user_agent: userAgent
-      })
-      .select()
-      .single();
+    const inquiry = {
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
+      phone: phone?.trim() || null,
+      subject: subject?.trim() || null,
+      message: message.trim(),
+      inquiry_type: getInquiryType(subject),
+      status: 'new',
+      priority: 'normal',
+      source: 'contact_form',
+      user_ip: userIP,
+      user_agent: userAgent
+    };
 
-    if (error) {
+    let data: { id: string };
+    try {
+      [data] = await sql<{ id: string }[]>`
+        insert into contact_inquiries ${sql(inquiry)}
+        returning id`;
+    } catch (error) {
       return NextResponse.json(
         { error: 'Failed to save your message. Please try again.' },
         { status: 500 }

@@ -1,3 +1,11 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Getting to Lamu, Watamu, Kilifi & Malindi',
+  description: 'How to travel to the Kenyan coast: flights, airport transfers, ferries and road routes to Lamu, Watamu, Kilifi and Malindi.',
+  alternates: { canonical: '/travel-insights/getting-there' },
+  openGraph: { url: '/travel-insights/getting-there', title: 'Getting to Lamu, Watamu, Kilifi & Malindi | Iroto Realty', description: 'How to travel to the Kenyan coast: flights, airport transfers, ferries and road routes to Lamu, Watamu, Kilifi and Malindi.' },
+};
 import PageLayout from '@/components/layout/PageLayout';
 import { getTravelSections } from '@/lib/travel-sections';
 import RichTextRenderer from '@/components/RichTextRenderer';

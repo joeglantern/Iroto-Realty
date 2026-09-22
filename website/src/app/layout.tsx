@@ -1,10 +1,39 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Providers from "@/components/Providers";
+import JsonLd from "@/components/seo/JsonLd";
+import { LAUNCH_CELEBRATION_ENABLED } from "@/lib/launch";
+import { IS_PRODUCTION_SITE, SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE, SITE_URL } from "@/lib/site";
+import { organizationJsonLd, websiteJsonLd } from "@/lib/structured-data";
 
 export const metadata: Metadata = {
-  title: "Iroto Realty - Premium Real Estate in Kenya",
-  description: "Discover luxury properties in Lamu and Watamu with Iroto Realty. Vacation rentals, sales collection, and premium real estate services.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: `${SITE_NAME} | ${SITE_TAGLINE}`,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  keywords: [
+    "Lamu vacation rentals", "Watamu villas", "Kilifi property", "Malindi holiday homes",
+    "Kenya coast real estate", "luxury villas Kenya", "property for sale Lamu", "Shela houses",
+  ],
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    locale: "en_KE",
+    title: `${SITE_NAME} | ${SITE_TAGLINE}`,
+    description: SITE_DESCRIPTION,
+    images: [{ url: "/logo/iroto-logo.png", alt: SITE_NAME }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${SITE_NAME} | ${SITE_TAGLINE}`,
+    description: SITE_DESCRIPTION,
+  },
+  robots: IS_PRODUCTION_SITE
+    ? { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 } }
+    : { index: false, follow: false },
   icons: {
     icon: [
       { url: '/favicon-96x96.png', sizes: '96x96', type: 'image/png' },
@@ -26,14 +55,25 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Hide the intro before first paint for visitors who have already seen it this session.
+            Skipped during the launch celebration, which plays on every visit. */}
+        {!LAUNCH_CELEBRATION_ENABLED && (
+          <script
+            dangerouslySetInnerHTML={{
+              __html:
+                "try{if(sessionStorage.getItem('iroto-visited')&&!/[?&]intro(=|&|$)/.test(location.search))document.documentElement.classList.add('intro-seen')}catch(e){}",
+            }}
+          />
+        )}
         <link 
           href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&display=swap" 
           rel="stylesheet" 
         />
       </head>
       <body className="antialiased font-sans">
+        <JsonLd data={[organizationJsonLd(), websiteJsonLd()]} />
         <Providers>
           {children}
         </Providers>

@@ -1,13 +1,13 @@
-﻿'use client';
+'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase';
+import { createContext, useContext } from 'react';
+import { authClient } from '@/lib/auth-client';
 
-// Simple, bulletproof auth interface
+type AuthSession = typeof authClient.$Infer.Session;
+
 interface SimpleAuthContextType {
-  user: User | null;
-  session: Session | null;
+  user: AuthSession['user'] | null;
+  session: AuthSession['session'] | null;
   loading: boolean;
   isAuthenticated: boolean;
   isAdmin: boolean;
@@ -17,77 +17,24 @@ interface SimpleAuthContextType {
 const SimpleAuthContext = createContext<SimpleAuthContextType | undefined>(undefined);
 
 export function SimpleAuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data, isPending } = authClient.useSession();
 
-  // Simple derived states
+  const user = data?.user ?? null;
   const isAuthenticated = !!user;
-  const isAdmin = isAuthenticated; // For now, all authenticated users are admins
+  // Only admins can sign in (checked at login), and every server action re-checks the role.
+  const isAdmin = isAuthenticated;
 
-  // Single useEffect - no complexity, no retries, no timeouts
-  useEffect(() => {
-    let mounted = true;
-
-    // Get initial session
-    const getInitialSession = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (mounted) {
-          if (error) {
-          }
-          
-          setSession(session);
-          setUser(session?.user ?? null);
-          setLoading(false);
-        }
-      } catch (error) {
-        if (mounted) {
-          setSession(null);
-          setUser(null);
-          setLoading(false);
-        }
-      }
-    };
-
-    getInitialSession();
-
-    // Listen to auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (!mounted) return;
-
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        // Always set loading to false after auth state change
-        setLoading(false);
-      }
-    );
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, []); // Empty dependency array - simple and predictable
-
-  // Simple sign out
   const signOut = async () => {
     try {
-      setLoading(true);
-      await supabase.auth.signOut();
-      // Auth state change will handle the cleanup
+      await authClient.signOut();
     } catch (error) {
-      setLoading(false);
     }
   };
 
   const value: SimpleAuthContextType = {
     user,
-    session,
-    loading,
+    session: data?.session ?? null,
+    loading: isPending,
     isAuthenticated,
     isAdmin,
     signOut,

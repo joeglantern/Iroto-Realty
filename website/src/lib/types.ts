@@ -1,10 +1,3 @@
-import { createClient } from '@supabase/supabase-js'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
 // Database types for the website (read-only, simplified versions)
 export interface Property {
   id: string
@@ -108,39 +101,4 @@ export interface Review {
   is_active: boolean
   created_at: string
   updated_at: string
-}
-
-// Helper function to get storage URL
-export function getStorageUrl(bucket: string, path: string): string {
-  if (!path) return ''
-  return `${supabaseUrl}/storage/v1/object/public/${bucket}/${path}`
-}
-
-// Helper function to track page views (for analytics)
-export async function trackPageView(data: {
-  page_path: string;
-  page_title?: string;
-  referrer_url?: string;
-  property_id?: string;
-  blog_post_id?: string;
-  session_id?: string;
-  user_ip?: string;
-  user_agent?: string;
-  device_type?: string;
-  browser?: string;
-}) {
-  try {
-    // Only track in production to avoid cluttering analytics during development
-    if (process.env.NODE_ENV === 'production') {
-      const { error } = await supabase
-        .from('page_views')
-        .insert(data);
-      
-      if (error) {
-        console.error('Error tracking page view:', error);
-      }
-    }
-  } catch (error) {
-    console.error('Error tracking page view:', error);
-  }
 }
