@@ -8,6 +8,9 @@ const nextConfig = {
     serverActions: { bodySizeLimit: '25mb' },
   },
   images: {
+    // next/image defaults to 75% quality when a component doesn't set its own;
+    // this makes the closest (only) allowed value 100 instead, site-wide.
+    qualities: [100],
     remotePatterns: [
       {
         protocol: mediaUrl.protocol.replace(':', ''),

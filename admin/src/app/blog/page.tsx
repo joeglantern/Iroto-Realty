@@ -64,7 +64,6 @@ function Blog() {
 
   // Image format constants
   const SUPPORTED_FORMATS = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/avif'];
-  const COMPRESS_ABOVE_BYTES = 10 * 1024 * 1024;
 
   // Image processing functions
   const validateImageFile = (file: File): string | null => {
@@ -77,18 +76,11 @@ function Blog() {
     return null;
   };
 
+  // AVIF must become JPEG because that is all the server stores; every other
+  // supported format is uploaded exactly as chosen, at full resolution, untouched.
   const processImage = async (file: File): Promise<File> => {
     const isAVIF = file.type === 'image/avif' || file.name.toLowerCase().endsWith('.avif');
-    
-    if (isAVIF) {
-      return convertToJPEG(file);
-    }
-
-    if (file.size > COMPRESS_ABOVE_BYTES) {
-      return compressImage(file);
-    }
-
-    return file;
+    return isAVIF ? convertToJPEG(file) : file;
   };
 
   const convertToJPEG = async (file: File): Promise<File> => {
@@ -96,16 +88,17 @@ function Blog() {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       const img = new window.Image();
-      
+
       img.onload = () => {
+        // Full original resolution - never downscaled.
         canvas.width = img.width;
         canvas.height = img.height;
-        
+
         if (ctx) {
           ctx.fillStyle = 'white';
           ctx.fillRect(0, 0, canvas.width, canvas.height);
           ctx.drawImage(img, 0, 0);
-          
+
           canvas.toBlob((blob) => {
             if (blob) {
               const newFile = new File([blob], file.name.replace(/\.(avif)$/i, '.jpg'), {
@@ -115,55 +108,12 @@ function Blog() {
             } else {
               reject(new Error('Failed to convert image'));
             }
-          }, 'image/jpeg', 0.85);
+          }, 'image/jpeg', 0.98); // near-lossless - only the mandatory AVIF-to-JPEG conversion touches quality
         } else {
           reject(new Error('Canvas context not available'));
         }
       };
-      
-      img.onerror = () => reject(new Error('Failed to load image'));
-      img.src = URL.createObjectURL(file);
-    });
-  };
 
-  const compressImage = async (file: File): Promise<File> => {
-    return new Promise((resolve, reject) => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const img = new window.Image();
-      
-      img.onload = () => {
-        const maxWidth = 1920;
-        const maxHeight = 1080;
-        let { width, height } = img;
-        
-        if (width > maxWidth || height > maxHeight) {
-          const ratio = Math.min(maxWidth / width, maxHeight / height);
-          width *= ratio;
-          height *= ratio;
-        }
-        
-        canvas.width = width;
-        canvas.height = height;
-        
-        if (ctx) {
-          ctx.drawImage(img, 0, 0, width, height);
-          
-          canvas.toBlob((blob) => {
-            if (blob) {
-              const newFile = new File([blob], file.name, {
-                type: file.type
-              });
-              resolve(newFile);
-            } else {
-              reject(new Error('Failed to compress image'));
-            }
-          }, file.type, 0.85);
-        } else {
-          reject(new Error('Canvas context not available'));
-        }
-      };
-      
       img.onerror = () => reject(new Error('Failed to load image'));
       img.src = URL.createObjectURL(file);
     });

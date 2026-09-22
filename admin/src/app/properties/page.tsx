@@ -77,80 +77,54 @@ export default function Properties() {
   const SUPPORTED_FORMATS = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/avif'];
   const MAX_GALLERY_IMAGES = 30; // Reasonable limit for performance
 
-  // Image compression and validation utility
+  // AVIF must become JPEG because that is all the server stores; every other
+  // supported format is uploaded exactly as chosen, at full resolution, untouched.
   const processImage = async (file: File): Promise<File> => {
     return new Promise((resolve, reject) => {
-      
-      // Check file type (including file extension fallback for AVIF)
       const isAVIF = file.type === 'image/avif' || file.name.toLowerCase().endsWith('.avif');
       const isSupportedType = SUPPORTED_FORMATS.includes(file.type) || isAVIF;
-      
+
       if (!isSupportedType) {
         reject(new Error(`Unsupported format: ${file.type}. Please use JPEG, PNG, WebP, or AVIF.`));
         return;
       }
 
-      // Check file size
       if (file.size > HARD_MAX_BYTES) {
         reject(new Error(`File too large: ${formatFileSize(file.size)}. Maximum size is ${HARD_MAX_MB} MB.`));
         return;
       }
 
-      // Always convert AVIF to JPEG for Supabase compatibility
-      if (isAVIF) {
-        // Continue to conversion process below
-      }
-      // If file is already reasonable size and JPEG/WebP, return as-is  
-      else if (file.size <= 2 * 1024 * 1024 && (file.type === 'image/jpeg' || file.type === 'image/webp')) {
+      if (!isAVIF) {
         resolve(file);
         return;
-      } else {
       }
-      
-      // AVIF and large files need conversion to JPEG for Supabase compatibility
 
-      // Compress if needed
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       const img = new window.Image();
 
       img.onload = () => {
-        // Calculate new dimensions (max 1920px width, maintain aspect ratio)
-        const maxWidth = 1920;
-        const maxHeight = 1920;
-        let { width, height } = img;
+        // Full original resolution - never downscaled.
+        canvas.width = img.width;
+        canvas.height = img.height;
 
-        if (width > maxWidth) {
-          height = (height * maxWidth) / width;
-          width = maxWidth;
-        }
-        if (height > maxHeight) {
-          width = (width * maxHeight) / height;
-          height = maxHeight;
-        }
+        ctx?.drawImage(img, 0, 0);
 
-        canvas.width = width;
-        canvas.height = height;
-
-        // Draw and compress
-        ctx?.drawImage(img, 0, 0, width, height);
-        
         canvas.toBlob(
           (blob) => {
             if (blob) {
-              // Create a new filename with .jpg extension
-              const newFileName = file.name.replace(/\.(avif|png|webp|jpe?g)$/i, '.jpg');
-              const compressedFile = new File([blob], newFileName, {
+              const newFileName = file.name.replace(/\.avif$/i, '.jpg');
+              const convertedFile = new File([blob], newFileName, {
                 type: 'image/jpeg',
                 lastModified: Date.now(),
               });
-              resolve(compressedFile);
+              resolve(convertedFile);
             } else {
               reject(new Error('Failed to convert image to JPEG'));
             }
           },
           'image/jpeg',
-          0.85 // 85% quality - good balance of quality and file size
+          0.98 // near-lossless - only the mandatory AVIF-to-JPEG conversion touches quality
         );
       };
 
