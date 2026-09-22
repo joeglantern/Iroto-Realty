@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
-import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { useSearchParams, usePathname } from 'next/navigation';
 import { searchProperties, getAvailableAmenities, getPropertyStats, getPropertyCategories } from '@/lib/data';
 import { getStorageUrl } from '@/lib/media';
 import { formatPropertyPrice } from '@/lib/price';
@@ -229,7 +229,6 @@ function FilterPill({ label, isActive, onClick, children }: FilterPillProps) {
 
 function SearchPageContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const pathname = usePathname();
   const initialQuery = searchParams.get('q') || '';
   
@@ -435,8 +434,11 @@ function SearchPageContent() {
     if (newFilters.propertyAge !== 'all') params.set('propertyAge', newFilters.propertyAge);
     if (newFilters.sortBy !== 'newest') params.set('sortBy', newFilters.sortBy);
 
-    const newURL = `${pathname}?${params.toString()}`;
-    router.replace(newURL, { scroll: false });
+    const query = params.toString();
+    const newURL = query ? `${pathname}?${query}` : pathname;
+    if (newURL === `${window.location.pathname}${window.location.search}`) return;
+    // A router navigation here would discard any search still in flight, leaving the page loading forever.
+    window.history.replaceState(window.history.state, '', newURL);
   };
 
   // Search on load and when filters change
