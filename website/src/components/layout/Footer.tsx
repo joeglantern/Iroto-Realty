@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { FacebookLogo, InstagramLogo, YoutubeLogo } from '@phosphor-icons/react';
+import { FacebookLogo, InstagramLogo } from '@phosphor-icons/react';
 import { SOCIAL_LINKS } from '@/lib/social';
 
 export default function Footer() {
@@ -52,14 +52,6 @@ export default function Footer() {
               </div>
               <span className="text-white">{SOCIAL_LINKS.instagram.label}</span>
             </a>
-
-            {/* YouTube */}
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-red-600 rounded flex items-center justify-center flex-shrink-0">
-                <YoutubeLogo size={16} weight="fill" className="text-white" />
-              </div>
-              <span className="text-white">irotorealty.com</span>
-            </div>
           </div>
 
           {/* Contact Information */}

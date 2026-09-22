@@ -18,6 +18,8 @@ const TIMELINE = {
   finish: 9200,
 };
 const FADE_OUT_MS = 800;
+const REDUCED_MOTION_MS = 3200;
+const RING_CIRCUMFERENCE = 2 * Math.PI * 16;
 
 const DUST_COLORS = ['#fff4cf', '#f8d77f', '#ebb84c', '#cf9232', '#a86a1c'].map(hex =>
   [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255)
@@ -116,7 +118,7 @@ export default function LaunchCelebration({ onComplete }: LaunchCelebrationProps
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       setReducedMotion(true);
       setShowCaption(true);
-      const timer = window.setTimeout(finish, 3200);
+      const timer = window.setTimeout(finish, REDUCED_MOTION_MS);
       return () => window.clearTimeout(timer);
     }
 
@@ -128,7 +130,7 @@ export default function LaunchCelebration({ onComplete }: LaunchCelebrationProps
     if (!renderer) {
       setReducedMotion(true);
       setShowCaption(true);
-      const timer = window.setTimeout(finish, 3200);
+      const timer = window.setTimeout(finish, REDUCED_MOTION_MS);
       return () => window.clearTimeout(timer);
     }
     const confettiCtx = confettiCanvas.getContext('2d')!;
@@ -447,16 +449,26 @@ export default function LaunchCelebration({ onComplete }: LaunchCelebrationProps
         <p className="whitespace-nowrap text-[10px] sm:text-sm uppercase tracking-[0.28em] sm:tracking-[0.45em] text-[#f3dca0]/80">
           Luxury coastal living &middot; now online
         </p>
-        <button
-          type="button"
-          onClick={event => {
-            event.stopPropagation();
-            finish();
-          }}
-          className="rounded-full border border-[#e9c46a]/60 bg-[#e9c46a]/10 px-7 py-3 text-sm font-semibold tracking-wide text-[#fbe7b0] backdrop-blur-sm transition-colors hover:bg-[#e9c46a]/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#e9c46a]"
-        >
-          Enter the site
-        </button>
+        {/* Countdown ring: fills while the site opens */}
+        <div className="flex items-center gap-3" role="status">
+          <svg width="40" height="40" viewBox="0 0 40 40" className="-rotate-90" aria-hidden="true">
+            <circle cx="20" cy="20" r="16" fill="none" stroke="rgba(233, 196, 106, 0.18)" strokeWidth="2.5" />
+            <circle
+              cx="20"
+              cy="20"
+              r="16"
+              fill="none"
+              stroke="#e9c46a"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeDasharray={RING_CIRCUMFERENCE}
+              strokeDashoffset={RING_CIRCUMFERENCE}
+              className={showCaption ? 'launch-ring-fill' : undefined}
+              style={{ animationDuration: `${reducedMotion ? REDUCED_MOTION_MS : TIMELINE.finish - TIMELINE.caption}ms` }}
+            />
+          </svg>
+          <span className="text-xs sm:text-sm tracking-wide text-[#f3dca0]/75">Entering the site&hellip;</span>
+        </div>
       </div>
 
       <button
@@ -474,6 +486,14 @@ export default function LaunchCelebration({ onComplete }: LaunchCelebrationProps
         .launch-backdrop {
           background-color: #0b0603;
           background-image: radial-gradient(ellipse at 50% 42%, #3d2408 0%, #1d1005 45%, #0b0603 100%);
+        }
+        .launch-ring-fill {
+          animation-name: launch-ring-fill;
+          animation-timing-function: linear;
+          animation-fill-mode: forwards;
+        }
+        @keyframes launch-ring-fill {
+          to { stroke-dashoffset: 0; }
         }
         .launch-flash {
           background: radial-gradient(circle at 50% 44%, rgba(255, 226, 150, 0.55) 0%, rgba(255, 200, 90, 0.18) 25%, transparent 60%);

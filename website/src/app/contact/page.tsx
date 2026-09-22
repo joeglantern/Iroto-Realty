@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import PageLayout from '@/components/layout/PageLayout';
-import { CheckCircle, XCircle, Envelope, Phone, MapPin, Clock, CircleNotch, FacebookLogo, InstagramLogo, YoutubeLogo } from '@phosphor-icons/react';
+import { CheckCircle, XCircle, Envelope, Phone, MapPin, Clock, CircleNotch, FacebookLogo, InstagramLogo } from '@phosphor-icons/react';
 import { SOCIAL_LINKS } from '@/lib/social';
 
 export default function Contact() {
@@ -296,14 +296,6 @@ export default function Contact() {
                       className="w-10 h-10 bg-brown hover:bg-brown/90 rounded-full flex items-center justify-center transition-colors duration-200"
                     >
                       <InstagramLogo size={20} weight="fill" className="text-white" />
-                    </a>
-                    <a
-                      href="https://youtube.com/@irotorealty"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-10 h-10 bg-brown hover:bg-brown/90 rounded-full flex items-center justify-center transition-colors duration-200"
-                    >
-                      <YoutubeLogo size={20} weight="fill" className="text-white" />
                     </a>
                   </div>
                 </div>
