@@ -131,9 +131,9 @@ export default function Header() {
               <Image
                 src="/logo/iroto-logo.png"
                 alt="Iroto Realty"
-                width={180}
-                height={60}
-                className="h-16 w-auto scale-[4] transform lg:h-18 lg:scale-[5]"
+                width={2822}
+                height={1118}
+                className="h-10 w-auto lg:h-12"
                 priority
               />
             </Link>

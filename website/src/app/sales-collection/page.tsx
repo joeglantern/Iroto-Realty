@@ -273,17 +273,24 @@ function CategoryCarousel({ categories }: CategoryCarouselProps) {
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-        <div 
+        <div
           className="flex transition-transform duration-300 ease-in-out"
           style={{
-            transform: `translateX(-${currentIndex * (100 / cardsPerView)}%)`,
+            // The row holds every card, but only cardsPerView-worths of width should be
+            // visible at once, so the row itself must be (count/cardsPerView) x 100% wide;
+            // each card is then an even 100/count share of that row. Both the row width and
+            // the per-card width must agree with this slide formula, or the row silently
+            // grows to fit every card at once and the page gains horizontal overflow.
+            width: `${(categories.length / cardsPerView) * 100}%`,
+            transform: `translateX(-${currentIndex * (100 / categories.length)}%)`,
             touchAction: 'pan-y pinch-zoom'
           }}
         >
           {categories.map((category) => (
-            <div 
+            <div
               key={category.id}
-              className="w-full md:w-1/2 flex-shrink-0 px-4"
+              className="flex-shrink-0 px-4"
+              style={{ width: `${100 / categories.length}%` }}
             >
               <CategoryCard category={category} />
             </div>

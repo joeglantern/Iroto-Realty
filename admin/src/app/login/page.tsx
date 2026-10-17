@@ -73,7 +73,7 @@ export default function LoginPage() {
               src="/logo/iroto-logo.png"
               alt="Iroto Realty"
               width={600}
-              height={200}
+              height={238}
               className="h-32 sm:h-48 md:h-64 w-auto"
             />
           </div>

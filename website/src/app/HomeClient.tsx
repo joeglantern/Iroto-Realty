@@ -817,12 +817,19 @@ function PropertiesCarousel() {
                 <p className="text-gray-500">No featured properties available</p>
               </div>
             ) : (
-              <div 
+              <div
                 className="flex transition-transform duration-500 ease-in-out"
-                style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+                style={{
+                  // The row holds every slide side by side, so it must be slidesCount x 100%
+                  // wide with each slide an even 100/slidesCount share - otherwise the row
+                  // silently grows to fit every slide at once and the page gains horizontal
+                  // overflow, even though only one slide is ever visible.
+                  width: `${slidesCount * 100}%`,
+                  transform: `translateX(-${currentSlide * (100 / slidesCount)}%)`,
+                }}
               >
                 {Array.from({ length: slidesCount }, (_, slideIndex) => (
-                  <div key={slideIndex} className="w-full flex-shrink-0">
+                  <div key={slideIndex} className="flex-shrink-0" style={{ width: `${100 / slidesCount}%` }}>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                       {allProperties
                         .slice(slideIndex * 6, (slideIndex + 1) * 6)

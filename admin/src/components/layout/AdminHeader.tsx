@@ -39,7 +39,7 @@ export default function AdminHeader() {
                 src="/logo/iroto-logo.png"
                 alt="Iroto Realty"
                 width={120}
-                height={40}
+                height={48}
                 className="mr-4"
               />
             </Link>

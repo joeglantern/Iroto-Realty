@@ -41,7 +41,7 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
               src="/logo/iroto-logo.png"
               alt="Iroto Realty"
               width={200}
-              height={80}
+              height={79}
               className="mx-auto"
               priority
             />
